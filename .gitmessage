@@ -1,0 +1,9 @@
+# <tipo>(<escopo>): <resumo no imperativo, minúsculo, sem ponto>
+#
+# Tipos:   feat | fix | refactor | test | docs | build | ci | chore | perf
+# Escopos: api | web | mobile | infra | docs | repo
+#
+# Corpo (opcional): o porquê da mudança, não o como.
+#
+# Rodapé (opcional): Refs: Fase 1 · 1.4 · Serviço de movimentação
+#                    BREAKING CHANGE: ...

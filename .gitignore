@@ -1,0 +1,12 @@
+# Ambiente
+.env
+*.local
+
+# IDE / SO
+.vs/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

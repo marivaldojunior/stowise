@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Stowise.Api/Stowise.Api.csproj" />
+    <Project Path="src/Stowise.Application/Stowise.Application.csproj" />
+    <Project Path="src/Stowise.Domain/Stowise.Domain.csproj" />
+    <Project Path="src/Stowise.Infrastructure/Stowise.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Stowise.IntegrationTests/Stowise.IntegrationTests.csproj" />
+    <Project Path="tests/Stowise.UnitTests/Stowise.UnitTests.csproj" />
+  </Folder>
+</Solution>

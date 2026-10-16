@@ -1,0 +1,400 @@
+# Stowise — Inventário e armazenagem com IA
+
+Oct 10, 2026 · @Marivaldo
+
+## Visão geral
+
+Stowise é um sistema de inventário e armazenagem com app Flutter, dashboard React e API .NET 10, em que a IA sugere e uma pessoa sempre confirma. O nome junta *stow* (armazenar) e *wise* (inteligente).
+
+| Parte | Responsabilidade |
+| --- | --- |
+| Flutter (app de campo) | Contagem offline-first, leitura de código de barras on-device, conferência de recebimento, confirmação de endereço; plugin Kotlin para coletores Zebra/Honeywell |
+| .NET 10 (API) | Catálogo, estoque, recebimento, importação, motor de armazenagem, patrimônio, camada de IA isolada e plugável |
+| React + TypeScript (gestão) | Revisão de importações, divergências, aprovação de ajustes, mapa de ocupação, configuração de regras, conciliação do inventário patrimonial, consultas em linguagem natural |
+
+Funcionalidades centrais:
+
+- **Importação inteligente** de CSV, TXT (delimitado ou posicional), Excel e XML de NF-e: a IA mapeia colunas e casa itens com o catálogo; a importação em si é determinística, com staging e revisão.
+- **Armazenagem inteligente**: motor de pontuação com regras configuráveis (capacidade, zona, curva ABC, FEFO, consolidação) e explicação de cada sugestão. Sem LLM na decisão.
+- **Contagem assistida por câmera**, com nível de confiança e aprovação antes de ajustar o saldo.
+- **Inventário patrimonial** (extensão, Fase 4): conferência de bens por plaqueta, local, responsável e estado de conservação, com conciliação aprovada por uma pessoa.
+
+Banco: **PostgreSQL**, com `jsonb` para o staging e **pgvector** para busca de produtos e bens similares.
+
+## Como usar com o Claude Code
+
+Exporte este documento em Markdown e salve na raiz do repositório como `docs/SPEC.md`. Crie um `CLAUDE.md` curto que aponte para ele e traga as regras abaixo.
+
+**Estrutura do repositório**
+
+```
+stowise/
+├── api/          # .NET 10
+├── web/          # React + TypeScript (Vite)
+├── mobile/       # Flutter + plugin Kotlin
+├── docs/
+│   ├── SPEC.md   # este documento
+│   └── adr/      # um arquivo por decisão
+├── infra/        # scripts de infraestrutura (init do Postgres)
+└── docker-compose.yml
+```
+
+**Regras para o agente**
+
+- Trabalhar uma tarefa do plano por vez, na ordem das fases, e marcar a tarefa ao concluir
+- Toda tarefa entra com testes; regra de negócio sem teste não é considerada concluída
+- Nunca alterar Saldo diretamente: toda mudança de estoque passa pelo serviço de movimentação
+- IA só sugere: nenhum fluxo grava resultado de IA sem confirmação humana
+- Decisão de arquitetura nova vira um ADR em `docs/adr/`
+- Nomes de domínio em português (Produto, Endereco, Movimentacao); código e infraestrutura em inglês
+- Commits no padrão Conventional Commits, um por tarefa
+
+**Fluxo sugerido por tarefa**
+
+1. Pedir ao Claude Code um plano curto da tarefa antes de codar
+2. Implementar com testes
+3. Rodar build, testes e lint localmente
+4. Abrir PR com descrição e checklist
+
+## Modelo de dados
+
+&#91;embedded content: modelo de dados · 6 módulos\]
+
+Importação, Recebimento e Inventário nunca alteram o saldo diretamente: tudo vira Movimentacao no Estoque, que referencia os cadastros de Catálogo e Estrutura física.
+
+O Patrimônio (módulo 7) é separado do estoque: bens patrimoniais não têm Saldo e têm um livro-razão próprio, a MovimentacaoPatrimonial ([ADR-0003](adr/0003-patrimonio-modulo-separado.md)).
+
+### 1. Catálogo
+
+Peso, dimensões e GTIN ficam na embalagem, não no produto: uma caixa e um palete do mesmo SKU ocupam espaços diferentes.
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| Produto | `Id`, `Sku` (único), `Descricao`, `Ncm`, `Cest`, `CategoriaId`, `UnidadeBase`, `ControlaLote`, `ControlaValidade`, `ClasseArmazenagem`, `ClasseAbc`, `StatusCadastro`, `Ativo`, `RowVersion` | `ClasseArmazenagem`: Normal, Refrigerado, Inflamável, Frágil. `ClasseAbc` recalculada por job. `StatusCadastro`: Incompleto ou Ativo |
+| ProdutoEmbalagem | `Id`, `ProdutoId`, `Tipo`, `Gtin` (único), `FatorConversao`, `PesoKg`, `AlturaCm`, `LarguraCm`, `ComprimentoCm` | `Tipo`: UN, CX, PALETE. Fator em relação à unidade base |
+| Categoria | `Id`, `Nome`, `ParentId` | Hierarquia |
+| ProdutoEmbedding | `ProdutoId`, `Vetor`, `Modelo`, `GeradoEm` | Tabela separada para regenerar ao trocar de modelo |
+| Fornecedor | `Id`, `Cnpj` (único), `RazaoSocial`, `NomeFantasia` |  |
+| ProdutoFornecedor | `Id`, `FornecedorId`, `CodigoFornecedor`, `ProdutoId`, `EmbalagemId`, `UnidadeFornecedor`, `FatorConversao`, `ConfirmadoPor`, `ConfirmadoEm` | De-para. Único por fornecedor + código do fornecedor (`cProd` da NF-e) |
+
+Produtos criados a partir de uma NF-e entram como **Incompleto**, porque a nota não traz peso nem dimensões por item. Eles vão para uma fila de "completar cadastro" no React, ou têm as medidas capturadas no recebimento pelo app.
+
+### 2. Estrutura física
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| Armazem | `Id`, `Codigo`, `Nome` |  |
+| Zona | `Id`, `ArmazemId`, `Codigo`, `ClasseArmazenagem` | Define onde cada classe de produto pode ficar |
+| Endereco | `Id`, `ZonaId`, `Codigo`, `Rua`, `Modulo`, `Nivel`, `Posicao`, `CapacidadePesoKg`, `AlturaCm`, `LarguraCm`, `ProfundidadeCm`, `DistanciaExpedicao`, `Status`, `MotivoBloqueio` | `Codigo` no formato A-03-02-1. `Status`: Livre, Ocupado, Bloqueado. `DistanciaExpedicao` alimenta a regra de curva ABC |
+
+### 3. Estoque
+
+A Movimentacao é o livro-razão: nunca é editada nem apagada. O Saldo é uma projeção atualizada na mesma transação, o que dá auditoria completa e permite reconstruir o estoque em qualquer data.
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| Lote | `Id`, `ProdutoId`, `Numero`, `Fabricacao`, `Validade` | Preenchido também pelo grupo `rastro` da NF-e |
+| Movimentacao | `Id`, `Tipo`, `ProdutoId`, `LoteId`, `EnderecoOrigemId`, `EnderecoDestinoId`, `Quantidade`, `DocumentoReferencia`, `UsuarioId`, `DispositivoId`, `OcorridoEm`, `RecebidoEm`, `IdempotencyKey` (única) | `Tipo`: Entrada, Saída, Transferência, Ajuste. `OcorridoEm` é a hora do celular; `RecebidoEm`, a do servidor |
+| Saldo | `EnderecoId`, `ProdutoId`, `LoteId`, `Quantidade`, `QuantidadeReservada`, `RowVersion` | Único por endereço + produto + lote. Concorrência otimista |
+
+A `IdempotencyKey` garante que uma sincronização offline repetida não duplique movimento.
+
+### 4. Recebimento, NF-e e armazenagem
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| Recebimento | `Id`, `FornecedorId`, `ChaveAcesso` (única), `Numero`, `Serie`, `DataEmissao`, `XmlOriginalUrl`, `Status`, `DataChegada` | A chave única impede importar a mesma nota duas vezes. O XML original fica guardado para auditoria |
+| RecebimentoItem | `Id`, `RecebimentoId`, `NumeroItem`, `ProdutoId`, `ProdutoFornecedorId`, `EmbalagemId`, `LoteId`, `Quantidade`, `CodigoFornecedor`, `DescricaoNota`, `UnidadeNota`, `QuantidadeNota`, `Cfop`, `ValorUnitario` | Guarda o que veio na nota separado do que foi convertido, para conferir divergências |
+| TarefaArmazenagem | `Id`, `RecebimentoItemId`, `Quantidade`, `EnderecoSugeridoId`, `EnderecoConfirmadoId`, `Status`, `MotivoDivergencia`, `PontuacaoJson`, `RegrasVersao`, `CriadoEm`, `ConcluidoEm` | `PontuacaoJson` é o snapshot da nota de cada regra, para explicar a sugestão mesmo após mudar os pesos |
+| RegraArmazenagem | `Id`, `Codigo`, `Peso`, `Ativa`, `ParametrosJson` | `Codigo` é a chave da estratégia no código |
+
+**Campos da NF-e e seu destino:**
+
+| Campo do XML | Uso no modelo |
+| --- | --- |
+| `chNFe` | `Recebimento.ChaveAcesso` |
+| `emit/CNPJ`, `xNome` | Fornecedor |
+| `det/prod/cProd` | `ProdutoFornecedor.CodigoFornecedor` |
+| `cEAN` / `cEANTrib` | GTIN da embalagem (pode vir "SEM GTIN") |
+| `xProd`, `NCM`, `CEST` | Criar ou casar o produto |
+| `uCom`/`qCom` × `uTrib`/`qTrib` | Inferir `FatorConversao` (ex.: 10 CX = 120 UN → fator 12) |
+| `rastro` (`nLote`, `dFab`, `dVal`) | Lote |
+
+**Casamento de itens da nota**, nesta ordem: de-para existente → GTIN → similaridade de descrição (pgvector). O usuário confirma os itens novos ou duvidosos, e o vínculo é salvo para as próximas notas daquele fornecedor.
+
+**Fluxo:** XML → valida XSD e chave → identifica fornecedor → casa itens → revisão → cria Recebimento → conferência física no app → sugestão de endereço.
+
+### 5. Importação
+
+A IA entende o arquivo (recebe só o cabeçalho e cerca de 10 linhas de amostra); quem importa é código determinístico. Para NF-e, o layout é fixo e não há mapeamento por IA.
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| TemplateImportacao | `Id`, `Nome`, `Fingerprint`, `Formato`, `Encoding`, `Delimitador`, `SeparadorDecimal`, `MapeamentoJson`, `SugeridoPorIa`, `ConfirmadoPor`, `VezesUsado` | `Fingerprint`: hash do cabeçalho normalizado; arquivo reconhecido dispensa a IA. `Formato`: Delimitado, Posicional, Excel |
+| Importacao | `Id`, `Tipo`, `Formato`, `NomeArquivo`, `HashArquivo`, `TemplateId`, `Status`, `TotalLinhas`, `LinhasValidas`, `LinhasComErro`, `UsuarioId`, `IniciadoEm`, `ConcluidoEm` | `Tipo`: Produtos, NotaFiscal ou BensPatrimoniais. `Formato` inclui NFeXml. `HashArquivo` evita importar o mesmo arquivo duas vezes |
+| ImportacaoLinha | `Id`, `ImportacaoId`, `NumeroLinha`, `DadosBrutos`, `DadosNormalizados`, `Status`, `Acao`, `ProdutoCorrespondenteId`, `Similaridade`, `Erros` | Staging em `jsonb`. `Status`: Válida, Erro, Possível duplicata, Ignorada. `Acao`: Criar, Atualizar, Ignorar. Na NF-e, cada `det` vira uma linha |
+
+Estados da Importacao:
+
+`Recebido → Mapeando → AguardandoConfirmacao → Validando → AguardandoRevisao → Efetivando → Concluido` (ou `Falhou`)
+
+### 6. Inventário e IA
+
+Uma contagem aprovada gera uma Movimentacao do tipo Ajuste; a IA nunca mexe no saldo diretamente.
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| Inventario | `Id`, `Tipo`, `ZonaId`, `Status`, `AbertoEm`, `FechadoEm` | `Tipo`: Geral ou Rotativo |
+| Contagem | `Id`, `InventarioId`, `EnderecoId`, `ProdutoId`, `LoteId`, `QuantidadeContada`, `QuantidadeSistema`, `Origem`, `ConfiancaIa`, `ImagemUrl`, `Status`, `UsuarioId`, `IdempotencyKey` | `QuantidadeSistema` é snapshot. `Origem`: Manual, Código de barras, Câmera. `Status`: Pendente, Aprovada, Rejeitada |
+| ChamadaIa | `Id`, `Funcionalidade`, `Provedor`, `Modelo`, `PromptVersao`, `TokensEntrada`, `TokensSaida`, `CustoEstimado`, `LatenciaMs`, `Sucesso`, `CorrelacaoId` | `Funcionalidade`: Mapeamento, Casamento de itens, Câmera, Consulta, Leitura de plaqueta, Estado de conservação, Casamento de bens. Base para controle de custo e comparação de prompts |
+
+### 7. Patrimônio
+
+Bens patrimoniais (computadores, móveis, equipamentos, veículos) são itens únicos identificados por plaqueta: não têm quantidade, lote nem Saldo. Ficam em um módulo próprio, com hierarquia de locais e livro-razão separados do estoque ([ADR-0003](adr/0003-patrimonio-modulo-separado.md)). Depreciação, integração contábil e termo de responsabilidade estão fora do escopo; o sistema exporta os dados para quem faz essa gestão.
+
+**Cadastros e movimentação**
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| LocalPatrimonial | `Id`, `Codigo`, `Nome`, `Tipo`, `ParentId`, `Ativo` | Hierarquia: Unidade → Prédio → Andar → Sala. Independente de Armazém/Zona/Endereço |
+| CategoriaPatrimonial | `Id`, `Nome`, `ParentId` | Hierarquia própria, separada da Categoria de produtos |
+| Responsavel | `Id`, `Nome`, `Matricula` (única), `Email`, `UsuarioId`, `Ativo` | Pessoa que responde pelo bem; não precisa ter login (`UsuarioId` opcional) |
+| BemPatrimonial | `Id`, `NumeroPatrimonio` (único), `Descricao`, `CategoriaId`, `NumeroSerie`, `Marca`, `Modelo`, `DataAquisicao`, `ValorAquisicao`, `DocumentoAquisicao`, `CentroCusto`, `LocalId`, `ResponsavelId`, `EstadoConservacao`, `Situacao`, `ImagemUrl`, `RowVersion` | `LocalId`, `ResponsavelId`, `EstadoConservacao` e `Situacao` são projeção do livro-razão e nunca são editados diretamente. `EstadoConservacao`: Novo, Bom, Regular, Ruim, Inservível. `Situacao`: Ativo, Em manutenção, Emprestado, Não localizado, Baixado |
+| MovimentacaoPatrimonial | `Id`, `BemId`, `Tipo`, `LocalOrigemId`, `LocalDestinoId`, `ResponsavelOrigemId`, `ResponsavelDestinoId`, `EstadoAnterior`, `EstadoNovo`, `SituacaoAnterior`, `SituacaoNova`, `Motivo`, `DocumentoReferencia`, `InventarioPatrimonialId`, `UsuarioId`, `DispositivoId`, `OcorridoEm`, `RecebidoEm`, `IdempotencyKey` (única) | `Tipo`: Incorporação, Transferência, Mudança de estado, Mudança de situação, Baixa. Nunca é editada nem apagada |
+| BemEmbedding | `BemId`, `Vetor`, `Modelo`, `GeradoEm` | Busca de bens similares por descrição para casar sobras sem plaqueta |
+
+A **Baixa** exige `Motivo` (Extravio, Furto, Inservível, Doação, Venda, Outro) e aprovação de um Gestor; um bem baixado não volta a ser movimentado.
+
+**Inventário patrimonial**
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| InventarioPatrimonial | `Id`, `Descricao`, `Status`, `CriadoPor`, `AbertoEm`, `FechadoEm` | `Status`: Planejado → EmAndamento → EmConciliacao → Concluido (ou Cancelado) |
+| InventarioPatrimonialLocal | `InventarioId`, `LocalId` | Escopo: os locais selecionados incluem os descendentes na hierarquia |
+| InventarioPatrimonialInventariante | `InventarioId`, `UsuarioId` | Só inventariantes registram conferências |
+| InventarioPatrimonialBem | `Id`, `InventarioId`, `BemId`, `LocalEsperadoId`, `ResponsavelEsperadoId`, `EstadoEsperado`, `Resultado`, `Decisao`, `DecididoPor`, `DecididoEm`, `MovimentacaoId` | Snapshot dos bens esperados na abertura. `Resultado`: Conforme, Local divergente, Estado divergente, Não localizado. `Decisao`: Aceitar, Corrigir cadastro, Manter, Abrir apuração |
+| ConferenciaPatrimonial | `Id`, `InventarioId`, `PlaquetaLida`, `BemId`, `LocalEncontradoId`, `EstadoEncontrado`, `Observacao`, `Origem`, `ImagemUrl`, `ConfiancaIa`, `UsuarioId`, `DispositivoId`, `OcorridoEm`, `IdempotencyKey` (única) | `Origem`: Código de barras/QR, Manual, Câmera (OCR). `BemId` vazio indica sobra (bem sem cadastro) |
+
+Regras do inventário patrimonial:
+
+- Na **abertura**, o sistema grava o snapshot dos bens ativos do escopo. Enquanto o inventário estiver EmAndamento ou EmConciliacao, esses bens **não podem ser movimentados** fora da conciliação: a tentativa retorna conflito.
+- **Leituras repetidas** do mesmo bem prevalecem pela mais recente; leituras em locais diferentes no mesmo inventário são sinalizadas na conciliação.
+- No **encerramento da contagem**, bens do snapshot sem conferência viram Não localizado e as sobras são listadas à parte.
+- Na **conciliação**, cada divergência é decidida por uma pessoa. Aceitar uma divergência de local ou estado gera a MovimentacaoPatrimonial correspondente; Não localizado vira Situacao Não localizado e abre apuração, **nunca baixa automática**; uma sobra pode ser incorporada (novo bem) ou casada com um bem existente.
+- O **relatório de conciliação** (PDF e CSV) é gerado no fechamento e fica guardado com o inventário.
+
+**IA no patrimônio** (sempre como sugestão, registrada em ChamadaIa):
+
+- Leitura de plaqueta danificada ou ilegível por OCR na foto
+- Sugestão de estado de conservação a partir da foto, com confiança
+- Casamento de sobra com bens cadastrados por descrição e foto (pgvector)
+
+## Decisões de arquitetura (ADRs)
+
+1. **Livro-razão + saldo projetado**, em vez de um campo de quantidade editável
+2. **Quantidades sempre na unidade base** (`decimal(18,4)`); embalagens e unidades do fornecedor apenas convertem
+3. **Idempotência em tudo que vem do celular**, por causa do modo offline
+4. **Concorrência otimista** no Saldo (`xmin` do Postgres via EF Core)
+5. **Relacional no núcleo, `jsonb` no staging**: rigidez onde o dado é confiável, flexibilidade onde ainda não é
+6. **Snapshot das decisões automáticas** (pontuação de armazenagem, confiança da IA) para manter tudo explicável
+7. **IA só sugere**: mapeamento, casamento de itens e contagem sempre passam por confirmação humana; decisões de armazenagem são algorítmicas
+8. **Aprendizado por confirmação**: templates de importação e de-para de fornecedor reduzem chamadas de IA a cada uso
+9. **Patrimônio separado do estoque**, com hierarquia de locais e livro-razão próprios ([ADR-0003](adr/0003-patrimonio-modulo-separado.md))
+
+## Plano de tarefas
+
+Ordem: fundação do repositório, API .NET, Web React, App Flutter e fechamento do portfólio; depois, a extensão de Patrimônio (Fase 4), que reaproveita a infraestrutura das fases anteriores. Dentro de cada fase, as tarefas seguem a ordem de dependência; a IA entra depois que o fluxo sem IA já funciona.
+
+### Fase 0 — Fundação do repositório
+
+- [x] Criar o monorepo com as pastas `api/`, `web/`, `mobile/` e `docs/adr/`
+- [x] `docker-compose` com PostgreSQL + pgvector e a API
+- [x] GitHub Actions separados por pasta (filtro de caminho), com build, testes e lint
+- [x] README inicial, `CLAUDE.md`, `docs/SPEC.md` e ADR-001 (livro-razão + saldo projetado)
+- [x] Convenção de commits e template de PR
+
+### Fase 1 — API .NET 10
+
+**1.1 Fundação**
+
+- [x] Solução em camadas (Domain, Application, Infrastructure, Api) ou vertical slices
+- [ ] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
+- [ ] Autenticação JWT com refresh token e perfis (Admin, Gestor, Operador)
+- [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry e health checks
+- [ ] OpenAPI com Scalar e versionamento de rotas
+- [ ] Projetos de teste: unidade e integração com Testcontainers
+
+**1.2 Catálogo**
+
+- [ ] CRUD de Produto, ProdutoEmbalagem, Categoria e Fornecedor
+- [ ] `StatusCadastro` e endpoint da fila de cadastros incompletos
+- [ ] CRUD do de-para ProdutoFornecedor
+
+**1.3 Estrutura física**
+
+- [ ] CRUD de Armazém, Zona e Endereço
+- [ ] Geração de endereços em lote (rua × módulo × nível × posição)
+- [ ] Bloqueio e desbloqueio de endereço com motivo
+
+**1.4 Estoque**
+
+- [ ] Serviço de movimentação: grava Movimentacao e atualiza Saldo na mesma transação
+- [ ] Idempotência por `IdempotencyKey` e concorrência otimista (`xmin`)
+- [ ] Transferência entre endereços e reservas
+- [ ] Consultas: saldo por produto, endereço e lote; extrato; saldo em uma data
+
+**1.5 Importação de produtos**
+
+- [ ] Upload com detecção de encoding, delimitador, separador decimal e layout posicional
+- [ ] Fingerprint do cabeçalho e templates de importação
+- [ ] Staging, validações determinísticas (GTIN, NCM, unidades) e máquina de estados
+- [ ] Processamento em background, progresso via SignalR, bulk insert e relatório final
+- [ ] Camada de IA plugável (Microsoft.Extensions.AI) com registro em ChamadaIa
+- [ ] Sugestão de mapeamento de colunas por IA (cabeçalho + amostra)
+
+**1.6 NF-e**
+
+- [ ] Parser do XML 4.00 com validação de XSD e dígito da chave de acesso
+- [ ] Job de embeddings de produtos e busca de similares
+- [ ] Casamento de itens: de-para, depois GTIN, depois similaridade
+- [ ] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`)
+- [ ] Efetivação: cria produtos, de-para, Recebimento e itens
+
+**1.7 Recebimento e armazenagem**
+
+- [ ] Fluxo de status do recebimento e conferência
+- [ ] Motor de pontuação: interface de regra e regras de capacidade, zona, curva ABC, FEFO e consolidação
+- [ ] Geração de TarefaArmazenagem com snapshot da pontuação; confirmação e divergência
+- [ ] Job de recálculo da curva ABC
+
+**1.8 Inventário**
+
+- [ ] Abertura e fechamento de inventário; registro de contagens
+- [ ] Aprovação e rejeição de contagem, gerando Ajuste
+- [ ] Endpoint de sincronização offline (lote de operações idempotentes)
+- [ ] Contagem por imagem: IA sugere item e quantidade com confiança
+
+**1.9 IA avançada**
+
+- [ ] Consulta em linguagem natural com tool calling sobre endpoints somente leitura
+- [ ] Conjunto de avaliação (arquivos e imagens de teste) rodando no CI
+- [ ] Rate limit, cache e relatório de custo por funcionalidade
+
+### Fase 2 — Web React
+
+**2.1 Fundação**
+
+- [ ] Vite + TypeScript, React Router e TanStack Query
+- [ ] Cliente da API gerado a partir do OpenAPI (orval)
+- [ ] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
+- [ ] Login, renovação de token e rotas protegidas por perfil
+- [ ] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
+
+**2.2 Cadastros e estoque**
+
+- [ ] Catálogo: lista com filtros, formulário de produto e embalagens
+- [ ] Fila de cadastros incompletos
+- [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
+- [ ] Saldos e extrato de movimentações
+
+**2.3 Importação e NF-e**
+
+- [ ] Upload de arquivo e revisão do mapeamento sugerido
+- [ ] Prévia com erros linha a linha e progresso em tempo real
+- [ ] Upload de NF-e e revisão do casamento de itens com as sugestões
+
+**2.4 Operação**
+
+- [ ] Recebimentos e acompanhamento das tarefas de armazenagem
+- [ ] Tela de divergências (armazenagem e inventário)
+- [ ] Configuração dos pesos das regras de armazenagem
+- [ ] Aprovação de contagens com foto e nível de confiança
+
+**2.5 IA**
+
+- [ ] Chat de consulta em linguagem natural
+- [ ] Painel de uso de IA: chamadas, custo e latência por funcionalidade
+
+### Fase 3 — App Flutter
+
+**3.1 Fundação**
+
+- [ ] Projeto com flavors (dev/prod), arquitetura em camadas, Riverpod ou Bloc e go\_router
+- [ ] Banco local (Drift) e fila de sincronização com `IdempotencyKey`
+- [ ] Autenticação e armazenamento seguro de tokens
+- [ ] Testes de unidade, widget, golden e integração
+
+**3.2 Leitura e hardware**
+
+- [ ] Leitura de código de barras on-device (ML Kit)
+- [ ] Plugin Kotlin para coletores Zebra (DataWedge) via platform channel
+
+**3.3 Operação**
+
+- [ ] Conferência de recebimento: bipagem, quantidade, lote, validade e captura de medidas
+- [ ] Armazenagem: recebe a sugestão, bipa o endereço e registra divergência com motivo
+- [ ] Contagem de inventário manual e por código de barras
+- [ ] Contagem por câmera, com confirmação da sugestão da IA
+- [ ] Consulta de saldo por produto e por endereço
+
+**3.4 Offline e release**
+
+- [ ] Sincronização em background, indicador de modo offline e tratamento de conflitos
+- [ ] Pipeline de release (Codemagic ou Fastlane) e publicação em teste aberto
+
+### Fechamento do portfólio
+
+- [ ] README geral com diagrama de arquitetura, links para os ADRs e badges de CI
+- [ ] Vídeo ou GIF de 2 minutos com o fluxo completo: NF-e → recebimento → armazenagem → contagem
+- [ ] Deploy de demonstração da API e da Web, com dados de exemplo e usuário de teste
+- [ ] Repositório fixado no perfil do GitHub
+
+### Fase 4 — Patrimônio (extensão)
+
+Começa depois do fechamento do portfólio. Segue a mesma ordem: API, Web e App; a IA entra depois que o fluxo sem IA já funciona.
+
+**4.1 API — Cadastros e movimentação patrimonial**
+
+- [ ] Módulo `Patrimonio` em Domain e Application, conforme o ADR-0003
+- [ ] CRUD de LocalPatrimonial (hierarquia), CategoriaPatrimonial e Responsavel
+- [ ] CRUD de BemPatrimonial sem edição direta de local, responsável, estado e situação
+- [ ] Serviço de movimentação patrimonial: incorporação, transferência, mudança de estado e de situação, com idempotência e concorrência otimista
+- [ ] Baixa com motivo e aprovação de Gestor
+- [ ] Consultas: bens por local (com descendentes) e por responsável, histórico do bem e posição em uma data
+- [ ] Importação de bens (`Tipo` BensPatrimoniais) reaproveitando staging, templates e mapeamento por IA
+
+**4.2 API — Inventário patrimonial**
+
+- [ ] Planejamento: escopo de locais, inventariantes e transições de status
+- [ ] Abertura com snapshot dos bens esperados e bloqueio de movimentação dos bens no escopo
+- [ ] Registro de conferências, inclusive pelo endpoint de sincronização offline
+- [ ] Encerramento da contagem: não localizados, sobras e leituras em locais diferentes
+- [ ] Conciliação: decisões por bem, geração das movimentações patrimoniais e incorporação ou casamento de sobras
+- [ ] Relatório de conciliação em PDF e CSV
+
+**4.3 API — IA no patrimônio**
+
+- [ ] Leitura de plaqueta por OCR na foto
+- [ ] Sugestão de estado de conservação pela foto, com confiança
+- [ ] Job de embeddings de bens e casamento de sobras por similaridade
+
+**4.4 Web — Patrimônio**
+
+- [ ] Árvore de locais, categorias e responsáveis
+- [ ] Lista de bens com filtros e ficha do bem com histórico de movimentações
+- [ ] Transferência, mudança de estado e baixa com aprovação
+- [ ] Geração de números de patrimônio e impressão de plaquetas (PDF com código de barras/QR)
+- [ ] Planejamento do inventário e acompanhamento em tempo real (percentual conferido por local)
+- [ ] Tela de conciliação com fotos, sugestões da IA e decisão por bem; download do relatório
+
+**4.5 App — Inventário patrimonial**
+
+- [ ] Seleção do inventário e do local, bipagem de plaquetas pela câmera e pelo coletor
+- [ ] Registro de estado de conservação, observação e foto por bem
+- [ ] Registro de sobra (bem sem plaqueta ou sem cadastro) com foto e descrição
+- [ ] OCR de plaqueta e sugestão de estado pela IA, com confirmação
+- [ ] Funcionamento offline com a fila de sincronização existente
+
+**4.6 Fechamento**
+
+- [ ] README e demonstração atualizados com o fluxo: importação de bens → inventário → conciliação

@@ -1,0 +1,36 @@
+name: stowise
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stowise}
+      POSTGRES_USER: ${POSTGRES_USER:-stowise}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-stowise}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/01-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__Stowise: Host=db;Port=5432;Database=${POSTGRES_DB:-stowise};Username=${POSTGRES_USER:-stowise};Password=${POSTGRES_PASSWORD:-stowise}
+    ports:
+      - "${API_PORT:-8080}:8080"
+
+volumes:
+  db-data:
