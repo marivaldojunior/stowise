@@ -8,25 +8,10 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 2
 
-[*.{cs,csx}]
-indent_size = 4
-csharp_style_namespace_declarations = file_scoped:warning
-csharp_using_directive_placement = outside_namespace:warning
-dotnet_sort_system_directives_first = true
-
-[*.{csproj,props,targets,slnx}]
-indent_size = 2
-
-[api/tests/**.cs]
-# Nomes de teste descritivos com underscore (Metodo_cenario_resultado)
-dotnet_diagnostic.CA1707.severity = none
+# Regras de C# ficam em api/.editorconfig, que também entra no contexto do build Docker.
 
 [*.md]
 trim_trailing_whitespace = false
 
 [*.{kt,kts}]
 indent_size = 4
-
-[api/src/**/Migrations/**.cs]
-# Código gerado pelo dotnet ef: fora dos analisadores e do dotnet format
-generated_code = true

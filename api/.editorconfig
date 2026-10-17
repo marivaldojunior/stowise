@@ -1,0 +1,24 @@
+# Sem "root = true": localmente, herda o .editorconfig da raiz do repositório.
+# No build Docker (contexto api/), este é o único arquivo, então as regras de C# ficam aqui.
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 2
+
+[*.{cs,csx}]
+indent_size = 4
+csharp_style_namespace_declarations = file_scoped:warning
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
+
+[tests/**.cs]
+# Nomes de teste descritivos com underscore (Metodo_cenario_resultado)
+dotnet_diagnostic.CA1707.severity = none
+
+[src/**/Migrations/**.cs]
+# Código gerado pelo dotnet ef: fora dos analisadores e do dotnet format
+generated_code = true
