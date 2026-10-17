@@ -217,6 +217,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 8. **Aprendizado por confirmação**: templates de importação e de-para de fornecedor reduzem chamadas de IA a cada uso
 9. **Patrimônio separado do estoque**, com hierarquia de locais e livro-razão próprios ([ADR-0003](adr/0003-patrimonio-modulo-separado.md))
 10. **Camada de IA atrás da API**: chave só no servidor, saída estruturada e validada, timeout, retry e fallback, cota por usuário ([ADR-0004](adr/0004-camada-de-ia.md))
+11. **Autenticação com ASP.NET Core Identity e JWT próprio**, com refresh token rotativo e detecção de reuso ([ADR-0005](adr/0005-autenticacao.md))
 
 ## Plano de tarefas
 
@@ -252,8 +253,9 @@ Regras de ordem:
 
 - [x] Solução em camadas (Domain, Application, Infrastructure, Api) ou vertical slices
 - [x] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
-- [ ] ADR de autenticação (ASP.NET Core Identity × Keycloak)
+- [x] ADR de autenticação (ASP.NET Core Identity × Keycloak)
 - [ ] Autenticação JWT com refresh token rotativo e perfis (Admin, Gestor, Operador)
+- [ ] Endpoints de gestão de usuários e perfis (Admin), usados pela tela do painel
 - [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks
 - [ ] OpenAPI com Scalar e versionamento de rotas
 - [ ] Contrato OpenAPI versionado no repositório e verificado no CI (o build falha se o contrato mudar sem atualização)
