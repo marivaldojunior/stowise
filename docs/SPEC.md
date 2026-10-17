@@ -265,7 +265,7 @@ Regras de ordem:
 
 - [x] CRUD de Produto, ProdutoEmbalagem e Categoria
 - [x] CRUD de Armazém, Zona e Endereço
-- [ ] Geração de endereços em lote (rua × módulo × nível × posição)
+- [x] Geração de endereços em lote (rua × módulo × nível × posição)
 - [ ] Bloqueio e desbloqueio de endereço com motivo
 
 **1.3 API — Estoque**

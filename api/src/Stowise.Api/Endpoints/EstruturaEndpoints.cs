@@ -117,6 +117,14 @@ public static class EstruturaEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status409Conflict);
 
+        escrita.MapPost("/lote", async (GerarEnderecos comando, IEnderecoService enderecos, CancellationToken ct) =>
+                (await enderecos.GenerateAsync(comando, ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("GerarEnderecos")
+            .WithSummary("Gera rua × módulo × nível × posição numa zona (até 5.000). Use simular para pré-visualizar.")
+            .Produces<GeracaoEnderecosResultado>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status409Conflict);
+
         escrita.MapPut("/{id:guid}", async (Guid id, DimensoesEnderecoComando comando, IEnderecoService enderecos, CancellationToken ct) =>
                 (await enderecos.UpdateAsync(id, comando, ct)).ToHttpResult(TypedResults.Ok))
             .WithName("AtualizarEndereco")

@@ -23,32 +23,23 @@ public static class SampleDataSeeder
         var frio = armazem.AddZona("FRIO", ClasseArmazenagem.Refrigerado);
 
         db.Armazens.Add(armazem);
-        db.Enderecos.AddRange(CreateEnderecos(seco, "A", modulos: 3, niveis: 3));
-        db.Enderecos.AddRange(CreateEnderecos(frio, "R", modulos: 2, niveis: 2));
+        db.Enderecos.AddRange(GeradorEnderecos.Gerar(seco, Plano("A", modulos: 3, niveis: 3)));
+        db.Enderecos.AddRange(GeradorEnderecos.Gerar(frio, Plano("R", modulos: 2, niveis: 2)));
 
         await db.SaveChangesAsync(cancellationToken);
         return true;
     }
 
-    private static IEnumerable<Endereco> CreateEnderecos(Zona zona, string rua, int modulos, int niveis)
-    {
-        for (var modulo = 1; modulo <= modulos; modulo++)
-        {
-            for (var nivel = 1; nivel <= niveis; nivel++)
-            {
-                yield return Endereco.Create(
-                    zona,
-                    rua,
-                    modulo,
-                    nivel,
-                    posicao: 1,
-                    new DimensoesEndereco(
-                        CapacidadePesoKg: 1000m,
-                        AlturaCm: 150m,
-                        LarguraCm: 120m,
-                        ProfundidadeCm: 100m,
-                        DistanciaExpedicao: modulo * 4m));
-            }
-        }
-    }
+    private static PlanoGeracaoEnderecos Plano(string rua, int modulos, int niveis) =>
+        new(
+            [rua],
+            new Faixa(1, modulos),
+            new Faixa(1, niveis),
+            new Faixa(1, 1),
+            CapacidadePesoKg: 1000m,
+            AlturaCm: 150m,
+            LarguraCm: 120m,
+            ProfundidadeCm: 100m,
+            DistanciaBase: 4m,
+            DistanciaPorModulo: 4m);
 }

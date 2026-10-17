@@ -14,6 +14,13 @@ public interface IEnderecoService
 
     Task<Result<EnderecoDetalhe>> CreateAsync(CriarEndereco comando, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Gera os endereços de rua × módulo × nível × posição numa zona, numa só transação.
+    /// Se algum código já existir no armazém, recusa (409), salvo com <see cref="GerarEnderecos.IgnorarExistentes"/>.
+    /// Com <see cref="GerarEnderecos.Simular"/>, calcula o resultado sem gravar.
+    /// </summary>
+    Task<Result<GeracaoEnderecosResultado>> GenerateAsync(GerarEnderecos comando, CancellationToken cancellationToken = default);
+
     /// <summary>Altera capacidade, medidas e distância. As coordenadas (e o código) não mudam.</summary>
     Task<Result<EnderecoDetalhe>> UpdateAsync(Guid id, DimensoesEnderecoComando comando, CancellationToken cancellationToken = default);
 
@@ -65,3 +72,32 @@ public sealed record CriarEndereco(
     decimal? LarguraCm,
     decimal? ProfundidadeCm,
     decimal? DistanciaExpedicao);
+
+public sealed record GerarEnderecos(
+    Guid? ZonaId,
+    IReadOnlyList<string>? Ruas,
+    int? ModuloInicial,
+    int? ModuloFinal,
+    int? NivelInicial,
+    int? NivelFinal,
+    int? PosicaoInicial,
+    int? PosicaoFinal,
+    decimal? CapacidadePesoKg,
+    decimal? AlturaCm,
+    decimal? LarguraCm,
+    decimal? ProfundidadeCm,
+    decimal? DistanciaBase,
+    decimal? DistanciaPorModulo,
+    bool IgnorarExistentes = false,
+    bool Simular = false);
+
+/// <param name="Total">Combinações do lote (rua × módulo × nível × posição).</param>
+/// <param name="CodigosExistentes">Até 50 códigos do lote que já existem no armazém.</param>
+/// <param name="Amostra">Até 10 dos códigos que seriam (ou foram) criados.</param>
+public sealed record GeracaoEnderecosResultado(
+    int Total,
+    int Criados,
+    int Ignorados,
+    bool Simulado,
+    IReadOnlyList<string> CodigosExistentes,
+    IReadOnlyList<string> Amostra);

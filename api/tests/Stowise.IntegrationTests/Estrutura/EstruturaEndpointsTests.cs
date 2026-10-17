@@ -37,6 +37,42 @@ public class EstruturaEndpointsTests(StowiseApiFactory factory) : IClassFixture<
     }
 
     [Fact]
+    public async Task Lote_above_the_limit_is_rejected_before_touching_the_database()
+    {
+        using var client = ClientWith(Perfis.Gestor);
+
+        var response = await client.PostAsJsonAsync("/api/v1/enderecos/lote", new
+        {
+            zonaId = Guid.NewGuid(),
+            ruas = new[] { "A", "B", "C", "D", "E", "F" },
+            moduloInicial = 1,
+            moduloFinal = 99,
+            nivelInicial = 1,
+            nivelFinal = 9,
+            posicaoInicial = 1,
+            posicaoFinal = 2,
+            capacidadePesoKg = 1000,
+            alturaCm = 150,
+            larguraCm = 120,
+            profundidadeCm = 100,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        Assert.Equal(["lote"], problem!.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task Lote_requires_gestao()
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var response = await client.PostAsJsonAsync("/api/v1/enderecos/lote", new { });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
     public async Task Invalid_zona_returns_field_errors()
     {
         using var client = ClientWith(Perfis.Admin);

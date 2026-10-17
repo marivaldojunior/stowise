@@ -100,6 +100,55 @@ internal sealed class EnderecoService(StowiseDbContext db) : IEnderecoService
         return ToDetalhe(endereco);
     }
 
+    public async Task<Result<GeracaoEnderecosResultado>> GenerateAsync(GerarEnderecos comando, CancellationToken cancellationToken = default)
+    {
+        var errors = EstruturaValidation.Validate(comando);
+        if (errors.Count > 0)
+        {
+            return AppError.Validation(errors);
+        }
+
+        var zona = await db.Zonas.AsNoTracking().FirstOrDefaultAsync(z => z.Id == comando.ZonaId, cancellationToken);
+        if (zona is null)
+        {
+            return AppError.Validation("zonaId", "Zona não encontrada.");
+        }
+
+        var gerados = GeradorEnderecos.Gerar(zona, EstruturaValidation.ToPlano(comando));
+        var codigos = gerados.Select(e => e.Codigo).ToList();
+        var existentes = await db.Enderecos.AsNoTracking()
+            .Where(e => e.ArmazemId == zona.ArmazemId && codigos.Contains(e.Codigo))
+            .Select(e => e.Codigo)
+            .ToListAsync(cancellationToken);
+        existentes.Sort(StringComparer.Ordinal);
+
+        var jaExistem = existentes.ToHashSet(StringComparer.Ordinal);
+        var novos = gerados.Where(e => !jaExistem.Contains(e.Codigo)).ToList();
+        var resultado = new GeracaoEnderecosResultado(
+            gerados.Count,
+            novos.Count,
+            existentes.Count,
+            comando.Simular,
+            [.. existentes.Take(50)],
+            [.. novos.Take(10).Select(e => e.Codigo)]);
+
+        if (comando.Simular)
+        {
+            return resultado;
+        }
+
+        if (existentes.Count > 0 && !comando.IgnorarExistentes)
+        {
+            return AppError.Conflict(
+                $"{existentes.Count} dos {gerados.Count} endereços já existem neste armazém (ex.: {string.Join(", ", existentes.Take(5))}). "
+                + "Use ignorarExistentes para criar só os que faltam.");
+        }
+
+        db.Enderecos.AddRange(novos);
+        await db.SaveChangesAsync(cancellationToken);
+        return resultado;
+    }
+
     public async Task<Result<EnderecoDetalhe>> UpdateAsync(Guid id, DimensoesEnderecoComando comando, CancellationToken cancellationToken = default)
     {
         var errors = EstruturaValidation.Validate(comando);

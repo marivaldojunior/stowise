@@ -120,6 +120,68 @@ public sealed class EstruturaFlowTests : IDisposable
         Assert.Equal(HttpStatusCode.NotFound, (await SendAsync(token, HttpMethod.Get, $"/api/v1/enderecos/{a03.Id}")).StatusCode);
     }
 
+    [DockerFact]
+    public async Task Lote_simulates_creates_refuses_overlap_and_can_skip_existing()
+    {
+        var token = await LoginAsync();
+        var cd = await CreateArmazemAsync(token, "CD02", "Centro Sul");
+        var seco = (await AddZonaAsync(token, cd.Id, "SECO", "Normal")).Zonas.Single();
+
+        var simulacao = await GerarLoteAsync(token, seco.Id, ruas: ["A", "B"], moduloFinal: 5, simular: true);
+        Assert.Equal(HttpStatusCode.OK, simulacao.StatusCode);
+        var previa = (await simulacao.Content.ReadFromJsonAsync<GeracaoEnderecosResultado>(Json))!;
+        Assert.True(previa.Simulado);
+        Assert.Equal(20, previa.Total);
+        Assert.Equal(20, previa.Criados);
+        Assert.Equal("A-01-01-1", previa.Amostra[0]);
+        Assert.Equal(0, (await GetAsync<PagedResult<EnderecoDetalhe>>(token, $"/api/v1/enderecos?armazemId={cd.Id}")).Total);
+
+        var criacao = await GerarLoteAsync(token, seco.Id, ruas: ["A", "B"], moduloFinal: 5);
+        Assert.Equal(HttpStatusCode.OK, criacao.StatusCode);
+        Assert.Equal(20, (await GetAsync<PagedResult<EnderecoDetalhe>>(token, $"/api/v1/enderecos?armazemId={cd.Id}")).Total);
+        var distante = await GetAsync<EnderecoDetalhe>(token, $"/api/v1/armazens/{cd.Id}/enderecos/codigo/A-05-02-1");
+        Assert.Equal(12m, distante.DistanciaExpedicao);
+
+        // Ampliar a rua B até o módulo 8 sobrepõe os módulos 1 a 5 já criados.
+        var sobreposto = await GerarLoteAsync(token, seco.Id, ruas: ["B"], moduloFinal: 8);
+        Assert.Equal(HttpStatusCode.Conflict, sobreposto.StatusCode);
+
+        var ampliado = await GerarLoteAsync(token, seco.Id, ruas: ["B"], moduloFinal: 8, ignorarExistentes: true);
+        Assert.Equal(HttpStatusCode.OK, ampliado.StatusCode);
+        var resultado = (await ampliado.Content.ReadFromJsonAsync<GeracaoEnderecosResultado>(Json))!;
+        Assert.Equal(6, resultado.Criados);
+        Assert.Equal(10, resultado.Ignorados);
+        Assert.Contains("B-01-01-1", resultado.CodigosExistentes);
+        Assert.Equal(26, (await GetAsync<PagedResult<EnderecoDetalhe>>(token, $"/api/v1/enderecos?armazemId={cd.Id}")).Total);
+    }
+
+    private Task<HttpResponseMessage> GerarLoteAsync(
+        string token,
+        Guid zonaId,
+        string[] ruas,
+        int moduloFinal,
+        bool simular = false,
+        bool ignorarExistentes = false) =>
+        SendAsync(token, HttpMethod.Post, "/api/v1/enderecos/lote", new
+        {
+            zonaId,
+            ruas,
+            moduloInicial = 1,
+            moduloFinal,
+            nivelInicial = 1,
+            nivelFinal = 2,
+            posicaoInicial = 1,
+            posicaoFinal = 1,
+            capacidadePesoKg = 1000,
+            alturaCm = 150,
+            larguraCm = 120,
+            profundidadeCm = 100,
+            distanciaBase = 4,
+            distanciaPorModulo = 2,
+            simular,
+            ignorarExistentes,
+        });
+
     private async Task<string> LoginAsync()
     {
         var response = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email = AdminEmail, senha = AdminPassword });
