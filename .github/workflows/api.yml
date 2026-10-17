@@ -40,7 +40,22 @@ jobs:
         env:
           # Testes com Testcontainers não podem ser pulados no CI
           STOWISE_REQUIRE_DOCKER: "true"
-        run: dotnet test --no-build -c Release --collect:"XPlat Code Coverage"
+        run: dotnet test --no-build -c Release --settings coverage.runsettings --results-directory TestResults
+
+      - name: Relatório de cobertura
+        if: success() || failure()
+        run: |
+          dotnet tool restore
+          dotnet reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:coverage-report -reporttypes:"MarkdownSummaryGithub;Html" -title:"Stowise API"
+          cat coverage-report/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publicar relatório de cobertura
+        if: success() || failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: api/coverage-report
+          retention-days: 14
 
   docker:
     runs-on: ubuntu-latest

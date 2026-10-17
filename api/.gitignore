@@ -480,3 +480,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Relatório de cobertura (ReportGenerator)
+coverage-report/

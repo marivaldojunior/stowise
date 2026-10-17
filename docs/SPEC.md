@@ -259,7 +259,7 @@ Regras de ordem:
 - [x] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks
 - [x] OpenAPI com Scalar e versionamento de rotas
 - [x] Contrato OpenAPI versionado no repositório e verificado no CI (o build falha se o contrato mudar sem atualização)
-- [ ] Projetos de teste: unidade e integração com Testcontainers
+- [x] Projetos de teste: unidade e integração com Testcontainers
 
 **1.2 API — Catálogo e estrutura física**
 

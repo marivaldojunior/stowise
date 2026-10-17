@@ -28,6 +28,10 @@ dotnet build
 dotnet test
 dotnet format --verify-no-changes
 
+# Cobertura (em api/): relatório HTML em coverage-report/index.html
+dotnet test --settings coverage.runsettings --results-directory TestResults
+dotnet reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:coverage-report -reporttypes:Html
+
 # Contrato OpenAPI: regrava api/openapi/v1.json após mudar endpoints (PowerShell, em api/)
 $env:STOWISE_UPDATE_CONTRACT='true'; dotnet test --filter OpenApiContract; Remove-Item Env:STOWISE_UPDATE_CONTRACT
 
