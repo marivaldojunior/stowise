@@ -1,4 +1,6 @@
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Stowise.Domain.Estrutura;
 using Stowise.Infrastructure.Persistence.Seed;
 using Stowise.IntegrationTests.Infrastructure;
@@ -20,6 +22,31 @@ public class DatabaseTests(PostgresFixture postgres)
             .ToListAsync();
         Assert.Contains("vector", extensions);
         Assert.Empty(await db.Database.GetPendingMigrationsAsync());
+    }
+
+    [DockerFact]
+    public async Task Address_migration_backfills_the_warehouse_of_existing_rows()
+    {
+        await using var db = PostgresFixture.CreateDbContext(postgres.CreateDatabaseConnectionString());
+        var migrator = db.GetService<IMigrator>();
+
+        // Banco na versão anterior, com um endereço que ainda não tem armazem_id.
+        await migrator.MigrateAsync("AddCatalogo");
+        var armazemId = Guid.CreateVersion7();
+        var zonaId = Guid.CreateVersion7();
+        await db.Database.ExecuteSqlAsync($"INSERT INTO armazens (id, codigo, nome) VALUES ({armazemId}, 'CD09', 'Antigo')");
+        await db.Database.ExecuteSqlAsync($"INSERT INTO zonas (id, armazem_id, codigo, classe_armazenagem) VALUES ({zonaId}, {armazemId}, 'SECO', 'Normal')");
+        await db.Database.ExecuteSqlAsync(
+            $"""
+            INSERT INTO enderecos (id, zona_id, codigo, rua, modulo, nivel, posicao, capacidade_peso_kg, altura_cm, largura_cm, profundidade_cm, distancia_expedicao, status)
+            VALUES ({Guid.CreateVersion7()}, {zonaId}, 'A-01-01-1', 'A', 1, 1, 1, 1000, 150, 120, 100, 4, 'Livre')
+            """);
+
+        await migrator.MigrateAsync();
+
+        var endereco = await db.Enderecos.AsNoTracking().SingleAsync();
+        Assert.Equal(armazemId, endereco.ArmazemId);
+        Assert.Equal(zonaId, endereco.ZonaId);
     }
 
     [DockerFact]

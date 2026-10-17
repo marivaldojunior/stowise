@@ -41,6 +41,7 @@ v1.MapAuthEndpoints();
 v1.MapUsuariosEndpoints();
 v1.MapCategoriasEndpoints();
 v1.MapProdutosEndpoints();
+v1.MapEstruturaEndpoints();
 
 await app.RunAsync();
 

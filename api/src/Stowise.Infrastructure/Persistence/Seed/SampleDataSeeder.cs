@@ -37,16 +37,17 @@ public static class SampleDataSeeder
             for (var nivel = 1; nivel <= niveis; nivel++)
             {
                 yield return Endereco.Create(
-                    zona.Id,
+                    zona,
                     rua,
                     modulo,
                     nivel,
                     posicao: 1,
-                    capacidadePesoKg: 1000m,
-                    alturaCm: 150m,
-                    larguraCm: 120m,
-                    profundidadeCm: 100m,
-                    distanciaExpedicao: modulo * 4m);
+                    new DimensoesEndereco(
+                        CapacidadePesoKg: 1000m,
+                        AlturaCm: 150m,
+                        LarguraCm: 120m,
+                        ProfundidadeCm: 100m,
+                        DistanciaExpedicao: modulo * 4m));
             }
         }
     }

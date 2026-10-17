@@ -12,8 +12,15 @@ internal sealed class EnderecoConfiguration : IEntityTypeConfiguration<Endereco>
         builder.Property(e => e.Rua).HasMaxLength(Endereco.RuaMaxLength);
         builder.Property(e => e.MotivoBloqueio).HasMaxLength(Endereco.MotivoBloqueioMaxLength);
 
-        builder.HasIndex(e => new { e.ZonaId, e.Codigo }).IsUnique();
+        // O código (A-03-02-1) é único no armazém, e não só na zona.
+        builder.HasIndex(e => new { e.ArmazemId, e.Codigo }).IsUnique();
+        builder.HasIndex(e => e.ZonaId);
         builder.HasIndex(e => e.Status);
+
+        builder.HasOne<Armazem>()
+            .WithMany()
+            .HasForeignKey(e => e.ArmazemId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne<Zona>()
             .WithMany()

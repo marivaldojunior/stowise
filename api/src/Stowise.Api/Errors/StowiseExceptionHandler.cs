@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Stowise.Domain.Common;
 
 namespace Stowise.Api.Errors;
@@ -25,6 +26,10 @@ public sealed class StowiseExceptionHandler(IProblemDetailsService problemDetail
                 e.StatusCode,
                 "Requisição inválida",
                 "O corpo ou os parâmetros da requisição estão em formato inválido."),
+            DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } => Problem(
+                StatusCodes.Status409Conflict,
+                "Registro duplicado",
+                "Outra operação gravou um valor que precisa ser único (código, SKU, GTIN...). Recarregue e tente de novo."),
             DbUpdateConcurrencyException => Problem(
                 StatusCodes.Status409Conflict,
                 "Conflito de concorrência",
@@ -51,7 +56,8 @@ public sealed class StowiseExceptionHandler(IProblemDetailsService problemDetail
 
     /// <summary>Exceções que viram 4xx não são erros do servidor: o middleware não precisa registrá-las como erro.</summary>
     public static bool IsClientError(Exception exception) =>
-        exception is DomainException or BadHttpRequestException or DbUpdateConcurrencyException;
+        exception is DomainException or BadHttpRequestException or DbUpdateConcurrencyException
+            or DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } };
 
     private static ProblemDetails Problem(int status, string title, string? detail) =>
         new() { Status = status, Title = title, Detail = detail };

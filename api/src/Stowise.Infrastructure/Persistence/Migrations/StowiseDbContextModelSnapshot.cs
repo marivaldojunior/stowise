@@ -156,7 +156,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stowise.Domain.Catalogo.Categoria", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -185,7 +184,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stowise.Domain.Catalogo.Produto", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -261,7 +259,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stowise.Domain.Catalogo.ProdutoEmbalagem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -326,7 +323,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stowise.Domain.Estrutura.Armazem", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -355,7 +351,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stowise.Domain.Estrutura.Endereco", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -363,6 +358,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("altura_cm");
+
+                    b.Property<Guid>("ArmazemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("armazem_id");
 
                     b.Property<decimal>("CapacidadePesoKg")
                         .HasPrecision(18, 4)
@@ -429,9 +428,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.HasIndex("Status")
                         .HasDatabaseName("ix_enderecos_status");
 
-                    b.HasIndex("ZonaId", "Codigo")
+                    b.HasIndex("ZonaId")
+                        .HasDatabaseName("ix_enderecos_zona_id");
+
+                    b.HasIndex("ArmazemId", "Codigo")
                         .IsUnique()
-                        .HasDatabaseName("ix_enderecos_zona_id_codigo");
+                        .HasDatabaseName("ix_enderecos_armazem_id_codigo");
 
                     b.ToTable("enderecos", (string)null);
                 });
@@ -439,7 +441,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Stowise.Domain.Estrutura.Zona", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
@@ -760,6 +761,13 @@ namespace Stowise.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("Stowise.Domain.Estrutura.Endereco", b =>
                 {
+                    b.HasOne("Stowise.Domain.Estrutura.Armazem", null)
+                        .WithMany()
+                        .HasForeignKey("ArmazemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_enderecos_armazens_armazem_id");
+
                     b.HasOne("Stowise.Domain.Estrutura.Zona", null)
                         .WithMany()
                         .HasForeignKey("ZonaId")

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Npgsql;
 using Stowise.Api.Errors;
 using Stowise.Domain.Common;
 
@@ -26,6 +27,29 @@ public class StowiseExceptionHandlerTests
         var (status, _) = await HandleAsync(new DbUpdateConcurrencyException("row changed"));
 
         Assert.Equal(StatusCodes.Status409Conflict, status);
+    }
+
+    [Fact]
+    public async Task Unique_violation_from_the_database_becomes_409()
+    {
+        var unique = new DbUpdateException("insert failed", new PostgresException("duplicate key", "ERROR", "ERROR", PostgresErrorCodes.UniqueViolation));
+
+        var (status, body) = await HandleAsync(unique);
+
+        Assert.Equal(StatusCodes.Status409Conflict, status);
+        Assert.Equal("Registro duplicado", body.GetProperty("title").GetString());
+        Assert.True(StowiseExceptionHandler.IsClientError(unique));
+    }
+
+    [Fact]
+    public async Task Other_database_errors_stay_500()
+    {
+        var other = new DbUpdateException("insert failed", new PostgresException("fk violation", "ERROR", "ERROR", PostgresErrorCodes.ForeignKeyViolation));
+
+        var (status, _) = await HandleAsync(other);
+
+        Assert.Equal(StatusCodes.Status500InternalServerError, status);
+        Assert.False(StowiseExceptionHandler.IsClientError(other));
     }
 
     [Fact]

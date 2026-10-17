@@ -46,4 +46,43 @@ public class ArmazemTests
         var ex = Assert.Throws<DomainException>(() => armazem.AddZona("seco", ClasseArmazenagem.Fragil));
         Assert.Contains("SECO", ex.Message, StringComparison.Ordinal);
     }
+
+    [Fact]
+    public void Rename_changes_nome_but_keeps_codigo()
+    {
+        var armazem = Armazem.Create("CD01", "Centro");
+
+        armazem.Rename("  Centro Norte  ");
+
+        Assert.Equal("Centro Norte", armazem.Nome);
+        Assert.Equal("CD01", armazem.Codigo);
+        Assert.Throws<DomainException>(() => armazem.Rename(" "));
+    }
+
+    [Fact]
+    public void UpdateZona_changes_codigo_and_classe_and_rejects_codigo_of_another_zone()
+    {
+        var armazem = Armazem.Create("CD01", "Centro");
+        var seco = armazem.AddZona("SECO", ClasseArmazenagem.Normal);
+        armazem.AddZona("FRIO", ClasseArmazenagem.Refrigerado);
+
+        armazem.UpdateZona(seco.Id, "seco-1", ClasseArmazenagem.Fragil);
+        Assert.Equal("SECO-1", seco.Codigo);
+        Assert.Equal(ClasseArmazenagem.Fragil, seco.ClasseArmazenagem);
+
+        armazem.UpdateZona(seco.Id, "SECO-1", ClasseArmazenagem.Normal);
+        Assert.Throws<DomainException>(() => armazem.UpdateZona(seco.Id, "frio", ClasseArmazenagem.Normal));
+    }
+
+    [Fact]
+    public void RemoveZona_removes_only_known_zones()
+    {
+        var armazem = Armazem.Create("CD01", "Centro");
+        var seco = armazem.AddZona("SECO", ClasseArmazenagem.Normal);
+
+        Assert.Throws<DomainException>(() => armazem.RemoveZona(Guid.NewGuid()));
+
+        armazem.RemoveZona(seco.Id);
+        Assert.Empty(armazem.Zonas);
+    }
 }

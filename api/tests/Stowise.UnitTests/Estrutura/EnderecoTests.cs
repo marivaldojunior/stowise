@@ -5,25 +5,24 @@ namespace Stowise.UnitTests.Estrutura;
 
 public class EnderecoTests
 {
-    private static readonly Guid ZonaId = Guid.CreateVersion7();
+    private static readonly Armazem Armazem = Armazem.Create("CD01", "Centro");
+    private static readonly Zona Zona = Armazem.AddZona("SECO", ClasseArmazenagem.Normal);
 
-    private static Endereco Create(
-        string rua = "A",
-        int modulo = 3,
-        int nivel = 2,
-        int posicao = 1,
-        decimal capacidade = 1000m,
-        decimal altura = 150m,
-        decimal distancia = 12m) =>
-        Endereco.Create(ZonaId, rua, modulo, nivel, posicao, capacidade, altura, 120m, 100m, distancia);
+    private static DimensoesEndereco Dimensoes(decimal capacidade = 1000m, decimal altura = 150m, decimal distancia = 12m) =>
+        new(capacidade, altura, 120m, 100m, distancia);
+
+    private static Endereco Create(string rua = "A", int modulo = 3, int nivel = 2, int posicao = 1, DimensoesEndereco? dimensoes = null) =>
+        Endereco.Create(Zona, rua, modulo, nivel, posicao, dimensoes ?? Dimensoes());
 
     [Fact]
-    public void Create_formats_codigo_as_rua_modulo_nivel_posicao()
+    public void Create_formats_codigo_and_takes_armazem_and_zona_from_the_zone()
     {
         var endereco = Create(rua: "a", modulo: 3, nivel: 2, posicao: 1);
 
         Assert.Equal("A-03-02-1", endereco.Codigo);
         Assert.Equal("A", endereco.Rua);
+        Assert.Equal(Zona.Id, endereco.ZonaId);
+        Assert.Equal(Armazem.Id, endereco.ArmazemId);
         Assert.Equal(StatusEndereco.Livre, endereco.Status);
         Assert.Null(endereco.MotivoBloqueio);
     }
@@ -52,21 +51,38 @@ public class EnderecoTests
     [Fact]
     public void Create_rejects_non_positive_capacity_and_dimensions()
     {
-        Assert.Throws<DomainException>(() => Create(capacidade: 0m));
-        Assert.Throws<DomainException>(() => Create(altura: -1m));
+        Assert.Throws<DomainException>(() => Create(dimensoes: Dimensoes(capacidade: 0m)));
+        Assert.Throws<DomainException>(() => Create(dimensoes: Dimensoes(altura: -1m)));
     }
 
     [Fact]
     public void Create_rejects_negative_distance_but_accepts_zero()
     {
-        Assert.Throws<DomainException>(() => Create(distancia: -0.5m));
-        Assert.Equal(0m, Create(distancia: 0m).DistanciaExpedicao);
+        Assert.Throws<DomainException>(() => Create(dimensoes: Dimensoes(distancia: -0.5m)));
+        Assert.Equal(0m, Create(dimensoes: Dimensoes(distancia: 0m)).DistanciaExpedicao);
     }
 
     [Fact]
-    public void Create_requires_zona()
+    public void UpdateDimensoes_changes_measures_and_keeps_codigo()
     {
-        Assert.Throws<DomainException>(() =>
-            Endereco.Create(Guid.Empty, "A", 1, 1, 1, 1000m, 150m, 120m, 100m, 0m));
+        var endereco = Create();
+
+        endereco.UpdateDimensoes(new DimensoesEndereco(800m, 200m, 100m, 90m, 30m));
+
+        Assert.Equal(800m, endereco.CapacidadePesoKg);
+        Assert.Equal(30m, endereco.DistanciaExpedicao);
+        Assert.Equal("A-03-02-1", endereco.Codigo);
+    }
+
+    [Theory]
+    [InlineData("A", true)]
+    [InlineData("aa", true)]
+    [InlineData("ABC", true)]
+    [InlineData("ABCD", false)]
+    [InlineData("A1", false)]
+    [InlineData(" ", false)]
+    public void IsValidRua_accepts_one_to_three_letters(string rua, bool valid)
+    {
+        Assert.Equal(valid, Endereco.IsValidRua(rua));
     }
 }

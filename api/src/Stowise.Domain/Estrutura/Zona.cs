@@ -14,8 +14,7 @@ public sealed class Zona : Entity
     internal Zona(Guid armazemId, string codigo, ClasseArmazenagem classe)
     {
         ArmazemId = armazemId;
-        Codigo = Guard.Required(codigo, "Código da zona", CodigoMaxLength).ToUpperInvariant();
-        ClasseArmazenagem = classe;
+        Update(codigo, classe);
     }
 
     public Guid ArmazemId { get; private set; }
@@ -23,4 +22,13 @@ public sealed class Zona : Entity
     public string Codigo { get; private set; } = null!;
 
     public ClasseArmazenagem ClasseArmazenagem { get; private set; }
+
+    internal static string NormalizeCodigo(string codigo) =>
+        Guard.Required(codigo, "Código da zona", CodigoMaxLength).ToUpperInvariant();
+
+    internal void Update(string codigo, ClasseArmazenagem classe)
+    {
+        Codigo = NormalizeCodigo(codigo);
+        ClasseArmazenagem = classe;
+    }
 }

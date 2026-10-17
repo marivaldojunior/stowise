@@ -3,16 +3,33 @@ using Stowise.Domain.Common;
 
 namespace Stowise.Domain.Estrutura;
 
-/// <summary>Posição física de armazenagem, identificada por rua, módulo, nível e posição (ex.: A-03-02-1).</summary>
+/// <summary>Capacidade, medidas internas e distância até a expedição de um endereço.</summary>
+/// <param name="DistanciaExpedicao">Em metros. Alimenta a regra de curva ABC.</param>
+public sealed record DimensoesEndereco(
+    decimal CapacidadePesoKg,
+    decimal AlturaCm,
+    decimal LarguraCm,
+    decimal ProfundidadeCm,
+    decimal DistanciaExpedicao);
+
+/// <summary>
+/// Posição física de armazenagem, identificada por rua, módulo, nível e posição (ex.: A-03-02-1).
+/// O código é único no armazém e não muda: para mudar as coordenadas, exclua e crie outro endereço.
+/// </summary>
 public sealed class Endereco : Entity
 {
     public const int CodigoMaxLength = 20;
     public const int RuaMaxLength = 3;
+    public const int ModuloMax = 99;
+    public const int NivelMax = 99;
+    public const int PosicaoMax = 9;
     public const int MotivoBloqueioMaxLength = 250;
 
     private Endereco()
     {
     }
+
+    public Guid ArmazemId { get; private set; }
 
     public Guid ZonaId { get; private set; }
 
@@ -41,45 +58,47 @@ public sealed class Endereco : Entity
 
     public string? MotivoBloqueio { get; private set; }
 
-    public static Endereco Create(
-        Guid zonaId,
-        string rua,
-        int modulo,
-        int nivel,
-        int posicao,
-        decimal capacidadePesoKg,
-        decimal alturaCm,
-        decimal larguraCm,
-        decimal profundidadeCm,
-        decimal distanciaExpedicao)
+    public static Endereco Create(Zona zona, string rua, int modulo, int nivel, int posicao, DimensoesEndereco dimensoes)
     {
-        if (zonaId == Guid.Empty)
-        {
-            throw new DomainException("A zona do endereço é obrigatória.");
-        }
+        ArgumentNullException.ThrowIfNull(zona);
 
         var ruaNormalizada = Guard.Required(rua, "Rua", RuaMaxLength).ToUpperInvariant();
-        if (!ruaNormalizada.All(char.IsAsciiLetterUpper))
+        if (!IsValidRua(ruaNormalizada))
         {
             throw new DomainException("Rua deve conter apenas letras (ex.: A, B, AA).");
         }
 
         var endereco = new Endereco
         {
-            ZonaId = zonaId,
+            ArmazemId = zona.ArmazemId,
+            ZonaId = zona.Id,
             Rua = ruaNormalizada,
-            Modulo = Guard.InRange(modulo, 1, 99, "Módulo"),
-            Nivel = Guard.InRange(nivel, 1, 99, "Nível"),
-            Posicao = Guard.InRange(posicao, 1, 9, "Posição"),
-            CapacidadePesoKg = Guard.Positive(capacidadePesoKg, "Capacidade de peso"),
-            AlturaCm = Guard.Positive(alturaCm, "Altura"),
-            LarguraCm = Guard.Positive(larguraCm, "Largura"),
-            ProfundidadeCm = Guard.Positive(profundidadeCm, "Profundidade"),
-            DistanciaExpedicao = Guard.NotNegative(distanciaExpedicao, "Distância até a expedição"),
+            Modulo = Guard.InRange(modulo, 1, ModuloMax, "Módulo"),
+            Nivel = Guard.InRange(nivel, 1, NivelMax, "Nível"),
+            Posicao = Guard.InRange(posicao, 1, PosicaoMax, "Posição"),
             Status = StatusEndereco.Livre,
         };
+        endereco.UpdateDimensoes(dimensoes);
         endereco.Codigo = FormatCodigo(endereco.Rua, endereco.Modulo, endereco.Nivel, endereco.Posicao);
         return endereco;
+    }
+
+    public void UpdateDimensoes(DimensoesEndereco dimensoes)
+    {
+        ArgumentNullException.ThrowIfNull(dimensoes);
+
+        CapacidadePesoKg = Guard.Positive(dimensoes.CapacidadePesoKg, "Capacidade de peso");
+        AlturaCm = Guard.Positive(dimensoes.AlturaCm, "Altura");
+        LarguraCm = Guard.Positive(dimensoes.LarguraCm, "Largura");
+        ProfundidadeCm = Guard.Positive(dimensoes.ProfundidadeCm, "Profundidade");
+        DistanciaExpedicao = Guard.NotNegative(dimensoes.DistanciaExpedicao, "Distância até a expedição");
+    }
+
+    /// <summary>De 1 a 3 letras (A, B, AA...).</summary>
+    public static bool IsValidRua(string? rua)
+    {
+        var trimmed = rua?.Trim();
+        return !string.IsNullOrEmpty(trimmed) && trimmed.Length <= RuaMaxLength && trimmed.All(char.IsAsciiLetter);
     }
 
     public static string FormatCodigo(string rua, int modulo, int nivel, int posicao) =>

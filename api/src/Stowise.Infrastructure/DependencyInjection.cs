@@ -6,8 +6,10 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stowise.Application.Auth;
 using Stowise.Application.Catalogo;
+using Stowise.Application.Estrutura;
 using Stowise.Application.Usuarios;
 using Stowise.Infrastructure.Catalogo;
+using Stowise.Infrastructure.Estrutura;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence;
 
@@ -35,6 +37,8 @@ public static class DependencyInjection
         services.AddScoped<DatabaseInitializer>();
         services.AddScoped<ICategoriaService, CategoriaService>();
         services.AddScoped<IProdutoService, ProdutoService>();
+        services.AddScoped<IArmazemService, ArmazemService>();
+        services.AddScoped<IEnderecoService, EnderecoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 
         services.AddIdentityAndJwt();

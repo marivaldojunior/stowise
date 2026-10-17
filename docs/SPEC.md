@@ -264,7 +264,7 @@ Regras de ordem:
 **1.2 API — Catálogo e estrutura física**
 
 - [x] CRUD de Produto, ProdutoEmbalagem e Categoria
-- [ ] CRUD de Armazém, Zona e Endereço
+- [x] CRUD de Armazém, Zona e Endereço
 - [ ] Geração de endereços em lote (rua × módulo × nível × posição)
 - [ ] Bloqueio e desbloqueio de endereço com motivo
 
