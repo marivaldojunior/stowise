@@ -24,6 +24,9 @@ public sealed class Saldo : Entity
 
     public decimal QuantidadeDisponivel => Quantidade - QuantidadeReservada;
 
+    /// <summary>Versão para concorrência otimista (<c>xmin</c>, ADR-0006).</summary>
+    public uint Versao { get; private set; }
+
     public static Saldo Create(Guid enderecoId, Guid produtoId, Guid? loteId) =>
         new() { EnderecoId = enderecoId, ProdutoId = produtoId, LoteId = loteId };
 

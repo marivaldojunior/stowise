@@ -5,7 +5,13 @@ using Stowise.Domain.Estrutura;
 namespace Stowise.Domain.Estoque;
 
 /// <summary>Quem registrou o movimento, de onde e quando (hora do aparelho e hora do servidor).</summary>
-public sealed record Registro(Guid UsuarioId, Guid? DispositivoId, DateTimeOffset OcorridoEm, DateTimeOffset RecebidoEm);
+/// <param name="IdempotencyKey">Chave gerada pelo cliente: a mesma operação reenviada não duplica o movimento (ADR-0006).</param>
+public sealed record Registro(
+    Guid UsuarioId,
+    Guid? DispositivoId,
+    DateTimeOffset OcorridoEm,
+    DateTimeOffset RecebidoEm,
+    Guid? IdempotencyKey = null);
 
 /// <summary>
 /// Livro-razão do estoque (ADR-0001): nunca é editado nem apagado. A quantidade é sempre positiva e na
@@ -45,6 +51,9 @@ public sealed class Movimentacao : Entity
 
     /// <summary>Hora em que o servidor recebeu a operação.</summary>
     public DateTimeOffset RecebidoEm { get; private set; }
+
+    /// <summary>Chave de idempotência do cliente; única quando informada.</summary>
+    public Guid? IdempotencyKey { get; private set; }
 
     /// <summary>Entrada no endereço de destino. Atualiza o saldo de destino.</summary>
     public static Movimentacao Entrada(
@@ -153,6 +162,7 @@ public sealed class Movimentacao : Entity
             DispositivoId = registro.DispositivoId,
             OcorridoEm = registro.OcorridoEm,
             RecebidoEm = registro.RecebidoEm,
+            IdempotencyKey = registro.IdempotencyKey,
         };
     }
 

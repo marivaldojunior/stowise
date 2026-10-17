@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
+using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
 using Stowise.Infrastructure.Persistence;
 
@@ -33,6 +34,33 @@ public class ModelTests
             .ToList();
 
         Assert.Empty(generated);
+    }
+
+    [Theory]
+    [InlineData(typeof(Saldo))]
+    [InlineData(typeof(Endereco))]
+    [InlineData(typeof(Produto))]
+    public void Concurrency_version_is_the_xmin_system_column(Type entityType)
+    {
+        using var db = CreateContext();
+
+        var versao = db.Model.FindEntityType(entityType)!.FindProperty("Versao")!;
+
+        Assert.Equal("xmin", versao.GetColumnName());
+        Assert.True(versao.IsConcurrencyToken);
+        Assert.Equal(ValueGenerated.OnAddOrUpdate, versao.ValueGenerated);
+    }
+
+    [Fact]
+    public void Idempotency_key_is_unique_in_the_ledger()
+    {
+        using var db = CreateContext();
+
+        var index = db.Model.FindEntityType(typeof(Movimentacao))!.GetIndexes()
+            .Single(i => i.Properties.Select(p => p.Name).SequenceEqual([nameof(Movimentacao.IdempotencyKey)]));
+
+        Assert.True(index.IsUnique);
+        Assert.Equal("ix_movimentacoes_idempotency_key", index.GetDatabaseName());
     }
 
     [Fact]

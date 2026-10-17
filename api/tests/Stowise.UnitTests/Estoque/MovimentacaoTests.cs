@@ -166,4 +166,16 @@ public class MovimentacaoTests
         endereco.SyncOcupacao(temSaldo: true);
         Assert.Equal(StatusEndereco.Bloqueado, endereco.Status);
     }
+
+    [Fact]
+    public void Idempotency_key_comes_from_the_request_metadata()
+    {
+        var produto = NovoProduto();
+        var endereco = NovoEndereco();
+        var chave = Guid.NewGuid();
+
+        var movimentacao = Movimentacao.Entrada(produto, null, endereco, SaldoDe(endereco, produto), 1m, Registro with { IdempotencyKey = chave }, null);
+
+        Assert.Equal(chave, movimentacao.IdempotencyKey);
+    }
 }

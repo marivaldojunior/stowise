@@ -218,6 +218,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 9. **Patrimônio separado do estoque**, com hierarquia de locais e livro-razão próprios ([ADR-0003](adr/0003-patrimonio-modulo-separado.md))
 10. **Camada de IA atrás da API**: chave só no servidor, saída estruturada e validada, timeout, retry e fallback, cota por usuário ([ADR-0004](adr/0004-camada-de-ia.md))
 11. **Autenticação com ASP.NET Core Identity e JWT próprio**, com refresh token rotativo e detecção de reuso ([ADR-0005](adr/0005-autenticacao.md))
+12. **Idempotência e concorrência no estoque**: chave do cliente única no livro-razão e `xmin` no Saldo e no Endereco, com nova tentativa ([ADR-0006](adr/0006-idempotencia-e-concorrencia.md))
 
 ## Plano de tarefas
 
@@ -271,7 +272,7 @@ Regras de ordem:
 **1.3 API — Estoque**
 
 - [x] Serviço de movimentação: grava Movimentacao e atualiza Saldo na mesma transação
-- [ ] Idempotência por `IdempotencyKey` e concorrência otimista (`xmin`)
+- [x] Idempotência por `IdempotencyKey` e concorrência otimista (`xmin`)
 - [ ] Transferência entre endereços e reservas
 - [ ] Consultas: saldo por produto, endereço e lote; extrato; saldo em uma data
 

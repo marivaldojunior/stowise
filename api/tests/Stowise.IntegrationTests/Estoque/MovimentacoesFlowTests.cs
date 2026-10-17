@@ -208,6 +208,69 @@ public sealed class MovimentacoesFlowTests : IAsyncLifetime
         Assert.Equal(5m, await SaldoAsync(_refrigerante.Id));
     }
 
+    [DockerFact]
+    public async Task Same_key_replays_the_original_without_moving_stock_again()
+    {
+        var chave = Guid.NewGuid();
+        var entrada = new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 4, idempotencyKey = chave };
+
+        var primeira = await SendAsync("/api/v1/movimentacoes/entradas", entrada);
+        var reenvio = await SendAsync("/api/v1/movimentacoes/entradas", entrada);
+
+        Assert.Equal(HttpStatusCode.Created, primeira.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, reenvio.StatusCode);
+        Assert.Equal("true", Assert.Single(reenvio.Headers.GetValues(MovimentacoesEndpoints.ReplayHeader)));
+        var original = (await primeira.Content.ReadFromJsonAsync<MovimentacaoDetalhe>(Json))!;
+        Assert.Equal(original.Id, (await reenvio.Content.ReadFromJsonAsync<MovimentacaoDetalhe>(Json))!.Id);
+        Assert.Equal(chave, original.IdempotencyKey);
+        Assert.Equal(4m, await SaldoAsync(_refrigerante.Id));
+
+        var outraOperacao = await SendAsync("/api/v1/movimentacoes/entradas", entrada with { quantidade = 5 });
+        Assert.Equal(HttpStatusCode.Conflict, outraOperacao.StatusCode);
+        Assert.Equal(4m, await SaldoAsync(_refrigerante.Id));
+    }
+
+    [DockerFact]
+    public async Task Replayed_exit_succeeds_even_after_the_stock_was_consumed()
+    {
+        await SendAsync("/api/v1/movimentacoes/entradas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 3 });
+        var saida = new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 3, idempotencyKey = Guid.NewGuid() };
+
+        Assert.Equal(HttpStatusCode.Created, (await SendAsync("/api/v1/movimentacoes/saidas", saida)).StatusCode);
+        var reenvio = await SendAsync("/api/v1/movimentacoes/saidas", saida);
+
+        Assert.Equal(HttpStatusCode.OK, reenvio.StatusCode);
+        Assert.Equal(0m, await SaldoAsync(_refrigerante.Id));
+    }
+
+    [DockerFact]
+    public async Task Concurrent_entries_on_the_same_balance_lose_no_update()
+    {
+        var respostas = await Task.WhenAll(Enumerable.Range(0, MovimentacaoConcorrencia).Select(_ =>
+            SendAsync("/api/v1/movimentacoes/entradas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 1 })));
+
+        Assert.All(respostas, r => Assert.Equal(HttpStatusCode.Created, r.StatusCode));
+        Assert.Equal(MovimentacaoConcorrencia, await SaldoAsync(_refrigerante.Id));
+        Assert.Equal(MovimentacaoConcorrencia, await QueryAsync(db => db.Movimentacoes.CountAsync()));
+    }
+
+    [DockerFact]
+    public async Task Concurrent_sends_with_the_same_key_record_a_single_movement()
+    {
+        var entrada = new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 2, idempotencyKey = Guid.NewGuid() };
+
+        var respostas = await Task.WhenAll(Enumerable.Range(0, MovimentacaoConcorrencia).Select(_ =>
+            SendAsync("/api/v1/movimentacoes/entradas", entrada)));
+
+        Assert.All(respostas, r => Assert.True(r.IsSuccessStatusCode, $"status {(int)r.StatusCode}"));
+        Assert.Single(respostas, r => r.StatusCode == HttpStatusCode.Created);
+        Assert.Equal(2m, await SaldoAsync(_refrigerante.Id));
+        Assert.Equal(1, await QueryAsync(db => db.Movimentacoes.CountAsync()));
+    }
+
+    /// <summary>Até 5 operações simultâneas no mesmo saldo terminam sem erro (ADR-0006).</summary>
+    private const int MovimentacaoConcorrencia = 5;
+
     private async Task<decimal> SaldoAsync(Guid produtoId) =>
         await QueryAsync(db => db.Saldos.Where(s => s.ProdutoId == produtoId && s.EnderecoId == _endereco.Id).SumAsync(s => s.Quantidade));
 

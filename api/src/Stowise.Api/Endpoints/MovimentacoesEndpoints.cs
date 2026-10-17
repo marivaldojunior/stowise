@@ -22,28 +22,34 @@ public static class MovimentacoesEndpoints
             .Produces<MovimentacaoDetalhe>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        group.MapPost("/entradas", async (RegistrarEntrada comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, CancellationToken ct) =>
-                Created(await movimentacoes.RegistrarEntradaAsync(comando, user.GetUsuarioId(), ct)))
+        group.MapPost("/entradas", async (RegistrarEntrada comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, HttpContext http, CancellationToken ct) =>
+                Registrada(await movimentacoes.RegistrarEntradaAsync(comando, user.GetUsuarioId(), ct), http))
             .WithName("RegistrarEntrada")
             .WithSummary("Entrada num endereço. Quantidade na embalagem informada (ou na unidade base).")
             .Produces<MovimentacaoDetalhe>(StatusCodes.Status201Created)
+            .Produces<MovimentacaoDetalhe>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
-        group.MapPost("/saidas", async (RegistrarSaida comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, CancellationToken ct) =>
-                Created(await movimentacoes.RegistrarSaidaAsync(comando, user.GetUsuarioId(), ct)))
+        group.MapPost("/saidas", async (RegistrarSaida comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, HttpContext http, CancellationToken ct) =>
+                Registrada(await movimentacoes.RegistrarSaidaAsync(comando, user.GetUsuarioId(), ct), http))
             .WithName("RegistrarSaida")
             .WithSummary("Saída de um endereço. Exige saldo disponível.")
             .Produces<MovimentacaoDetalhe>(StatusCodes.Status201Created)
+            .Produces<MovimentacaoDetalhe>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
-        group.MapPost("/ajustes", async (RegistrarAjuste comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, CancellationToken ct) =>
-                Created(await movimentacoes.RegistrarAjusteAsync(comando, user.GetUsuarioId(), ct)))
+        group.MapPost("/ajustes", async (RegistrarAjuste comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, HttpContext http, CancellationToken ct) =>
+                Registrada(await movimentacoes.RegistrarAjusteAsync(comando, user.GetUsuarioId(), ct), http))
             .WithName("RegistrarAjuste")
             .WithSummary("Correção do saldo com motivo. Só Admin e Gestor.")
             .RequireAuthorization(Politicas.Gestao)
             .Produces<MovimentacaoDetalhe>(StatusCodes.Status201Created)
+            .Produces<MovimentacaoDetalhe>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status403Forbidden)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
@@ -51,6 +57,19 @@ public static class MovimentacoesEndpoints
         return app;
     }
 
-    private static IResult Created(Application.Common.Result<MovimentacaoDetalhe> result) =>
-        result.ToHttpResult(m => TypedResults.CreatedAtRoute(m, ObterMovimentacaoRoute, new { id = m.Id }));
+    /// <summary>Cabeçalho que marca o reenvio de uma operação já gravada (ADR-0006).</summary>
+    public const string ReplayHeader = "Idempotent-Replayed";
+
+    /// <summary>201 para uma operação nova; 200 com o cabeçalho de reenvio quando a chave de idempotência já foi usada.</summary>
+    private static IResult Registrada(Application.Common.Result<MovimentacaoRegistrada> result, HttpContext http) =>
+        result.ToHttpResult(r =>
+        {
+            if (!r.Repetida)
+            {
+                return TypedResults.CreatedAtRoute(r.Movimentacao, ObterMovimentacaoRoute, new { id = r.Movimentacao.Id });
+            }
+
+            http.Response.Headers[ReplayHeader] = "true";
+            return TypedResults.Ok(r.Movimentacao);
+        });
 }

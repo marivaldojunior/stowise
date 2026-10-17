@@ -9,25 +9,30 @@ namespace Stowise.Infrastructure.Persistence.Configurations;
 
 internal sealed class LoteConfiguration : IEntityTypeConfiguration<Lote>
 {
+    public const string UniqueIndex = "ix_lotes_produto_id_numero";
+
     public void Configure(EntityTypeBuilder<Lote> builder)
     {
         builder.ToTable("lotes");
         builder.Property(l => l.Numero).HasMaxLength(Lote.NumeroMaxLength);
-        builder.HasIndex(l => new { l.ProdutoId, l.Numero }).IsUnique();
+        builder.HasIndex(l => new { l.ProdutoId, l.Numero }).IsUnique().HasDatabaseName(UniqueIndex);
         builder.HasOne<Produto>().WithMany().HasForeignKey(l => l.ProdutoId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 
 internal sealed class SaldoConfiguration : IEntityTypeConfiguration<Saldo>
 {
+    public const string UniqueIndex = "ix_saldos_endereco_id_produto_id_lote_id";
+
     public void Configure(EntityTypeBuilder<Saldo> builder)
     {
         builder.ToTable("saldos");
 
         // Um saldo por endereço + produto + lote; NULLS NOT DISTINCT cobre os produtos sem lote.
-        builder.HasIndex(s => new { s.EnderecoId, s.ProdutoId, s.LoteId }).IsUnique().AreNullsDistinct(false);
+        builder.HasIndex(s => new { s.EnderecoId, s.ProdutoId, s.LoteId }).IsUnique().AreNullsDistinct(false).HasDatabaseName(UniqueIndex);
         builder.HasIndex(s => s.ProdutoId);
         builder.Ignore(s => s.QuantidadeDisponivel);
+        builder.Property(s => s.Versao).IsRowVersion().HasColumnName("xmin");
         builder.ToTable(t => t.HasCheckConstraint("ck_saldos_quantidades", "quantidade >= 0 AND quantidade_reservada >= 0 AND quantidade_reservada <= quantidade"));
 
         builder.HasOne<Endereco>().WithMany().HasForeignKey(s => s.EnderecoId).OnDelete(DeleteBehavior.Restrict);
@@ -38,6 +43,8 @@ internal sealed class SaldoConfiguration : IEntityTypeConfiguration<Saldo>
 
 internal sealed class MovimentacaoConfiguration : IEntityTypeConfiguration<Movimentacao>
 {
+    public const string IdempotencyKeyIndex = "ix_movimentacoes_idempotency_key";
+
     public void Configure(EntityTypeBuilder<Movimentacao> builder)
     {
         builder.ToTable("movimentacoes");
@@ -49,6 +56,7 @@ internal sealed class MovimentacaoConfiguration : IEntityTypeConfiguration<Movim
         builder.HasIndex(m => m.EnderecoOrigemId);
         builder.HasIndex(m => m.EnderecoDestinoId);
         builder.HasIndex(m => m.LoteId);
+        builder.HasIndex(m => m.IdempotencyKey).IsUnique().HasDatabaseName(IdempotencyKeyIndex);
 
         builder.HasOne<Produto>().WithMany().HasForeignKey(m => m.ProdutoId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Lote>().WithMany().HasForeignKey(m => m.LoteId).OnDelete(DeleteBehavior.Restrict);

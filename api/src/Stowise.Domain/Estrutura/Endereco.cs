@@ -63,6 +63,9 @@ public sealed class Endereco : Entity
     /// <summary>Usuário que bloqueou o endereço.</summary>
     public Guid? BloqueadoPor { get; private set; }
 
+    /// <summary>Versão para concorrência otimista (<c>xmin</c>): movimentações simultâneas atualizam a ocupação.</summary>
+    public uint Versao { get; private set; }
+
     public static Endereco Create(Zona zona, string rua, int modulo, int nivel, int posicao, DimensoesEndereco dimensoes)
     {
         ArgumentNullException.ThrowIfNull(zona);

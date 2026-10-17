@@ -377,6 +377,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("endereco_origem_id");
 
+                    b.Property<Guid?>("IdempotencyKey")
+                        .HasColumnType("uuid")
+                        .HasColumnName("idempotency_key");
+
                     b.Property<Guid?>("LoteId")
                         .HasColumnType("uuid")
                         .HasColumnName("lote_id");
@@ -422,6 +426,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.HasIndex("EnderecoOrigemId")
                         .HasDatabaseName("ix_movimentacoes_endereco_origem_id");
 
+                    b.HasIndex("IdempotencyKey")
+                        .IsUnique()
+                        .HasDatabaseName("ix_movimentacoes_idempotency_key");
+
                     b.HasIndex("LoteId")
                         .HasDatabaseName("ix_movimentacoes_lote_id");
 
@@ -464,6 +472,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantidade_reservada");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id")
                         .HasName("pk_saldos");
@@ -591,6 +605,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.Property<Guid>("ZonaId")
                         .HasColumnType("uuid")
