@@ -2,7 +2,7 @@
 
 ## Fluxo por tarefa
 
-1. Escolha a próxima tarefa aberta do plano em [`docs/SPEC.md`](docs/SPEC.md), respeitando a ordem das fases.
+1. Escolha a próxima tarefa aberta do plano em [`docs/SPEC.md`](docs/SPEC.md), respeitando a ordem dos marcos.
 2. Crie um branch `<tipo>/<descricao-curta>` (ex.: `feat/servico-movimentacao`).
 3. Escreva um plano curto, implemente **com testes** e rode build, testes e lint da pasta afetada.
 4. Marque a tarefa como concluída no `SPEC.md` e abra o PR usando o template.

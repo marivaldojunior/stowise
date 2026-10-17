@@ -2,7 +2,7 @@
 
 <!-- Resumo da tarefa do plano (docs/SPEC.md) que este PR entrega. -->
 
-Tarefa: Fase _ · _._ — _
+Tarefa: Marco _ · _._ — _
 
 ## Como testar
 

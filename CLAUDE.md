@@ -4,10 +4,11 @@ Inventário e armazenagem com IA: API .NET 10 (`api/`), painel React + TypeScrip
 
 ## Regras
 
-- Trabalhe **uma tarefa do plano por vez**, na ordem das fases, e marque-a (`- [x]`) no `SPEC.md` ao concluir.
+- Trabalhe **uma tarefa do plano por vez**, na ordem dos marcos, e marque-a (`- [x]`) no `SPEC.md` ao concluir.
 - Toda tarefa entra com testes; regra de negócio sem teste não está concluída.
 - **Nunca altere Saldo diretamente**: toda mudança de estoque passa pelo serviço de movimentação ([ADR-0001](docs/adr/0001-livro-razao-saldo-projetado.md)).
 - **IA só sugere**: nenhum fluxo grava resultado de IA sem confirmação humana. Decisões de armazenagem são algorítmicas, sem LLM.
+- **IA só pela API** ([ADR-0004](docs/adr/0004-camada-de-ia.md)): a chave do provedor fica no servidor; Flutter e React nunca chamam o provedor. Toda saída de IA tem JSON Schema e é validada, e toda chamada tem timeout, retry, fallback e registro em `ChamadaIa`.
 - Decisão de arquitetura nova vira um ADR em `docs/adr/` (use o modelo `0000-modelo.md`).
 - Nomes de domínio em português (`Produto`, `Endereco`, `Movimentacao`); código e infraestrutura em inglês (`ProdutoRepository`, `MovimentacaoService`).
 - Commits em Conventional Commits, um por tarefa — veja [`CONTRIBUTING.md`](CONTRIBUTING.md).
@@ -17,7 +18,7 @@ Inventário e armazenagem com IA: API .NET 10 (`api/`), painel React + TypeScrip
 1. Apresente um plano curto antes de codar.
 2. Implemente com testes.
 3. Rode build, testes e lint da pasta afetada (abaixo).
-4. Abra o PR com o template de `.github/pull_request_template.md`.
+4. Faça o commit direto na `main`, um por tarefa. Por enquanto, o projeto não usa branches por tarefa nem PR. Não faça `git push` sem pedido do usuário.
 
 ## Comandos
 

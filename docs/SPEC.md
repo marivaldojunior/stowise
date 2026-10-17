@@ -8,16 +8,19 @@ Stowise é um sistema de inventário e armazenagem com app Flutter, dashboard Re
 
 | Parte | Responsabilidade |
 | --- | --- |
-| Flutter (app de campo) | Contagem offline-first, leitura de código de barras on-device, conferência de recebimento, confirmação de endereço; plugin Kotlin para coletores Zebra/Honeywell |
+| Flutter (app de campo) | Contagem offline-first, leitura de código de barras on-device, conferência de recebimento, confirmação de endereço, cadastro de produto por foto; plugin Kotlin para coletores Zebra/Honeywell |
 | .NET 10 (API) | Catálogo, estoque, recebimento, importação, motor de armazenagem, patrimônio, camada de IA isolada e plugável |
-| React + TypeScript (gestão) | Revisão de importações, divergências, aprovação de ajustes, mapa de ocupação, configuração de regras, conciliação do inventário patrimonial, consultas em linguagem natural |
+| React + TypeScript (gestão) | Revisão de importações, divergências, aprovação de ajustes, mapa de ocupação, configuração de regras, conciliação do inventário patrimonial, gestão de usuários, consultas em linguagem natural |
 
 Funcionalidades centrais:
 
 - **Importação inteligente** de CSV, TXT (delimitado ou posicional), Excel e XML de NF-e: a IA mapeia colunas e casa itens com o catálogo; a importação em si é determinística, com staging e revisão.
 - **Armazenagem inteligente**: motor de pontuação com regras configuráveis (capacidade, zona, curva ABC, FEFO, consolidação) e explicação de cada sugestão. Sem LLM na decisão.
 - **Contagem assistida por câmera**, com nível de confiança e aprovação antes de ajustar o saldo.
-- **Inventário patrimonial** (extensão, Fase 4): conferência de bens por plaqueta, local, responsável e estado de conservação, com conciliação aprovada por uma pessoa.
+- **Cadastro por foto** no app: a IA sugere descrição, categoria e atributos; o operador revisa antes de gravar.
+- **Busca semântica de produtos**: busca híbrida (texto + embeddings no pgvector), sem banco vetorial separado.
+- **Perguntas sobre documentos** (extensão, Marco 6): RAG sobre manuais, notas e laudos de lote, com citação da fonte.
+- **Inventário patrimonial** (extensão, Marco 5): conferência de bens por plaqueta, local, responsável e estado de conservação, com conciliação aprovada por uma pessoa.
 
 Banco: **PostgreSQL**, com `jsonb` para o staging e **pgvector** para busca de produtos e bens similares.
 
@@ -41,10 +44,11 @@ stowise/
 
 **Regras para o agente**
 
-- Trabalhar uma tarefa do plano por vez, na ordem das fases, e marcar a tarefa ao concluir
+- Trabalhar uma tarefa do plano por vez, na ordem dos marcos, e marcar a tarefa ao concluir
 - Toda tarefa entra com testes; regra de negócio sem teste não é considerada concluída
 - Nunca alterar Saldo diretamente: toda mudança de estoque passa pelo serviço de movimentação
 - IA só sugere: nenhum fluxo grava resultado de IA sem confirmação humana
+- IA só pela API: a chave do provedor fica no servidor; Flutter e React nunca chamam o provedor ([ADR-0004](adr/0004-camada-de-ia.md))
 - Decisão de arquitetura nova vira um ADR em `docs/adr/`
 - Nomes de domínio em português (Produto, Endereco, Movimentacao); código e infraestrutura em inglês
 - Commits no padrão Conventional Commits, um por tarefa
@@ -146,7 +150,8 @@ Uma contagem aprovada gera uma Movimentacao do tipo Ajuste; a IA nunca mexe no s
 | --- | --- | --- |
 | Inventario | `Id`, `Tipo`, `ZonaId`, `Status`, `AbertoEm`, `FechadoEm` | `Tipo`: Geral ou Rotativo |
 | Contagem | `Id`, `InventarioId`, `EnderecoId`, `ProdutoId`, `LoteId`, `QuantidadeContada`, `QuantidadeSistema`, `Origem`, `ConfiancaIa`, `ImagemUrl`, `Status`, `UsuarioId`, `IdempotencyKey` | `QuantidadeSistema` é snapshot. `Origem`: Manual, Código de barras, Câmera. `Status`: Pendente, Aprovada, Rejeitada |
-| ChamadaIa | `Id`, `Funcionalidade`, `Provedor`, `Modelo`, `PromptVersao`, `TokensEntrada`, `TokensSaida`, `CustoEstimado`, `LatenciaMs`, `Sucesso`, `CorrelacaoId` | `Funcionalidade`: Mapeamento, Casamento de itens, Câmera, Consulta, Leitura de plaqueta, Estado de conservação, Casamento de bens. Base para controle de custo e comparação de prompts |
+| ChamadaIa | `Id`, `Funcionalidade`, `UsuarioId`, `Provedor`, `Modelo`, `PromptVersao`, `TokensEntrada`, `TokensSaida`, `CustoEstimado`, `LatenciaMs`, `Tentativas`, `UsouFallback`, `Sucesso`, `Erro`, `CorrelacaoId` | `Funcionalidade`: Mapeamento, Casamento de itens, Câmera, Cadastro por foto, Consulta, Embeddings, Documentos, Leitura de plaqueta, Estado de conservação, Casamento de bens. Base para controle de custo, cota por usuário e comparação de prompts |
+| CotaIa | `Id`, `Perfil`, `UsuarioId`, `Funcionalidade`, `LimiteChamadasDia`, `LimiteTokensMes` | Cota por perfil, com exceção opcional por usuário. Acima do limite, a API recusa a chamada (HTTP 429) e o fluxo segue sem IA |
 
 ### 7. Patrimônio
 
@@ -189,6 +194,17 @@ Regras do inventário patrimonial:
 - Sugestão de estado de conservação a partir da foto, com confiança
 - Casamento de sobra com bens cadastrados por descrição e foto (pgvector)
 
+### 8. Documentos (RAG)
+
+Perguntas em linguagem natural sobre manuais, notas fiscais e laudos de lote. A resposta sempre cita a fonte (documento e página) e diz quando não encontrou a informação. Usa o mesmo pgvector do catálogo, sem banco vetorial separado.
+
+| Entidade | Campos principais | Observações |
+| --- | --- | --- |
+| Documento | `Id`, `Titulo`, `Tipo`, `ArquivoUrl`, `HashArquivo`, `ProdutoId`, `LoteId`, `FornecedorId`, `RecebimentoId`, `PerfisPermitidos`, `Status`, `EnviadoPor`, `EnviadoEm` | `Tipo`: Manual, Nota fiscal, Laudo, Ficha técnica, Outro. `Status`: Recebido, Processando, Indexado, Falhou. O XML de NF-e já guardado no Recebimento entra como documento |
+| DocumentoTrecho | `Id`, `DocumentoId`, `Ordem`, `Pagina`, `Texto`, `Vetor`, `Modelo`, `BuscaTexto` | `BuscaTexto` é `tsvector` para a busca híbrida. Trechos são regenerados ao trocar de modelo |
+
+Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e a resposta sem trecho de apoio é "não encontrei", nunca uma resposta inventada.
+
 ## Decisões de arquitetura (ADRs)
 
 1. **Livro-razão + saldo projetado**, em vez de um campo de quantidade editável
@@ -200,12 +216,29 @@ Regras do inventário patrimonial:
 7. **IA só sugere**: mapeamento, casamento de itens e contagem sempre passam por confirmação humana; decisões de armazenagem são algorítmicas
 8. **Aprendizado por confirmação**: templates de importação e de-para de fornecedor reduzem chamadas de IA a cada uso
 9. **Patrimônio separado do estoque**, com hierarquia de locais e livro-razão próprios ([ADR-0003](adr/0003-patrimonio-modulo-separado.md))
+10. **Camada de IA atrás da API**: chave só no servidor, saída estruturada e validada, timeout, retry e fallback, cota por usuário ([ADR-0004](adr/0004-camada-de-ia.md))
 
 ## Plano de tarefas
 
-Ordem: fundação do repositório, API .NET, Web React, App Flutter e fechamento do portfólio; depois, a extensão de Patrimônio (Fase 4), que reaproveita a infraestrutura das fases anteriores. Dentro de cada fase, as tarefas seguem a ordem de dependência; a IA entra depois que o fluxo sem IA já funciona.
+O plano é dividido em **marcos**. Cada marco é uma fatia vertical (API, Web e App) que termina com uma entrega demonstrável: deploy de demonstração atualizado, README atualizado e uma versão marcada com tag.
 
-### Fase 0 — Fundação do repositório
+| Marco | Objetivo | O que a demonstração mostra | Versão |
+| --- | --- | --- | --- |
+| 0 | Fundação do repositório | CI por pasta e ambiente local com Docker | — |
+| 1 | MVP: catálogo, endereços, estoque e importação com IA | Importar uma planilha com mapeamento sugerido pela IA, movimentar estoque pelo app e ver o saldo no painel | v0.1.0 |
+| 2 | NF-e, recebimento e armazenagem inteligente | XML de NF-e → conferência no app → sugestão de endereço com explicação | v0.2.0 |
+| 3 | Inventário e modo offline | Contagem offline, inclusive por câmera, sincronização e aprovação do ajuste | v0.3.0 |
+| 4 | IA avançada | Cadastro por foto, busca semântica, chat de consulta e painel de custo da IA | v1.0.0 |
+| 5 | Patrimônio (extensão) | Importação de bens → inventário patrimonial → conciliação | v1.1.0 |
+| 6 | Perguntas sobre documentos (extensão) | Pergunta sobre um manual ou lote, com citação da fonte | v1.2.0 |
+
+Regras de ordem:
+
+- Os marcos seguem a ordem da tabela. Um marco só começa depois da entrega do marco anterior.
+- Dentro de cada marco, a ordem é API, Web, App e Entrega; dentro de cada bloco, as tarefas seguem a ordem de dependência.
+- A IA entra depois que o fluxo sem IA já funciona.
+
+### Marco 0 — Fundação do repositório
 
 - [x] Criar o monorepo com as pastas `api/`, `web/`, `mobile/` e `docs/adr/`
 - [x] `docker-compose` com PostgreSQL + pgvector e a API
@@ -213,46 +246,88 @@ Ordem: fundação do repositório, API .NET, Web React, App Flutter e fechamento
 - [x] README inicial, `CLAUDE.md`, `docs/SPEC.md` e ADR-001 (livro-razão + saldo projetado)
 - [x] Convenção de commits e template de PR
 
-### Fase 1 — API .NET 10
+### Marco 1 — MVP: catálogo, endereços, estoque e importação com IA
 
-**1.1 Fundação**
+**1.1 API — Fundação**
 
 - [x] Solução em camadas (Domain, Application, Infrastructure, Api) ou vertical slices
 - [ ] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
-- [ ] Autenticação JWT com refresh token e perfis (Admin, Gestor, Operador)
-- [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry e health checks
+- [ ] ADR de autenticação (ASP.NET Core Identity × Keycloak)
+- [ ] Autenticação JWT com refresh token rotativo e perfis (Admin, Gestor, Operador)
+- [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks
 - [ ] OpenAPI com Scalar e versionamento de rotas
+- [ ] Contrato OpenAPI versionado no repositório e verificado no CI (o build falha se o contrato mudar sem atualização)
 - [ ] Projetos de teste: unidade e integração com Testcontainers
 
-**1.2 Catálogo**
+**1.2 API — Catálogo e estrutura física**
 
-- [ ] CRUD de Produto, ProdutoEmbalagem, Categoria e Fornecedor
-- [ ] `StatusCadastro` e endpoint da fila de cadastros incompletos
-- [ ] CRUD do de-para ProdutoFornecedor
-
-**1.3 Estrutura física**
-
+- [ ] CRUD de Produto, ProdutoEmbalagem e Categoria
 - [ ] CRUD de Armazém, Zona e Endereço
 - [ ] Geração de endereços em lote (rua × módulo × nível × posição)
 - [ ] Bloqueio e desbloqueio de endereço com motivo
 
-**1.4 Estoque**
+**1.3 API — Estoque**
 
 - [ ] Serviço de movimentação: grava Movimentacao e atualiza Saldo na mesma transação
 - [ ] Idempotência por `IdempotencyKey` e concorrência otimista (`xmin`)
 - [ ] Transferência entre endereços e reservas
 - [ ] Consultas: saldo por produto, endereço e lote; extrato; saldo em uma data
 
-**1.5 Importação de produtos**
+**1.4 API — Importação de produtos com IA**
 
 - [ ] Upload com detecção de encoding, delimitador, separador decimal e layout posicional
 - [ ] Fingerprint do cabeçalho e templates de importação
 - [ ] Staging, validações determinísticas (GTIN, NCM, unidades) e máquina de estados
-- [ ] Processamento em background, progresso via SignalR, bulk insert e relatório final
-- [ ] Camada de IA plugável (Microsoft.Extensions.AI) com registro em ChamadaIa
-- [ ] Sugestão de mapeamento de colunas por IA (cabeçalho + amostra)
+- [ ] ADR de jobs em background (fila durável, retry e agendamento)
+- [ ] Processamento em background com status e progresso consultáveis por endpoint e por SignalR, bulk insert e relatório final
+- [ ] Camada de IA plugável (Microsoft.Extensions.AI) com registro em ChamadaIa, conforme o ADR-0004
+- [ ] Resiliência da IA: timeout, retry com backoff e fallback de provedor; sem IA disponível, o fluxo segue manual
+- [ ] Saídas estruturadas: JSON Schema por funcionalidade, validação e rejeição de resposta inválida
+- [ ] Cota de IA por perfil e por usuário (CotaIa), com HTTP 429 acima do limite
+- [ ] Sugestão de mapeamento de colunas e de regras de normalização (data, decimal, unidade) por IA, a partir do cabeçalho + amostra; a aplicação das regras é determinística
 
-**1.6 NF-e**
+**1.5 Web — Fundação, cadastros, estoque e importação**
+
+- [ ] Vite + TypeScript, React Router e TanStack Query
+- [ ] Cliente da API gerado a partir do OpenAPI (orval)
+- [ ] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
+- [ ] Login, renovação de token e rotas protegidas por perfil
+- [ ] Gestão de usuários e perfis (Admin)
+- [ ] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
+- [ ] Catálogo: lista com filtros, formulário de produto e embalagens
+- [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
+- [ ] Saldos e extrato de movimentações
+- [ ] Upload de arquivo e revisão do mapeamento sugerido
+- [ ] Prévia com erros linha a linha e progresso em tempo real
+
+**1.6 App — Fundação, movimentação e consulta**
+
+- [ ] Projeto com flavors (dev/prod), arquitetura em camadas, Riverpod ou Bloc e go\_router
+- [ ] Cliente da API gerado a partir do contrato OpenAPI (openapi-generator, dart-dio)
+- [ ] Autenticação e armazenamento seguro de tokens
+- [ ] Testes de unidade, widget, golden e integração
+- [ ] Leitura de código de barras on-device (ML Kit)
+- [ ] Movimentação online: entrada, saída e transferência, com leitura do código do produto e do endereço
+- [ ] Consulta de saldo por produto e por endereço
+- [ ] APK de demonstração gerado pelo CI como artefato
+
+**1.7 Entrega**
+
+- [ ] Deploy de demonstração da API e da Web, com dados de exemplo e usuário de teste
+- [ ] README com diagrama de arquitetura, como rodar localmente, links para os ADRs e badges de CI
+- [ ] Seção "Decisões técnicas" no README, com os trade-offs de cada ADR em uma linha
+- [ ] GIF curto de cada cliente (Web e App) no README
+- [ ] Tag `v0.1.0` com notas de release
+- [ ] Repositório fixado no perfil do GitHub
+
+### Marco 2 — NF-e, recebimento e armazenagem inteligente
+
+**2.1 API — Fornecedores e cadastros incompletos**
+
+- [ ] CRUD de Fornecedor e do de-para ProdutoFornecedor
+- [ ] `StatusCadastro` e endpoint da fila de cadastros incompletos
+
+**2.2 API — NF-e**
 
 - [ ] Parser do XML 4.00 com validação de XSD e dígito da chave de acesso
 - [ ] Job de embeddings de produtos e busca de similares
@@ -260,100 +335,91 @@ Ordem: fundação do repositório, API .NET, Web React, App Flutter e fechamento
 - [ ] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`)
 - [ ] Efetivação: cria produtos, de-para, Recebimento e itens
 
-**1.7 Recebimento e armazenagem**
+**2.3 API — Recebimento e armazenagem**
 
 - [ ] Fluxo de status do recebimento e conferência
 - [ ] Motor de pontuação: interface de regra e regras de capacidade, zona, curva ABC, FEFO e consolidação
 - [ ] Geração de TarefaArmazenagem com snapshot da pontuação; confirmação e divergência
 - [ ] Job de recálculo da curva ABC
 
-**1.8 Inventário**
+**2.4 Web — NF-e e operação**
+
+- [ ] Fila de cadastros incompletos
+- [ ] Upload de NF-e e revisão do casamento de itens com as sugestões
+- [ ] Recebimentos e acompanhamento das tarefas de armazenagem
+- [ ] Tela de divergências de armazenagem
+- [ ] Configuração dos pesos das regras de armazenagem
+
+**2.5 App — Recebimento e armazenagem**
+
+- [ ] Plugin Kotlin para coletores Zebra (DataWedge) via platform channel
+- [ ] Conferência de recebimento: bipagem, quantidade, lote, validade e captura de medidas
+- [ ] Armazenagem: recebe a sugestão, bipa o endereço e registra divergência com motivo
+
+**2.6 Entrega**
+
+- [ ] Deploy de demonstração atualizado com notas fiscais de exemplo
+- [ ] GIF do fluxo NF-e → recebimento → armazenagem no README
+- [ ] Tag `v0.2.0` com notas de release
+
+### Marco 3 — Inventário e modo offline
+
+**3.1 API — Inventário**
 
 - [ ] Abertura e fechamento de inventário; registro de contagens
 - [ ] Aprovação e rejeição de contagem, gerando Ajuste
 - [ ] Endpoint de sincronização offline (lote de operações idempotentes)
 - [ ] Contagem por imagem: IA sugere item e quantidade com confiança
 
-**1.9 IA avançada**
+**3.2 Web — Inventário**
 
-- [ ] Consulta em linguagem natural com tool calling sobre endpoints somente leitura
-- [ ] Conjunto de avaliação (arquivos e imagens de teste) rodando no CI
-- [ ] Rate limit, cache e relatório de custo por funcionalidade
-
-### Fase 2 — Web React
-
-**2.1 Fundação**
-
-- [ ] Vite + TypeScript, React Router e TanStack Query
-- [ ] Cliente da API gerado a partir do OpenAPI (orval)
-- [ ] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
-- [ ] Login, renovação de token e rotas protegidas por perfil
-- [ ] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
-
-**2.2 Cadastros e estoque**
-
-- [ ] Catálogo: lista com filtros, formulário de produto e embalagens
-- [ ] Fila de cadastros incompletos
-- [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
-- [ ] Saldos e extrato de movimentações
-
-**2.3 Importação e NF-e**
-
-- [ ] Upload de arquivo e revisão do mapeamento sugerido
-- [ ] Prévia com erros linha a linha e progresso em tempo real
-- [ ] Upload de NF-e e revisão do casamento de itens com as sugestões
-
-**2.4 Operação**
-
-- [ ] Recebimentos e acompanhamento das tarefas de armazenagem
-- [ ] Tela de divergências (armazenagem e inventário)
-- [ ] Configuração dos pesos das regras de armazenagem
+- [ ] Tela de divergências de inventário
 - [ ] Aprovação de contagens com foto e nível de confiança
 
-**2.5 IA**
+**3.3 App — Inventário e offline**
 
-- [ ] Chat de consulta em linguagem natural
-- [ ] Painel de uso de IA: chamadas, custo e latência por funcionalidade
-
-### Fase 3 — App Flutter
-
-**3.1 Fundação**
-
-- [ ] Projeto com flavors (dev/prod), arquitetura em camadas, Riverpod ou Bloc e go\_router
 - [ ] Banco local (Drift) e fila de sincronização com `IdempotencyKey`
-- [ ] Autenticação e armazenamento seguro de tokens
-- [ ] Testes de unidade, widget, golden e integração
-
-**3.2 Leitura e hardware**
-
-- [ ] Leitura de código de barras on-device (ML Kit)
-- [ ] Plugin Kotlin para coletores Zebra (DataWedge) via platform channel
-
-**3.3 Operação**
-
-- [ ] Conferência de recebimento: bipagem, quantidade, lote, validade e captura de medidas
-- [ ] Armazenagem: recebe a sugestão, bipa o endereço e registra divergência com motivo
 - [ ] Contagem de inventário manual e por código de barras
 - [ ] Contagem por câmera, com confirmação da sugestão da IA
-- [ ] Consulta de saldo por produto e por endereço
-
-**3.4 Offline e release**
-
 - [ ] Sincronização em background, indicador de modo offline e tratamento de conflitos
 - [ ] Pipeline de release (Codemagic ou Fastlane) e publicação em teste aberto
 
-### Fechamento do portfólio
+**3.4 Entrega**
 
-- [ ] README geral com diagrama de arquitetura, links para os ADRs e badges de CI
 - [ ] Vídeo ou GIF de 2 minutos com o fluxo completo: NF-e → recebimento → armazenagem → contagem
-- [ ] Deploy de demonstração da API e da Web, com dados de exemplo e usuário de teste
-- [ ] Repositório fixado no perfil do GitHub
+- [ ] Tag `v0.3.0` com notas de release
 
-### Fase 4 — Patrimônio (extensão)
+### Marco 4 — IA avançada
 
-Começa depois do fechamento do portfólio. Segue a mesma ordem: API, Web e App; a IA entra depois que o fluxo sem IA já funciona.
+**4.1 API**
 
-**4.1 API — Cadastros e movimentação patrimonial**
+- [ ] Busca semântica de produtos: busca híbrida (texto + vetor) com filtros
+- [ ] Cadastro por foto: IA sugere descrição, categoria, marca, GTIN e atributos; o produto só é criado após confirmação e entra como Incompleto se faltar medida
+- [ ] Consulta em linguagem natural com tool calling sobre endpoints somente leitura
+- [ ] Conjunto de avaliação (arquivos e imagens de teste) rodando no CI
+- [ ] Cache de respostas e relatório de custo por funcionalidade e por usuário
+
+**4.2 Web**
+
+- [ ] Busca semântica no catálogo
+- [ ] Chat de consulta em linguagem natural
+- [ ] Painel de uso de IA: chamadas, custo e latência por funcionalidade e por usuário
+
+**4.3 App**
+
+- [ ] Cadastro de produto por foto, com revisão da sugestão da IA antes de gravar
+- [ ] Busca semântica de produto na consulta de saldo
+
+**4.4 Entrega**
+
+- [ ] README revisado: diagrama, decisões técnicas e GIFs atualizados
+- [ ] Tag `v1.0.0` com notas de release
+
+### Marco 5 — Patrimônio (extensão)
+
+Reaproveita a sincronização offline, a leitura de código de barras, a importação com staging e a camada de IA dos marcos anteriores.
+
+**5.1 API — Cadastros e movimentação patrimonial**
 
 - [ ] Módulo `Patrimonio` em Domain e Application, conforme o ADR-0003
 - [ ] CRUD de LocalPatrimonial (hierarquia), CategoriaPatrimonial e Responsavel
@@ -363,7 +429,7 @@ Começa depois do fechamento do portfólio. Segue a mesma ordem: API, Web e App;
 - [ ] Consultas: bens por local (com descendentes) e por responsável, histórico do bem e posição em uma data
 - [ ] Importação de bens (`Tipo` BensPatrimoniais) reaproveitando staging, templates e mapeamento por IA
 
-**4.2 API — Inventário patrimonial**
+**5.2 API — Inventário patrimonial**
 
 - [ ] Planejamento: escopo de locais, inventariantes e transições de status
 - [ ] Abertura com snapshot dos bens esperados e bloqueio de movimentação dos bens no escopo
@@ -372,13 +438,13 @@ Começa depois do fechamento do portfólio. Segue a mesma ordem: API, Web e App;
 - [ ] Conciliação: decisões por bem, geração das movimentações patrimoniais e incorporação ou casamento de sobras
 - [ ] Relatório de conciliação em PDF e CSV
 
-**4.3 API — IA no patrimônio**
+**5.3 API — IA no patrimônio**
 
 - [ ] Leitura de plaqueta por OCR na foto
 - [ ] Sugestão de estado de conservação pela foto, com confiança
 - [ ] Job de embeddings de bens e casamento de sobras por similaridade
 
-**4.4 Web — Patrimônio**
+**5.4 Web — Patrimônio**
 
 - [ ] Árvore de locais, categorias e responsáveis
 - [ ] Lista de bens com filtros e ficha do bem com histórico de movimentações
@@ -387,7 +453,7 @@ Começa depois do fechamento do portfólio. Segue a mesma ordem: API, Web e App;
 - [ ] Planejamento do inventário e acompanhamento em tempo real (percentual conferido por local)
 - [ ] Tela de conciliação com fotos, sugestões da IA e decisão por bem; download do relatório
 
-**4.5 App — Inventário patrimonial**
+**5.5 App — Inventário patrimonial**
 
 - [ ] Seleção do inventário e do local, bipagem de plaquetas pela câmera e pelo coletor
 - [ ] Registro de estado de conservação, observação e foto por bem
@@ -395,6 +461,35 @@ Começa depois do fechamento do portfólio. Segue a mesma ordem: API, Web e App;
 - [ ] OCR de plaqueta e sugestão de estado pela IA, com confirmação
 - [ ] Funcionamento offline com a fila de sincronização existente
 
-**4.6 Fechamento**
+**5.6 Entrega**
 
 - [ ] README e demonstração atualizados com o fluxo: importação de bens → inventário → conciliação
+- [ ] Tag `v1.1.0` com notas de release
+
+### Marco 6 — Perguntas sobre documentos (extensão)
+
+Reaproveita a camada de IA, os jobs em background, o pgvector e o chat de consulta.
+
+**6.1 API**
+
+- [ ] ADR do pipeline de RAG (extração, tamanho dos trechos, busca híbrida e formato da citação)
+- [ ] Upload de documentos com vínculo opcional a produto, lote, fornecedor ou recebimento, e perfis permitidos
+- [ ] Job de ingestão: extração de texto (PDF e XML), divisão em trechos, embeddings e `tsvector`
+- [ ] Busca híbrida de trechos com filtro por perfil
+- [ ] Resposta com citação obrigatória (documento e página) e "não encontrei" quando não houver trecho de apoio
+- [ ] Integração com o chat de consulta: a IA escolhe entre ferramentas de dados e busca em documentos
+- [ ] Conjunto de avaliação de RAG (perguntas e fontes esperadas) rodando no CI
+
+**6.2 Web**
+
+- [ ] Biblioteca de documentos: upload, status da indexação e vínculos
+- [ ] Respostas do chat com citações clicáveis, que abrem o documento na página citada
+
+**6.3 App**
+
+- [ ] Pergunta sobre um produto ou lote a partir da leitura do código de barras, com a citação da fonte
+
+**6.4 Entrega**
+
+- [ ] README e demonstração atualizados com o fluxo de perguntas sobre documentos
+- [ ] Tag `v1.2.0` com notas de release
