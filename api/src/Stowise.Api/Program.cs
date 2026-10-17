@@ -42,6 +42,7 @@ v1.MapUsuariosEndpoints();
 v1.MapCategoriasEndpoints();
 v1.MapProdutosEndpoints();
 v1.MapEstruturaEndpoints();
+v1.MapMovimentacoesEndpoints();
 
 await app.RunAsync();
 

@@ -270,7 +270,7 @@ Regras de ordem:
 
 **1.3 API — Estoque**
 
-- [ ] Serviço de movimentação: grava Movimentacao e atualiza Saldo na mesma transação
+- [x] Serviço de movimentação: grava Movimentacao e atualiza Saldo na mesma transação
 - [ ] Idempotência por `IdempotencyKey` e concorrência otimista (`xmin`)
 - [ ] Transferência entre endereços e reservas
 - [ ] Consultas: saldo por produto, endereço e lote; extrato; saldo em uma data

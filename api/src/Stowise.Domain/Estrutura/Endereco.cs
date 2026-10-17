@@ -127,6 +127,18 @@ public sealed class Endereco : Entity
         Status = ocupado ? StatusEndereco.Ocupado : StatusEndereco.Livre;
     }
 
+    /// <summary>
+    /// Mantém Livre/Ocupado conforme o saldo, depois de cada movimentação. Um endereço bloqueado continua
+    /// bloqueado: a ocupação volta a valer no desbloqueio.
+    /// </summary>
+    public void SyncOcupacao(bool temSaldo)
+    {
+        if (Status != StatusEndereco.Bloqueado)
+        {
+            Status = temSaldo ? StatusEndereco.Ocupado : StatusEndereco.Livre;
+        }
+    }
+
     /// <summary>De 1 a 3 letras (A, B, AA...).</summary>
     public static bool IsValidRua(string? rua)
     {

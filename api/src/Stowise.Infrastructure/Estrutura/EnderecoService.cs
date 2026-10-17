@@ -177,9 +177,9 @@ internal sealed class EnderecoService(StowiseDbContext db, TimeProvider time) : 
             return NotFound();
         }
 
-        if (endereco.Status == StatusEndereco.Ocupado)
+        if (endereco.Status == StatusEndereco.Ocupado || await TemSaldoAsync(id, cancellationToken))
         {
-            return AppError.BusinessRule($"O endereço {endereco.Codigo} está ocupado e não pode ser excluído.");
+            return AppError.BusinessRule($"O endereço {endereco.Codigo} tem saldo e não pode ser excluído.");
         }
 
         db.Enderecos.Remove(endereco);
@@ -228,11 +228,13 @@ internal sealed class EnderecoService(StowiseDbContext db, TimeProvider time) : 
             return AppError.BusinessRule($"O endereço {endereco.Codigo} não está bloqueado.");
         }
 
-        // Bloco 1.3 (Estoque): consultar o Saldo do endereço para decidir entre Ocupado e Livre.
-        endereco.Unblock(ocupado: false);
+        endereco.Unblock(ocupado: await TemSaldoAsync(id, cancellationToken));
         await db.SaveChangesAsync(cancellationToken);
         return ToDetalhe(endereco);
     }
+
+    private Task<bool> TemSaldoAsync(Guid enderecoId, CancellationToken cancellationToken) =>
+        db.Saldos.AnyAsync(s => s.EnderecoId == enderecoId && s.Quantidade > 0, cancellationToken);
 
     private static EnderecoDetalhe ToDetalhe(Endereco e) =>
         new(

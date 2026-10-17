@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
+using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence.Configurations;
@@ -22,6 +23,12 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
     public DbSet<Produto> Produtos => Set<Produto>();
 
     public DbSet<ProdutoEmbalagem> ProdutoEmbalagens => Set<ProdutoEmbalagem>();
+
+    public DbSet<Lote> Lotes => Set<Lote>();
+
+    public DbSet<Movimentacao> Movimentacoes => Set<Movimentacao>();
+
+    public DbSet<Saldo> Saldos => Set<Saldo>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

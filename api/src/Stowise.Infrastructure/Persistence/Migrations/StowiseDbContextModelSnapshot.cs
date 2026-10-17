@@ -320,6 +320,172 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("produto_embalagens", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Estoque.Lote", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateOnly?>("Fabricacao")
+                        .HasColumnType("date")
+                        .HasColumnName("fabricacao");
+
+                    b.Property<string>("Numero")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("numero");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<DateOnly?>("Validade")
+                        .HasColumnType("date")
+                        .HasColumnName("validade");
+
+                    b.HasKey("Id")
+                        .HasName("pk_lotes");
+
+                    b.HasIndex("ProdutoId", "Numero")
+                        .IsUnique()
+                        .HasDatabaseName("ix_lotes_produto_id_numero");
+
+                    b.ToTable("lotes", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Estoque.Movimentacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid?>("DispositivoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("dispositivo_id");
+
+                    b.Property<string>("DocumentoReferencia")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("documento_referencia");
+
+                    b.Property<Guid?>("EnderecoDestinoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endereco_destino_id");
+
+                    b.Property<Guid?>("EnderecoOrigemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endereco_origem_id");
+
+                    b.Property<Guid?>("LoteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lote_id");
+
+                    b.Property<string>("Observacao")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("observacao");
+
+                    b.Property<DateTimeOffset>("OcorridoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ocorrido_em");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<decimal>("Quantidade")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantidade");
+
+                    b.Property<DateTimeOffset>("RecebidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("recebido_em");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tipo");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_movimentacoes");
+
+                    b.HasIndex("EnderecoDestinoId")
+                        .HasDatabaseName("ix_movimentacoes_endereco_destino_id");
+
+                    b.HasIndex("EnderecoOrigemId")
+                        .HasDatabaseName("ix_movimentacoes_endereco_origem_id");
+
+                    b.HasIndex("LoteId")
+                        .HasDatabaseName("ix_movimentacoes_lote_id");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_movimentacoes_usuario_id");
+
+                    b.HasIndex("ProdutoId", "OcorridoEm")
+                        .HasDatabaseName("ix_movimentacoes_produto_id_ocorrido_em");
+
+                    b.ToTable("movimentacoes", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_movimentacoes_quantidade", "quantidade > 0");
+                        });
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Estoque.Saldo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("EnderecoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endereco_id");
+
+                    b.Property<Guid?>("LoteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lote_id");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<decimal>("Quantidade")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantidade");
+
+                    b.Property<decimal>("QuantidadeReservada")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantidade_reservada");
+
+                    b.HasKey("Id")
+                        .HasName("pk_saldos");
+
+                    b.HasIndex("LoteId")
+                        .HasDatabaseName("ix_saldos_lote_id");
+
+                    b.HasIndex("ProdutoId")
+                        .HasDatabaseName("ix_saldos_produto_id");
+
+                    b.HasIndex("EnderecoId", "ProdutoId", "LoteId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_saldos_endereco_id_produto_id_lote_id");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("EnderecoId", "ProdutoId", "LoteId"), false);
+
+                    b.ToTable("saldos", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_saldos_quantidades", "quantidade >= 0 AND quantidade_reservada >= 0 AND quantidade_reservada <= quantidade");
+                        });
+                });
+
             modelBuilder.Entity("Stowise.Domain.Estrutura.Armazem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -765,6 +931,74 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_produto_embalagens_produtos_produto_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Estoque.Lote", b =>
+                {
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_lotes_produtos_produto_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Estoque.Movimentacao", b =>
+                {
+                    b.HasOne("Stowise.Domain.Estrutura.Endereco", null)
+                        .WithMany()
+                        .HasForeignKey("EnderecoDestinoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_movimentacoes_enderecos_endereco_destino_id");
+
+                    b.HasOne("Stowise.Domain.Estrutura.Endereco", null)
+                        .WithMany()
+                        .HasForeignKey("EnderecoOrigemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_movimentacoes_enderecos_endereco_origem_id");
+
+                    b.HasOne("Stowise.Domain.Estoque.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_movimentacoes_lotes_lote_id");
+
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_movimentacoes_produtos_produto_id");
+
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_movimentacoes_usuarios_usuario_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Estoque.Saldo", b =>
+                {
+                    b.HasOne("Stowise.Domain.Estrutura.Endereco", null)
+                        .WithMany()
+                        .HasForeignKey("EnderecoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_saldos_enderecos_endereco_id");
+
+                    b.HasOne("Stowise.Domain.Estoque.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_saldos_lotes_lote_id");
+
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_saldos_produtos_produto_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Estrutura.Endereco", b =>

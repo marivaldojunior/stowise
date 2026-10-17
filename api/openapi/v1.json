@@ -3136,6 +3136,270 @@
           }
         ]
       }
+    },
+    "/api/v1/movimentacoes/{id}": {
+      "get": {
+        "tags": [
+          "Estoque"
+        ],
+        "operationId": "ObterMovimentacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimentacaoDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/movimentacoes/entradas": {
+      "post": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Entrada num endereço. Quantidade na embalagem informada (ou na unidade base).",
+        "operationId": "RegistrarEntrada",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarEntrada"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimentacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/movimentacoes/saidas": {
+      "post": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Saída de um endereço. Exige saldo disponível.",
+        "operationId": "RegistrarSaida",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarSaida"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimentacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/movimentacoes/ajustes": {
+      "post": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Correção do saldo com motivo. Só Admin e Gestor.",
+        "operationId": "RegistrarAjuste",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegistrarAjuste"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MovimentacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4292,6 +4556,134 @@
           }
         }
       },
+      "LoteInformado": {
+        "required": [
+          "numero",
+          "fabricacao",
+          "validade"
+        ],
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fabricacao": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "MovimentacaoDetalhe": {
+        "required": [
+          "id",
+          "tipo",
+          "produtoId",
+          "loteId",
+          "loteNumero",
+          "enderecoOrigemId",
+          "enderecoDestinoId",
+          "quantidade",
+          "documentoReferencia",
+          "observacao",
+          "usuarioId",
+          "dispositivoId",
+          "ocorridoEm",
+          "recebidoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoMovimentacao"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "loteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "loteNumero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enderecoOrigemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "enderecoDestinoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "documentoReferencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "observacao": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "usuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispositivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recebidoEm": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
       "PagedResultOfEnderecoDetalhe": {
         "required": [
           "itens",
@@ -4643,6 +5035,207 @@
           }
         }
       },
+      "RegistrarAjuste": {
+        "required": [
+          "produtoId",
+          "enderecoId",
+          "quantidade",
+          "lote",
+          "motivo",
+          "ocorridoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "enderecoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "motivo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ocorridoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RegistrarEntrada": {
+        "required": [
+          "produtoId",
+          "embalagemId",
+          "enderecoId",
+          "quantidade",
+          "lote",
+          "documentoReferencia",
+          "dispositivoId",
+          "ocorridoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "enderecoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lote": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/LoteInformado"
+              }
+            ]
+          },
+          "documentoReferencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispositivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ocorridoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RegistrarSaida": {
+        "required": [
+          "produtoId",
+          "embalagemId",
+          "enderecoId",
+          "quantidade",
+          "lote",
+          "documentoReferencia",
+          "dispositivoId",
+          "ocorridoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "enderecoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lote": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "documentoReferencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispositivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ocorridoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
       "RenomearArmazem": {
         "required": [
           "nome"
@@ -4716,6 +5309,14 @@
           "Unidade",
           "Caixa",
           "Palete"
+        ]
+      },
+      "TipoMovimentacao": {
+        "enum": [
+          "Entrada",
+          "Saida",
+          "Transferencia",
+          "Ajuste"
         ]
       },
       "UsuarioDetalhe": {
@@ -4836,6 +5437,9 @@
     },
     {
       "name": "Estrutura física"
+    },
+    {
+      "name": "Estoque"
     }
   ]
 }
