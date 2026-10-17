@@ -3,7 +3,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-COPY global.json Directory.Build.props Directory.Packages.props Stowise.slnx ./
+COPY .editorconfig global.json Directory.Build.props Directory.Packages.props Stowise.slnx ./
 COPY src/Stowise.Domain/*.csproj src/Stowise.Domain/packages.lock.json src/Stowise.Domain/
 COPY src/Stowise.Application/*.csproj src/Stowise.Application/packages.lock.json src/Stowise.Application/
 COPY src/Stowise.Infrastructure/*.csproj src/Stowise.Infrastructure/packages.lock.json src/Stowise.Infrastructure/
