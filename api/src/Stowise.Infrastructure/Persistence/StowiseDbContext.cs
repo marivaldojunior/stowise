@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Stowise.Domain.Catalogo;
+using Stowise.Domain.Common;
 using Stowise.Domain.Estrutura;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence.Configurations;
@@ -15,6 +17,12 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<Endereco> Enderecos => Set<Endereco>();
 
+    public DbSet<Categoria> Categorias => Set<Categoria>();
+
+    public DbSet<Produto> Produtos => Set<Produto>();
+
+    public DbSet<ProdutoEmbalagem> ProdutoEmbalagens => Set<ProdutoEmbalagem>();
+
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
@@ -24,6 +32,13 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
         builder.HasPostgresExtension("vector");
         IdentityConfiguration.Configure(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(StowiseDbContext).Assembly);
+
+        // O domínio gera os ids (Guid v7) ao criar a entidade. Sem isto, o EF trata uma entidade nova encontrada
+        // numa coleção (ex.: Produto.AddEmbalagem) como já existente e faz UPDATE em vez de INSERT.
+        foreach (var entity in builder.Model.GetEntityTypes().Where(e => typeof(Entity).IsAssignableFrom(e.ClrType)))
+        {
+            builder.Entity(entity.ClrType).Property(nameof(Entity.Id)).ValueGeneratedNever();
+        }
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

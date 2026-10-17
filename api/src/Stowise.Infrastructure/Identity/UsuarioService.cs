@@ -17,8 +17,10 @@ internal sealed class UsuarioService(UserManager<Usuario> users, StowiseDbContex
         var query = db.Users.AsNoTracking();
         if (!string.IsNullOrWhiteSpace(filtro.Busca))
         {
-            var pattern = $"%{EscapeLike(filtro.Busca.Trim())}%";
-            query = query.Where(u => EF.Functions.ILike(u.Nome, pattern, @"\") || EF.Functions.ILike(u.Email!, pattern, @"\"));
+            var pattern = $"%{LikePattern.Escape(filtro.Busca.Trim())}%";
+            query = query.Where(u =>
+                EF.Functions.ILike(u.Nome, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(u.Email!, pattern, LikePattern.EscapeCharacter));
         }
 
         if (filtro.Ativo is { } ativo)
@@ -314,11 +316,6 @@ internal sealed class UsuarioService(UserManager<Usuario> users, StowiseDbContex
             .ToDictionary(g => g.Key, g => g.Select(e => e.Description).ToArray());
         return AppError.Validation(fields);
     }
-
-    private static string EscapeLike(string value) =>
-        value.Replace(@"\", @"\\", StringComparison.Ordinal)
-            .Replace("%", @"\%", StringComparison.Ordinal)
-            .Replace("_", @"\_", StringComparison.Ordinal);
 
     private sealed record UsuarioRow(Guid Id, string Nome, string Email, bool Ativo, DateTimeOffset? LockoutEnd, DateTimeOffset CriadoEm);
 }

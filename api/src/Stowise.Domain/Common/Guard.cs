@@ -38,6 +38,9 @@ internal static class Guard
         return value;
     }
 
+    public static decimal? PositiveOrNull(decimal? value, string campo) =>
+        value is null ? null : Positive(value.Value, campo);
+
     public static decimal NotNegative(decimal value, string campo)
     {
         if (value < 0)

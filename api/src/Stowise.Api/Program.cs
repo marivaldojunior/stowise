@@ -21,6 +21,8 @@ foreach (var perfil in Perfis.Todos)
     authorization.AddPolicy(perfil, policy => policy.RequireRole(perfil));
 }
 
+authorization.AddPolicy(Politicas.Gestao, policy => policy.RequireRole(Politicas.PerfisDeGestao));
+
 var app = builder.Build();
 
 await app.Services.InitializeDatabaseAsync();
@@ -37,6 +39,8 @@ app.MapStowiseOpenApi();
 var v1 = app.MapApiV1();
 v1.MapAuthEndpoints();
 v1.MapUsuariosEndpoints();
+v1.MapCategoriasEndpoints();
+v1.MapProdutosEndpoints();
 
 await app.RunAsync();
 

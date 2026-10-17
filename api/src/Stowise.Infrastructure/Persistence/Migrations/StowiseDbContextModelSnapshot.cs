@@ -153,6 +153,176 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("usuario_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Catalogo.Categoria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)")
+                        .HasColumnName("nome");
+
+                    b.Property<Guid?>("ParentId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("parent_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_categorias");
+
+                    b.HasIndex("ParentId", "Nome")
+                        .IsUnique()
+                        .HasDatabaseName("ix_categorias_parent_id_nome");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("ParentId", "Nome"), false);
+
+                    b.ToTable("categorias", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Catalogo.Produto", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Ativo")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ativo");
+
+                    b.Property<Guid?>("CategoriaId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("categoria_id");
+
+                    b.Property<string>("Cest")
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)")
+                        .HasColumnName("cest");
+
+                    b.Property<string>("ClasseArmazenagem")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("classe_armazenagem");
+
+                    b.Property<bool>("ControlaLote")
+                        .HasColumnType("boolean")
+                        .HasColumnName("controla_lote");
+
+                    b.Property<bool>("ControlaValidade")
+                        .HasColumnType("boolean")
+                        .HasColumnName("controla_validade");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("descricao");
+
+                    b.Property<string>("Ncm")
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)")
+                        .HasColumnName("ncm");
+
+                    b.Property<string>("Sku")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("sku");
+
+                    b.Property<string>("UnidadeBase")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
+                        .HasColumnName("unidade_base");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_produtos");
+
+                    b.HasIndex("CategoriaId")
+                        .HasDatabaseName("ix_produtos_categoria_id");
+
+                    b.HasIndex("Sku")
+                        .IsUnique()
+                        .HasDatabaseName("ix_produtos_sku");
+
+                    b.ToTable("produtos", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Catalogo.ProdutoEmbalagem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<decimal?>("AlturaCm")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("altura_cm");
+
+                    b.Property<decimal?>("ComprimentoCm")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("comprimento_cm");
+
+                    b.Property<decimal>("FatorConversao")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("fator_conversao");
+
+                    b.Property<string>("Gtin")
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("gtin");
+
+                    b.Property<decimal?>("LarguraCm")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("largura_cm");
+
+                    b.Property<decimal?>("PesoKg")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("peso_kg");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tipo");
+
+                    b.Property<bool>("UnidadeBase")
+                        .HasColumnType("boolean")
+                        .HasColumnName("unidade_base");
+
+                    b.HasKey("Id")
+                        .HasName("pk_produto_embalagens");
+
+                    b.HasIndex("Gtin")
+                        .IsUnique()
+                        .HasDatabaseName("ix_produto_embalagens_gtin");
+
+                    b.HasIndex("ProdutoId", "Tipo", "FatorConversao")
+                        .IsUnique()
+                        .HasDatabaseName("ix_produto_embalagens_produto_id_tipo_fator_conversao");
+
+                    b.ToTable("produto_embalagens", (string)null);
+                });
+
             modelBuilder.Entity("Stowise.Domain.Estrutura.Armazem", b =>
                 {
                     b.Property<Guid>("Id")
@@ -560,6 +730,34 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasConstraintName("fk_usuario_tokens_usuarios_user_id");
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Catalogo.Categoria", b =>
+                {
+                    b.HasOne("Stowise.Domain.Catalogo.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("ParentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_categorias_categorias_parent_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Catalogo.Produto", b =>
+                {
+                    b.HasOne("Stowise.Domain.Catalogo.Categoria", null)
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_produtos_categorias_categoria_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Catalogo.ProdutoEmbalagem", b =>
+                {
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany("Embalagens")
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_produto_embalagens_produtos_produto_id");
+                });
+
             modelBuilder.Entity("Stowise.Domain.Estrutura.Endereco", b =>
                 {
                     b.HasOne("Stowise.Domain.Estrutura.Zona", null)
@@ -588,6 +786,11 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_refresh_tokens_usuarios_usuario_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Catalogo.Produto", b =>
+                {
+                    b.Navigation("Embalagens");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Estrutura.Armazem", b =>

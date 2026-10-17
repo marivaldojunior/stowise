@@ -5,7 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stowise.Application.Auth;
+using Stowise.Application.Catalogo;
 using Stowise.Application.Usuarios;
+using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence;
 
@@ -31,6 +33,8 @@ public static class DependencyInjection
 
         services.AddOptions<DatabaseOptions>().BindConfiguration(DatabaseOptions.SectionName);
         services.AddScoped<DatabaseInitializer>();
+        services.AddScoped<ICategoriaService, CategoriaService>();
+        services.AddScoped<IProdutoService, ProdutoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 
         services.AddIdentityAndJwt();
