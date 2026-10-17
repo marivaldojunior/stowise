@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Stowise.Api.Endpoints;
 using Stowise.Application.Catalogo;
+using Stowise.Application.Common;
 using Stowise.Application.Estoque;
 using Stowise.Application.Estrutura;
 using Stowise.Domain.Catalogo;
@@ -347,6 +348,65 @@ public sealed class MovimentacoesFlowTests : IAsyncLifetime
         Assert.Equal(StatusReserva.Cancelada, (await cancelada.Content.ReadFromJsonAsync<ReservaDetalhe>(Json))!.Status);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, (await SendAsync($"/api/v1/reservas/{segunda.Id}/cancelar", body: null)).StatusCode);
         Assert.Equal(HttpStatusCode.Created, (await SendAsync("/api/v1/movimentacoes/saidas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 3 })).StatusCode);
+    }
+
+    [DockerFact]
+    public async Task Balances_statement_and_point_in_time_balance_agree_with_the_ledger()
+    {
+        var b = await CreateEnderecoAsync(_endereco.ZonaId, modulo: 2);
+        var dia1 = new DateTimeOffset(2026, 10, 1, 10, 0, 0, TimeSpan.Zero);
+        var dia2 = dia1.AddDays(1);
+        var dia3 = dia1.AddDays(2);
+
+        // Dia 1: 10 no A. Dia 2: 4 do A para o B e 2 lotes de iogurte no B. Dia 3: sai 1 do B e entra 1 no A por ajuste.
+        await Movimentar("entradas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 10, ocorridoEm = dia1 });
+        await Movimentar("transferencias", new { produtoId = _refrigerante.Id, enderecoOrigemId = _endereco.Id, enderecoDestinoId = b.Id, quantidade = 4, ocorridoEm = dia2 });
+        await Movimentar("entradas", new { produtoId = _iogurte.Id, enderecoId = b.Id, quantidade = 5, ocorridoEm = dia2, lote = new { numero = "L-NOV", validade = "2026-11-30" } });
+        await Movimentar("entradas", new { produtoId = _iogurte.Id, enderecoId = b.Id, quantidade = 3, ocorridoEm = dia2, lote = new { numero = "L-OUT", validade = "2026-10-31" } });
+        await Movimentar("saidas", new { produtoId = _refrigerante.Id, enderecoId = b.Id, quantidade = 1, ocorridoEm = dia3 });
+        await Movimentar("ajustes", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 1, motivo = "Sobra", ocorridoEm = dia3 });
+        await PostAsync<ReservaDetalhe>("/api/v1/reservas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 2 });
+
+        // Saldos atuais: refrigerante 7 no A (2 reservados) e 3 no B; iogurte por validade (FEFO).
+        var refrigerante = await GetAsync<PagedResult<SaldoItem>>($"/api/v1/saldos?produtoId={_refrigerante.Id}");
+        Assert.Equal([(_endereco.Codigo, 7m, 2m, 5m), (b.Codigo, 3m, 0m, 3m)],
+            refrigerante.Itens.Select(s => (s.EnderecoCodigo, s.Quantidade, s.QuantidadeReservada, s.QuantidadeDisponivel)));
+        var iogurte = await GetAsync<PagedResult<SaldoItem>>($"/api/v1/saldos?enderecoId={b.Id}&produtoId={_iogurte.Id}");
+        Assert.Equal(["L-OUT", "L-NOV"], iogurte.Itens.Select(s => s.LoteNumero));
+
+        var resumo = await GetAsync<ResumoSaldoProduto>($"/api/v1/saldos/produtos/{_iogurte.Id}");
+        Assert.Equal(8m, resumo.Quantidade);
+        Assert.Equal(1, resumo.Enderecos);
+        Assert.Equal([("L-OUT", 3m), ("L-NOV", 5m)], resumo.Lotes.Select(l => (l.Numero, l.Quantidade)));
+
+        // Extrato do endereço B: a transferência aparece como chegada; mais recente primeiro.
+        var extratoB = await GetAsync<PagedResult<ExtratoItem>>($"/api/v1/movimentacoes?enderecoId={b.Id}&produtoId={_refrigerante.Id}");
+        Assert.Equal([TipoMovimentacao.Saida, TipoMovimentacao.Transferencia], extratoB.Itens.Select(m => m.Tipo));
+        Assert.Equal(_endereco.Codigo, extratoB.Itens[1].EnderecoOrigemCodigo);
+        var soDia2 = await GetAsync<PagedResult<ExtratoItem>>($"/api/v1/movimentacoes?de={Uri.EscapeDataString(dia2.ToString("O"))}&ate={Uri.EscapeDataString(dia2.ToString("O"))}");
+        Assert.Equal(3, soDia2.Total);
+
+        // Saldo no fim do dia 2, só pelo livro-razão: 6 no A e 4 no B.
+        var fimDia2 = Uri.EscapeDataString(dia2.AddHours(12).ToString("O"));
+        var naData = await GetAsync<PagedResult<SaldoNaData>>($"/api/v1/saldos/em-data?data={fimDia2}&produtoId={_refrigerante.Id}");
+        Assert.Equal([(_endereco.Codigo, 6m), (b.Codigo, 4m)], naData.Itens.Select(s => (s.EnderecoCodigo, s.Quantidade)));
+
+        // Consistência do ADR-0001: o livro-razão até agora é igual à projeção (tabela de saldos).
+        var agora = Uri.EscapeDataString(DateTimeOffset.UtcNow.AddMinutes(1).ToString("O"));
+        var razao = await GetAsync<PagedResult<SaldoNaData>>($"/api/v1/saldos/em-data?data={agora}");
+        var projecao = await GetAsync<PagedResult<SaldoItem>>("/api/v1/saldos");
+        Assert.Equal(
+            projecao.Itens.Where(s => s.Quantidade != 0).Select(s => (s.EnderecoId, s.ProdutoId, s.LoteId, s.Quantidade)).Order(),
+            razao.Itens.Select(s => (s.EnderecoId, s.ProdutoId, s.LoteId, s.Quantidade)).Order());
+
+        var reservas = await GetAsync<PagedResult<ReservaDetalhe>>($"/api/v1/reservas?produtoId={_refrigerante.Id}&status=Ativa");
+        Assert.Equal(2m, Assert.Single(reservas.Itens).Quantidade);
+    }
+
+    private async Task Movimentar(string tipo, object body)
+    {
+        var response = await SendAsync($"/api/v1/movimentacoes/{tipo}", body);
+        Assert.True(response.StatusCode == HttpStatusCode.Created, $"{tipo} → {(int)response.StatusCode}: {await response.Content.ReadAsStringAsync()}");
     }
 
     private async Task<EnderecoDetalhe> CreateEnderecoAsync(Guid zonaId, int modulo) =>

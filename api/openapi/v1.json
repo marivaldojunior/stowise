@@ -726,6 +726,283 @@
         ]
       }
     },
+    "/api/v1/movimentacoes": {
+      "get": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Extrato de movimentações, do mais recente para o mais antigo. O endereço vale como origem ou destino.",
+        "operationId": "ObterExtrato",
+        "parameters": [
+          {
+            "name": "produtoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "enderecoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "loteId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "tipo",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TipoMovimentacao"
+            }
+          },
+          {
+            "name": "de",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "ate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfExtratoItem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/reservas": {
+      "get": {
+        "tags": [
+          "Estoque"
+        ],
+        "operationId": "ListarReservas",
+        "parameters": [
+          {
+            "name": "produtoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "enderecoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StatusReserva"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfReservaDetalhe"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Reserva parte do saldo disponível de um endereço (unidade base).",
+        "operationId": "CriarReserva",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarReserva"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReservaDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/categorias": {
       "get": {
         "tags": [
@@ -3603,82 +3880,6 @@
         ]
       }
     },
-    "/api/v1/reservas": {
-      "post": {
-        "tags": [
-          "Estoque"
-        ],
-        "summary": "Reserva parte do saldo disponível de um endereço (unidade base).",
-        "operationId": "CriarReserva",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CriarReserva"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "401": {
-            "description": "Unauthorized",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "201": {
-            "description": "Created",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ReservaDetalhe"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Unprocessable Entity",
-            "content": {
-              "application/problem+json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "Bearer": []
-          }
-        ]
-      }
-    },
     "/api/v1/reservas/{id}/cancelar": {
       "post": {
         "tags": [
@@ -3850,6 +4051,276 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/saldos": {
+      "get": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Saldos atuais com reservado e disponível. Filtros por produto, endereço, lote, armazém e zona.",
+        "operationId": "ListarSaldos",
+        "parameters": [
+          {
+            "name": "produtoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "enderecoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "loteId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "armazemId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "zonaId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "incluirZerados",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfSaldoItem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/saldos/produtos/{produtoId}": {
+      "get": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Total do produto em todos os endereços, com a divisão por lote.",
+        "operationId": "ObterResumoSaldoProduto",
+        "parameters": [
+          {
+            "name": "produtoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumoSaldoProduto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/saldos/em-data": {
+      "get": {
+        "tags": [
+          "Estoque"
+        ],
+        "summary": "Saldo numa data, calculado pelo livro-razão (OcorridoEm até a data).",
+        "operationId": "ObterSaldoNaData",
+        "parameters": [
+          {
+            "name": "data",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "produtoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "enderecoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "armazemId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfSaldoNaData"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
                 }
               }
             }
@@ -4824,6 +5295,90 @@
           }
         }
       },
+      "ExtratoItem": {
+        "required": [
+          "id",
+          "tipo",
+          "ocorridoEm",
+          "recebidoEm",
+          "produtoId",
+          "sku",
+          "loteNumero",
+          "enderecoOrigemCodigo",
+          "enderecoDestinoCodigo",
+          "quantidade",
+          "documentoReferencia",
+          "observacao",
+          "usuarioId"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoMovimentacao"
+          },
+          "ocorridoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "recebidoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "loteNumero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enderecoOrigemCodigo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "enderecoDestinoCodigo": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "documentoReferencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "observacao": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "usuarioId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      },
       "GeracaoEnderecosResultado": {
         "required": [
           "total",
@@ -5286,6 +5841,55 @@
           }
         }
       },
+      "PagedResultOfExtratoItem": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExtratoItem"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "PagedResultOfProdutoResumo": {
         "required": [
           "itens",
@@ -5299,6 +5903,153 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProdutoResumo"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfReservaDetalhe": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReservaDetalhe"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfSaldoItem": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SaldoItem"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfSaldoNaData": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SaldoNaData"
             }
           },
           "pagina": {
@@ -6001,6 +6752,263 @@
           }
         }
       },
+      "ResumoSaldoLote": {
+        "required": [
+          "loteId",
+          "numero",
+          "validade",
+          "quantidade",
+          "quantidadeReservada"
+        ],
+        "type": "object",
+        "properties": {
+          "loteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "numero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantidadeReservada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "ResumoSaldoProduto": {
+        "required": [
+          "produtoId",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "quantidade",
+          "quantidadeReservada",
+          "quantidadeDisponivel",
+          "enderecos",
+          "lotes"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantidadeReservada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantidadeDisponivel": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "enderecos": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResumoSaldoLote"
+            }
+          }
+        }
+      },
+      "SaldoItem": {
+        "required": [
+          "enderecoId",
+          "enderecoCodigo",
+          "armazemId",
+          "zonaId",
+          "produtoId",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "loteId",
+          "loteNumero",
+          "validade",
+          "quantidade",
+          "quantidadeReservada",
+          "quantidadeDisponivel"
+        ],
+        "type": "object",
+        "properties": {
+          "enderecoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enderecoCodigo": {
+            "type": "string"
+          },
+          "armazemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "zonaId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "loteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "loteNumero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantidadeReservada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantidadeDisponivel": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "SaldoNaData": {
+        "required": [
+          "enderecoId",
+          "enderecoCodigo",
+          "produtoId",
+          "sku",
+          "loteId",
+          "loteNumero",
+          "quantidade"
+        ],
+        "type": "object",
+        "properties": {
+          "enderecoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "enderecoCodigo": {
+            "type": "string"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "loteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "loteNumero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantidade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "SalvarCategoria": {
         "required": [
           "nome",
@@ -6191,13 +7199,13 @@
       "name": "Usuários"
     },
     {
+      "name": "Estoque"
+    },
+    {
       "name": "Catálogo"
     },
     {
       "name": "Estrutura física"
-    },
-    {
-      "name": "Estoque"
     }
   ]
 }

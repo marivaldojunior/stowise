@@ -80,6 +80,33 @@ public class MovimentacoesEndpointsTests(StowiseApiFactory factory) : IClassFixt
         Assert.Equal(["enderecoId", "produtoId", "quantidade"], problem!.Errors.Keys.Order(StringComparer.Ordinal));
     }
 
+    [Fact]
+    public async Task Queries_validate_dates_before_touching_the_database()
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var semData = await client.GetAsync(new Uri("/api/v1/saldos/em-data", UriKind.Relative));
+        var periodoInvertido = await client.GetAsync(new Uri("/api/v1/movimentacoes?de=2026-10-10T00:00:00Z&ate=2026-10-01T00:00:00Z", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.BadRequest, semData.StatusCode);
+        Assert.Equal(["data"], (await semData.Content.ReadFromJsonAsync<HttpValidationProblemDetails>())!.Errors.Keys);
+        Assert.Equal(HttpStatusCode.BadRequest, periodoInvertido.StatusCode);
+        Assert.Equal(["ate"], (await periodoInvertido.Content.ReadFromJsonAsync<HttpValidationProblemDetails>())!.Errors.Keys);
+    }
+
+    [Theory]
+    [InlineData("/api/v1/saldos")]
+    [InlineData("/api/v1/movimentacoes")]
+    [InlineData("/api/v1/reservas")]
+    public async Task Queries_require_authentication(string url)
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri(url, UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
     private HttpClient ClientWith(string perfil)
     {
         var client = factory.CreateClient();

@@ -87,6 +87,32 @@ public static class EstoqueValidation
         return errors;
     }
 
+    public static IReadOnlyDictionary<string, string[]> Validate(ExtratoFiltro filtro)
+    {
+        ArgumentNullException.ThrowIfNull(filtro);
+
+        var errors = new Dictionary<string, string[]>();
+        if (filtro.De is not null && filtro.Ate is not null && filtro.Ate < filtro.De)
+        {
+            errors["ate"] = ["O fim do período deve ser igual ou posterior ao início."];
+        }
+
+        return errors;
+    }
+
+    public static IReadOnlyDictionary<string, string[]> Validate(SaldoNaDataFiltro filtro)
+    {
+        ArgumentNullException.ThrowIfNull(filtro);
+
+        var errors = new Dictionary<string, string[]>();
+        if (filtro.Data is null)
+        {
+            errors["data"] = ["Informe a data e hora (ISO 8601, ex.: 2026-10-01T23:59:59-03:00)."];
+        }
+
+        return errors;
+    }
+
     public static IReadOnlyDictionary<string, string[]> Validate(RegistrarAjuste comando, DateTimeOffset agora)
     {
         ArgumentNullException.ThrowIfNull(comando);

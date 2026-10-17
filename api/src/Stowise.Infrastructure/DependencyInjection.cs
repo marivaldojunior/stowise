@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IEnderecoService, EnderecoService>();
         services.AddScoped<IMovimentacaoService, MovimentacaoService>();
         services.AddScoped<IReservaService, ReservaService>();
+        services.AddScoped<IConsultaEstoqueService, ConsultaEstoqueService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 
         services.AddIdentityAndJwt();

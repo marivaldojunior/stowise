@@ -44,6 +44,7 @@ v1.MapProdutosEndpoints();
 v1.MapEstruturaEndpoints();
 v1.MapMovimentacoesEndpoints();
 v1.MapReservasEndpoints();
+v1.MapConsultasEstoqueEndpoints();
 
 await app.RunAsync();
 

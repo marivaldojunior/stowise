@@ -81,6 +81,43 @@ internal sealed class ReservaService(StowiseDbContext db, TimeProvider time) : I
     public async Task<Result<ReservaDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default) =>
         await DetalheAsync(id, cancellationToken) is { } detalhe ? detalhe : NotFound();
 
+    public async Task<PagedResult<ReservaDetalhe>> ListAsync(ReservaFiltro filtro, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filtro);
+        var (pagina, tamanhoPagina) = Paging.Normalize(filtro.Pagina, filtro.TamanhoPagina);
+
+        var query =
+            from r in db.Reservas.AsNoTracking()
+            join l in db.Lotes on r.LoteId equals (Guid?)l.Id into lotes
+            from l in lotes.DefaultIfEmpty()
+            select new { r, LoteNumero = l == null ? null : l.Numero };
+
+        if (filtro.ProdutoId is { } produtoId)
+        {
+            query = query.Where(x => x.r.ProdutoId == produtoId);
+        }
+
+        if (filtro.EnderecoId is { } enderecoId)
+        {
+            query = query.Where(x => x.r.EnderecoId == enderecoId);
+        }
+
+        if (filtro.Status is { } status)
+        {
+            query = query.Where(x => x.r.Status == status);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var itens = await query
+            .OrderByDescending(x => x.r.CriadaEm)
+            .ThenByDescending(x => x.r.Id)
+            .Skip((pagina - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ReservaDetalhe>([.. itens.Select(x => ToDetalhe(x.r, x.LoteNumero))], pagina, tamanhoPagina, total);
+    }
+
     /// <summary>Repete a operação com dados frescos quando o saldo ou a reserva mudaram no meio do caminho.</summary>
     private async Task<Result<ReservaDetalhe>> RetryAsync(Func<Task<Result<ReservaDetalhe>>> operacao, CancellationToken cancellationToken)
     {

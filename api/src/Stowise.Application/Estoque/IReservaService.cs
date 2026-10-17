@@ -15,7 +15,12 @@ public interface IReservaService
     Task<Result<ReservaDetalhe>> CancelAsync(Guid id, Guid usuarioId, CancellationToken cancellationToken = default);
 
     Task<Result<ReservaDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Reservas mais recentes primeiro.</summary>
+    Task<PagedResult<ReservaDetalhe>> ListAsync(ReservaFiltro filtro, CancellationToken cancellationToken = default);
 }
+
+public sealed record ReservaFiltro(Guid? ProdutoId, Guid? EnderecoId, StatusReserva? Status, int? Pagina, int? TamanhoPagina);
 
 /// <param name="Quantidade">Na unidade base.</param>
 /// <param name="Lote">Número do lote, obrigatório para produtos que controlam lote.</param>
