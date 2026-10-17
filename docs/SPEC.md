@@ -254,7 +254,7 @@ Regras de ordem:
 - [x] Solução em camadas (Domain, Application, Infrastructure, Api) ou vertical slices
 - [x] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
 - [x] ADR de autenticação (ASP.NET Core Identity × Keycloak)
-- [ ] Autenticação JWT com refresh token rotativo e perfis (Admin, Gestor, Operador)
+- [x] Autenticação JWT com refresh token rotativo e perfis (Admin, Gestor, Operador)
 - [ ] Endpoints de gestão de usuários e perfis (Admin), usados pela tela do painel
 - [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks
 - [ ] OpenAPI com Scalar e versionamento de rotas

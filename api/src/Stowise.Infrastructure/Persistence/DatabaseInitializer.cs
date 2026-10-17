@@ -1,12 +1,14 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence.Seed;
 
 namespace Stowise.Infrastructure.Persistence;
 
-public sealed partial class DatabaseInitializer(
+internal sealed partial class DatabaseInitializer(
     StowiseDbContext db,
+    AdminBootstrapper adminBootstrapper,
     IOptions<DatabaseOptions> options,
     ILogger<DatabaseInitializer> logger)
 {
@@ -17,6 +19,8 @@ public sealed partial class DatabaseInitializer(
             LogApplyingMigrations(logger);
             await db.Database.MigrateAsync(cancellationToken);
         }
+
+        await adminBootstrapper.EnsureAdminAsync();
 
         if (options.Value.SeedSampleData)
         {

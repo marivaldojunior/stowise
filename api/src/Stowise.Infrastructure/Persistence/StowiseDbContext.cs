@@ -1,9 +1,13 @@
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Stowise.Domain.Estrutura;
+using Stowise.Infrastructure.Identity;
+using Stowise.Infrastructure.Persistence.Configurations;
 
 namespace Stowise.Infrastructure.Persistence;
 
-public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options) : DbContext(options)
+public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
+    : IdentityDbContext<Usuario, Perfil, Guid>(options)
 {
     public DbSet<Armazem> Armazens => Set<Armazem>();
 
@@ -11,10 +15,15 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<Endereco> Enderecos => Set<Endereco>();
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+
+    protected override void OnModelCreating(ModelBuilder builder)
     {
-        modelBuilder.HasPostgresExtension("vector");
-        modelBuilder.ApplyConfigurationsFromAssembly(typeof(StowiseDbContext).Assembly);
+        base.OnModelCreating(builder);
+
+        builder.HasPostgresExtension("vector");
+        IdentityConfiguration.Configure(builder);
+        builder.ApplyConfigurationsFromAssembly(typeof(StowiseDbContext).Assembly);
     }
 
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
