@@ -6,7 +6,7 @@ using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Estrutura;
 
-internal sealed class EnderecoService(StowiseDbContext db) : IEnderecoService
+internal sealed class EnderecoService(StowiseDbContext db, TimeProvider time) : IEnderecoService
 {
     public async Task<PagedResult<EnderecoDetalhe>> ListAsync(EnderecoFiltro filtro, CancellationToken cancellationToken = default)
     {
@@ -187,6 +187,53 @@ internal sealed class EnderecoService(StowiseDbContext db) : IEnderecoService
         return Result.Success();
     }
 
+    public async Task<Result<EnderecoDetalhe>> BlockAsync(
+        Guid id,
+        BloquearEndereco comando,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        var errors = EstruturaValidation.Validate(comando);
+        if (errors.Count > 0)
+        {
+            return AppError.Validation(errors);
+        }
+
+        var endereco = await db.Enderecos.FindAsync([id], cancellationToken);
+        if (endereco is null)
+        {
+            return NotFound();
+        }
+
+        if (endereco.Status == StatusEndereco.Bloqueado)
+        {
+            return AppError.BusinessRule($"O endereço {endereco.Codigo} já está bloqueado: {endereco.MotivoBloqueio}");
+        }
+
+        endereco.Block(comando.Motivo!, time.GetUtcNow(), usuarioId);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToDetalhe(endereco);
+    }
+
+    public async Task<Result<EnderecoDetalhe>> UnblockAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var endereco = await db.Enderecos.FindAsync([id], cancellationToken);
+        if (endereco is null)
+        {
+            return NotFound();
+        }
+
+        if (endereco.Status != StatusEndereco.Bloqueado)
+        {
+            return AppError.BusinessRule($"O endereço {endereco.Codigo} não está bloqueado.");
+        }
+
+        // Bloco 1.3 (Estoque): consultar o Saldo do endereço para decidir entre Ocupado e Livre.
+        endereco.Unblock(ocupado: false);
+        await db.SaveChangesAsync(cancellationToken);
+        return ToDetalhe(endereco);
+    }
+
     private static EnderecoDetalhe ToDetalhe(Endereco e) =>
         new(
             e.Id,
@@ -203,7 +250,9 @@ internal sealed class EnderecoService(StowiseDbContext db) : IEnderecoService
             e.ProfundidadeCm,
             e.DistanciaExpedicao,
             e.Status,
-            e.MotivoBloqueio);
+            e.MotivoBloqueio,
+            e.BloqueadoEm,
+            e.BloqueadoPor);
 
     private static AppError NotFound() => AppError.NotFound("Endereço não encontrado.");
 }

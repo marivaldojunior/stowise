@@ -26,6 +26,11 @@ public interface IEnderecoService
 
     /// <summary>Exclui o endereço, desde que ele não esteja ocupado.</summary>
     Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Bloqueia o endereço com motivo. Registra quem bloqueou e quando.</summary>
+    Task<Result<EnderecoDetalhe>> BlockAsync(Guid id, BloquearEndereco comando, Guid usuarioId, CancellationToken cancellationToken = default);
+
+    Task<Result<EnderecoDetalhe>> UnblockAsync(Guid id, CancellationToken cancellationToken = default);
 }
 
 /// <param name="Codigo">Prefixo do código (ex.: "A-03" traz o módulo 3 da rua A).</param>
@@ -52,7 +57,9 @@ public sealed record EnderecoDetalhe(
     decimal ProfundidadeCm,
     decimal DistanciaExpedicao,
     StatusEndereco Status,
-    string? MotivoBloqueio);
+    string? MotivoBloqueio,
+    DateTimeOffset? BloqueadoEm,
+    Guid? BloqueadoPor);
 
 public sealed record DimensoesEnderecoComando(
     decimal? CapacidadePesoKg,
@@ -101,3 +108,5 @@ public sealed record GeracaoEnderecosResultado(
     bool Simulado,
     IReadOnlyList<string> CodigosExistentes,
     IReadOnlyList<string> Amostra);
+
+public sealed record BloquearEndereco(string? Motivo);

@@ -74,6 +74,55 @@ public class EnderecoTests
         Assert.Equal("A-03-02-1", endereco.Codigo);
     }
 
+    [Fact]
+    public void Block_records_reason_author_and_time()
+    {
+        var endereco = Create();
+        var quando = new DateTimeOffset(2026, 10, 18, 9, 30, 0, TimeSpan.Zero);
+        var usuarioId = Guid.CreateVersion7();
+
+        endereco.Block("  Longarina amassada  ", quando, usuarioId);
+
+        Assert.Equal(StatusEndereco.Bloqueado, endereco.Status);
+        Assert.Equal("Longarina amassada", endereco.MotivoBloqueio);
+        Assert.Equal(quando, endereco.BloqueadoEm);
+        Assert.Equal(usuarioId, endereco.BloqueadoPor);
+    }
+
+    [Fact]
+    public void Block_requires_reason_and_cannot_repeat()
+    {
+        var endereco = Create();
+
+        Assert.Throws<DomainException>(() => endereco.Block(" ", DateTimeOffset.UtcNow, Guid.NewGuid()));
+        Assert.Throws<DomainException>(() => endereco.Block(new string('x', Endereco.MotivoBloqueioMaxLength + 1), DateTimeOffset.UtcNow, Guid.NewGuid()));
+
+        endereco.Block("Avaria", DateTimeOffset.UtcNow, Guid.NewGuid());
+        Assert.Throws<DomainException>(() => endereco.Block("Outra avaria", DateTimeOffset.UtcNow, Guid.NewGuid()));
+    }
+
+    [Theory]
+    [InlineData(false, StatusEndereco.Livre)]
+    [InlineData(true, StatusEndereco.Ocupado)]
+    public void Unblock_clears_the_block_and_restores_status_by_occupancy(bool ocupado, StatusEndereco esperado)
+    {
+        var endereco = Create();
+        endereco.Block("Avaria", DateTimeOffset.UtcNow, Guid.NewGuid());
+
+        endereco.Unblock(ocupado);
+
+        Assert.Equal(esperado, endereco.Status);
+        Assert.Null(endereco.MotivoBloqueio);
+        Assert.Null(endereco.BloqueadoEm);
+        Assert.Null(endereco.BloqueadoPor);
+    }
+
+    [Fact]
+    public void Unblock_requires_a_blocked_address()
+    {
+        Assert.Throws<DomainException>(() => Create().Unblock(ocupado: false));
+    }
+
     [Theory]
     [InlineData("A", true)]
     [InlineData("aa", true)]

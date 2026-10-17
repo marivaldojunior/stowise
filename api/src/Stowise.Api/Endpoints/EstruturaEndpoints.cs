@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Stowise.Api.Common;
 using Stowise.Application.Auth;
 using Stowise.Application.Common;
@@ -106,9 +107,26 @@ public static class EstruturaEndpoints
             .Produces<EnderecoDetalhe>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
+        // Qualquer usuário autenticado bloqueia: o operador no armazém vê a estante avariada e barra o uso na hora.
+        group.MapPost("/{id:guid}/bloquear", async (Guid id, BloquearEndereco comando, IEnderecoService enderecos, ClaimsPrincipal user, CancellationToken ct) =>
+                (await enderecos.BlockAsync(id, comando, user.GetUsuarioId(), ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("BloquearEndereco")
+            .Produces<EnderecoDetalhe>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
         var escrita = group.MapGroup("/")
             .RequireAuthorization(Politicas.Gestao)
             .ProducesProblem(StatusCodes.Status403Forbidden);
+
+        escrita.MapPost("/{id:guid}/desbloquear", async (Guid id, IEnderecoService enderecos, CancellationToken ct) =>
+                (await enderecos.UnblockAsync(id, ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("DesbloquearEndereco")
+            .WithSummary("Só Admin e Gestor desbloqueiam.")
+            .Produces<EnderecoDetalhe>()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         escrita.MapPost("/", async (CriarEndereco comando, IEnderecoService enderecos, CancellationToken ct) =>
                 (await enderecos.CreateAsync(comando, ct)).ToHttpResult(e => TypedResults.CreatedAtRoute(e, ObterEnderecoRoute, new { id = e.Id })))

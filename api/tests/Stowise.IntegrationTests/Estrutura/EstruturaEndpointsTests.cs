@@ -73,6 +73,18 @@ public class EstruturaEndpointsTests(StowiseApiFactory factory) : IClassFixture<
     }
 
     [Fact]
+    public async Task Any_user_reaches_block_validation_but_only_gestao_unblocks()
+    {
+        using var operador = ClientWith(Perfis.Operador);
+
+        var semMotivo = await operador.PostAsJsonAsync($"/api/v1/enderecos/{Guid.NewGuid()}/bloquear", new { motivo = " " });
+        var desbloqueio = await operador.PostAsync(new Uri($"/api/v1/enderecos/{Guid.NewGuid()}/desbloquear", UriKind.Relative), null);
+
+        Assert.Equal(HttpStatusCode.BadRequest, semMotivo.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, desbloqueio.StatusCode);
+    }
+
+    [Fact]
     public async Task Invalid_zona_returns_field_errors()
     {
         using var client = ClientWith(Perfis.Admin);

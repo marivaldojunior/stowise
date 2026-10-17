@@ -58,6 +58,11 @@ public sealed class Endereco : Entity
 
     public string? MotivoBloqueio { get; private set; }
 
+    public DateTimeOffset? BloqueadoEm { get; private set; }
+
+    /// <summary>Usuário que bloqueou o endereço.</summary>
+    public Guid? BloqueadoPor { get; private set; }
+
     public static Endereco Create(Zona zona, string rua, int modulo, int nivel, int posicao, DimensoesEndereco dimensoes)
     {
         ArgumentNullException.ThrowIfNull(zona);
@@ -92,6 +97,34 @@ public sealed class Endereco : Entity
         LarguraCm = Guard.Positive(dimensoes.LarguraCm, "Largura");
         ProfundidadeCm = Guard.Positive(dimensoes.ProfundidadeCm, "Profundidade");
         DistanciaExpedicao = Guard.NotNegative(dimensoes.DistanciaExpedicao, "Distância até a expedição");
+    }
+
+    /// <summary>Impede o uso do endereço (ex.: estante avariada). O motivo é obrigatório e fica registrado.</summary>
+    public void Block(string motivo, DateTimeOffset quando, Guid usuarioId)
+    {
+        if (Status == StatusEndereco.Bloqueado)
+        {
+            throw new DomainException($"O endereço {Codigo} já está bloqueado: {MotivoBloqueio}");
+        }
+
+        MotivoBloqueio = Guard.Required(motivo, "Motivo do bloqueio", MotivoBloqueioMaxLength);
+        BloqueadoEm = quando;
+        BloqueadoPor = usuarioId;
+        Status = StatusEndereco.Bloqueado;
+    }
+
+    /// <param name="ocupado">Se o endereço tem saldo. Define se ele volta a Ocupado ou a Livre.</param>
+    public void Unblock(bool ocupado)
+    {
+        if (Status != StatusEndereco.Bloqueado)
+        {
+            throw new DomainException($"O endereço {Codigo} não está bloqueado.");
+        }
+
+        MotivoBloqueio = null;
+        BloqueadoEm = null;
+        BloqueadoPor = null;
+        Status = ocupado ? StatusEndereco.Ocupado : StatusEndereco.Livre;
     }
 
     /// <summary>De 1 a 3 letras (A, B, AA...).</summary>

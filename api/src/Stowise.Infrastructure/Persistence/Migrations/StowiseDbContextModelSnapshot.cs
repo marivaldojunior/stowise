@@ -363,6 +363,14 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("armazem_id");
 
+                    b.Property<DateTimeOffset?>("BloqueadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("bloqueado_em");
+
+                    b.Property<Guid?>("BloqueadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("bloqueado_por");
+
                     b.Property<decimal>("CapacidadePesoKg")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")

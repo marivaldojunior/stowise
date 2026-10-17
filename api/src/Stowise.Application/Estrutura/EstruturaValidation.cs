@@ -60,6 +60,15 @@ public static class EstruturaValidation
         return errors;
     }
 
+    public static IReadOnlyDictionary<string, string[]> Validate(BloquearEndereco comando)
+    {
+        ArgumentNullException.ThrowIfNull(comando);
+
+        var errors = new Dictionary<string, string[]>();
+        Text(errors, "motivo", comando.Motivo, Endereco.MotivoBloqueioMaxLength, "o motivo do bloqueio");
+        return errors;
+    }
+
     public static IReadOnlyDictionary<string, string[]> Validate(GerarEnderecos comando)
     {
         ArgumentNullException.ThrowIfNull(comando);

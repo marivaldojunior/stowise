@@ -155,6 +155,55 @@ public sealed class EstruturaFlowTests : IDisposable
         Assert.Equal(26, (await GetAsync<PagedResult<EnderecoDetalhe>>(token, $"/api/v1/enderecos?armazemId={cd.Id}")).Total);
     }
 
+    [DockerFact]
+    public async Task Operador_blocks_with_reason_and_gestao_unblocks()
+    {
+        var admin = await LoginAsync();
+        var cd = await CreateArmazemAsync(admin, "CD02", "Centro Sul");
+        var seco = (await AddZonaAsync(admin, cd.Id, "SECO", "Normal")).Zonas.Single();
+        var endereco = await CreateEnderecoAsync(admin, seco.Id, "A", 1);
+        var operador = await CreateOperadorAndLoginAsync(admin);
+
+        var bloqueio = await SendAsync(operador.AccessToken, HttpMethod.Post, $"/api/v1/enderecos/{endereco.Id}/bloquear", new { motivo = "Longarina amassada" });
+        Assert.Equal(HttpStatusCode.OK, bloqueio.StatusCode);
+        var bloqueado = (await bloqueio.Content.ReadFromJsonAsync<EnderecoDetalhe>(Json))!;
+        Assert.Equal(Domain.Estrutura.StatusEndereco.Bloqueado, bloqueado.Status);
+        Assert.Equal("Longarina amassada", bloqueado.MotivoBloqueio);
+        Assert.Equal(operador.Usuario.Id, bloqueado.BloqueadoPor);
+        Assert.NotNull(bloqueado.BloqueadoEm);
+
+        var repetido = await SendAsync(operador.AccessToken, HttpMethod.Post, $"/api/v1/enderecos/{endereco.Id}/bloquear", new { motivo = "Outra" });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, repetido.StatusCode);
+
+        var bloqueados = await GetAsync<PagedResult<EnderecoDetalhe>>(admin, $"/api/v1/enderecos?armazemId={cd.Id}&status=Bloqueado");
+        Assert.Equal(endereco.Id, Assert.Single(bloqueados.Itens).Id);
+
+        var pelaOperacao = await SendAsync(operador.AccessToken, HttpMethod.Post, $"/api/v1/enderecos/{endereco.Id}/desbloquear");
+        Assert.Equal(HttpStatusCode.Forbidden, pelaOperacao.StatusCode);
+
+        var desbloqueio = await SendAsync(admin, HttpMethod.Post, $"/api/v1/enderecos/{endereco.Id}/desbloquear");
+        Assert.Equal(HttpStatusCode.OK, desbloqueio.StatusCode);
+        var livre = (await desbloqueio.Content.ReadFromJsonAsync<EnderecoDetalhe>(Json))!;
+        Assert.Equal(Domain.Estrutura.StatusEndereco.Livre, livre.Status);
+        Assert.Null(livre.MotivoBloqueio);
+
+        var outraVez = await SendAsync(admin, HttpMethod.Post, $"/api/v1/enderecos/{endereco.Id}/desbloquear");
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, outraVez.StatusCode);
+    }
+
+    private async Task<AuthResponse> CreateOperadorAndLoginAsync(string adminToken)
+    {
+        const string email = "operador@stowise.test";
+        const string senha = "Senha-do-operador-1";
+        var criado = await SendAsync(adminToken, HttpMethod.Post, "/api/v1/usuarios",
+            new { nome = "Operador", email, senha, perfis = new[] { "Operador" } });
+        Assert.Equal(HttpStatusCode.Created, criado.StatusCode);
+
+        var login = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email, senha });
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+        return (await login.Content.ReadFromJsonAsync<AuthResponse>())!;
+    }
+
     private Task<HttpResponseMessage> GerarLoteAsync(
         string token,
         Guid zonaId,
