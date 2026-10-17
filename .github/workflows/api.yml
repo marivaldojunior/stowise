@@ -37,6 +37,9 @@ jobs:
         run: dotnet build --no-restore -c Release
 
       - name: Test
+        env:
+          # Testes com Testcontainers não podem ser pulados no CI
+          STOWISE_REQUIRE_DOCKER: "true"
         run: dotnet test --no-build -c Release --collect:"XPlat Code Coverage"
 
   docker:

@@ -28,6 +28,9 @@ dotnet build
 dotnet test
 dotnet format --verify-no-changes
 
+# Migrations (em api/; rode dotnet tool restore uma vez)
+dotnet ef migrations add <Nome> -p src/Stowise.Infrastructure -s src/Stowise.Infrastructure -o Persistence/Migrations
+
 # Web (em web/)
 npm run lint && npm run typecheck && npm test && npm run build
 
@@ -41,3 +44,8 @@ docker compose up -d --build
 ## Estrutura da API
 
 Camadas com dependência em um só sentido ([ADR-0002](docs/adr/0002-solucao-em-camadas.md)): `Domain` ← `Application` ← `Infrastructure` / `Api`. `Domain` não referencia EF Core nem outros projetos. Versões de pacotes NuGet ficam em `api/Directory.Packages.props` (gerenciamento central); após adicionar um pacote, rode `dotnet restore` para atualizar os `packages.lock.json`.
+
+- **Nomes:** substantivos e estados do domínio em português (`Endereco`, `StatusEndereco.Livre`); verbos e termos técnicos em inglês (`Endereco.Create`, `Armazem.AddZona`, `SampleDataSeeder`). Mensagens de `DomainException` em português, porque chegam ao usuário; logs e erros de infraestrutura em inglês.
+- **Entidades:** construtor privado para o EF, criação por `Create(...)` com validação, setters privados. Ids em `Guid.CreateVersion7()`.
+- **Banco:** tabelas e colunas em `snake_case`, enums gravados como texto e `decimal(18,4)` por convenção do `StowiseDbContext`. Migrations e seed rodam na inicialização só com `Database:MigrateOnStartup` e `Database:SeedSampleData` (ligados em Development e no docker-compose).
+- **Testes de integração:** testes com PostgreSQL usam `[DockerFact]` e a coleção `PostgresTestGroup` (Testcontainers, imagem `pgvector/pgvector:pg17`, um banco novo por teste). Sem Docker, eles são pulados localmente; no CI, `STOWISE_REQUIRE_DOCKER=true` faz o teste falhar em vez de ser pulado. Testes HTTP usam `StowiseApiFactory` (ambiente `Testing`).

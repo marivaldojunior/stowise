@@ -1,5 +1,27 @@
 <Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <!-- Fixa o EF Core no mesmo patch do pacote Design (o Npgsql traz uma versão anterior) -->
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="Pgvector.EntityFrameworkCore" />
+  </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\Stowise.Application\Stowise.Application.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Stowise.IntegrationTests" />
+  </ItemGroup>
+
 </Project>

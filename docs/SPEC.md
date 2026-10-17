@@ -251,7 +251,7 @@ Regras de ordem:
 **1.1 API — Fundação**
 
 - [x] Solução em camadas (Domain, Application, Infrastructure, Api) ou vertical slices
-- [ ] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
+- [x] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
 - [ ] ADR de autenticação (ASP.NET Core Identity × Keycloak)
 - [ ] Autenticação JWT com refresh token rotativo e perfis (Admin, Gestor, Operador)
 - [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks

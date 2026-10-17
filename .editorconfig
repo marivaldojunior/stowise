@@ -26,3 +26,7 @@ trim_trailing_whitespace = false
 
 [*.{kt,kts}]
 indent_size = 4
+
+[api/src/**/Migrations/**.cs]
+# Código gerado pelo dotnet ef: fora dos analisadores e do dotnet format
+generated_code = true
