@@ -14,6 +14,12 @@ public interface IMovimentacaoService
 
     Task<Result<MovimentacaoRegistrada>> RegistrarSaidaAsync(RegistrarSaida comando, Guid usuarioId, CancellationToken cancellationToken = default);
 
+    /// <summary>Move a mercadoria entre dois endereços do mesmo armazém.</summary>
+    Task<Result<MovimentacaoRegistrada>> RegistrarTransferenciaAsync(RegistrarTransferencia comando, Guid usuarioId, CancellationToken cancellationToken = default);
+
+    /// <summary>Saída que consome uma reserva ativa: quantidade, endereço, produto e lote vêm da reserva.</summary>
+    Task<Result<MovimentacaoRegistrada>> ConsumirReservaAsync(Guid reservaId, ConsumirReserva comando, Guid usuarioId, CancellationToken cancellationToken = default);
+
     Task<Result<MovimentacaoRegistrada>> RegistrarAjusteAsync(RegistrarAjuste comando, Guid usuarioId, CancellationToken cancellationToken = default);
 
     Task<Result<MovimentacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
@@ -45,6 +51,26 @@ public sealed record RegistrarSaida(
     Guid? EnderecoId,
     decimal? Quantidade,
     string? Lote,
+    string? DocumentoReferencia,
+    Guid? DispositivoId,
+    DateTimeOffset? OcorridoEm,
+    Guid? IdempotencyKey = null);
+
+/// <param name="Lote">Número do lote, obrigatório para produtos que controlam lote.</param>
+public sealed record RegistrarTransferencia(
+    Guid? ProdutoId,
+    Guid? EmbalagemId,
+    Guid? EnderecoOrigemId,
+    Guid? EnderecoDestinoId,
+    decimal? Quantidade,
+    string? Lote,
+    string? DocumentoReferencia,
+    Guid? DispositivoId,
+    DateTimeOffset? OcorridoEm,
+    Guid? IdempotencyKey = null);
+
+/// <param name="DocumentoReferencia">Sem ele, vale o documento da reserva.</param>
+public sealed record ConsumirReserva(
     string? DocumentoReferencia,
     Guid? DispositivoId,
     DateTimeOffset? OcorridoEm,

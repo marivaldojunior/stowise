@@ -445,6 +445,93 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Estoque.Reserva", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<Guid>("CriadaPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("criada_por");
+
+                    b.Property<string>("DocumentoReferencia")
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("documento_referencia");
+
+                    b.Property<DateTimeOffset?>("EncerradaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("encerrada_em");
+
+                    b.Property<Guid?>("EncerradaPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("encerrada_por");
+
+                    b.Property<Guid>("EnderecoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endereco_id");
+
+                    b.Property<Guid?>("LoteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("lote_id");
+
+                    b.Property<Guid?>("MovimentacaoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("movimentacao_id");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<decimal>("Quantidade")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantidade");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_reservas");
+
+                    b.HasIndex("CriadaPor")
+                        .HasDatabaseName("ix_reservas_criada_por");
+
+                    b.HasIndex("DocumentoReferencia")
+                        .HasDatabaseName("ix_reservas_documento_referencia");
+
+                    b.HasIndex("LoteId")
+                        .HasDatabaseName("ix_reservas_lote_id");
+
+                    b.HasIndex("MovimentacaoId")
+                        .HasDatabaseName("ix_reservas_movimentacao_id");
+
+                    b.HasIndex("ProdutoId")
+                        .HasDatabaseName("ix_reservas_produto_id");
+
+                    b.HasIndex("EnderecoId", "ProdutoId", "LoteId", "Status")
+                        .HasDatabaseName("ix_reservas_endereco_id_produto_id_lote_id_status");
+
+                    b.ToTable("reservas", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_reservas_quantidade", "quantidade > 0");
+                        });
+                });
+
             modelBuilder.Entity("Stowise.Domain.Estoque.Saldo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -996,6 +1083,42 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_movimentacoes_usuarios_usuario_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Estoque.Reserva", b =>
+                {
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("CriadaPor")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_reservas_usuarios_criada_por");
+
+                    b.HasOne("Stowise.Domain.Estrutura.Endereco", null)
+                        .WithMany()
+                        .HasForeignKey("EnderecoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_reservas_enderecos_endereco_id");
+
+                    b.HasOne("Stowise.Domain.Estoque.Lote", null)
+                        .WithMany()
+                        .HasForeignKey("LoteId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_reservas_lotes_lote_id");
+
+                    b.HasOne("Stowise.Domain.Estoque.Movimentacao", null)
+                        .WithMany()
+                        .HasForeignKey("MovimentacaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_reservas_movimentacoes_movimentacao_id");
+
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_reservas_produtos_produto_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Estoque.Saldo", b =>

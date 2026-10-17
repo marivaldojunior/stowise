@@ -268,6 +268,105 @@ public sealed class MovimentacoesFlowTests : IAsyncLifetime
         Assert.Equal(1, await QueryAsync(db => db.Movimentacoes.CountAsync()));
     }
 
+    [DockerFact]
+    public async Task Transfer_moves_stock_and_occupancy_between_addresses_of_the_same_warehouse()
+    {
+        var destino = await CreateEnderecoAsync(_endereco.ZonaId, modulo: 2);
+        await SendAsync("/api/v1/movimentacoes/entradas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 10 });
+        var transferencia = new
+        {
+            produtoId = _refrigerante.Id,
+            enderecoOrigemId = _endereco.Id,
+            enderecoDestinoId = destino.Id,
+            quantidade = 10,
+            idempotencyKey = Guid.NewGuid(),
+        };
+
+        var resposta = await SendAsync("/api/v1/movimentacoes/transferencias", transferencia);
+        Assert.Equal(HttpStatusCode.Created, resposta.StatusCode);
+        Assert.Equal(TipoMovimentacao.Transferencia, (await resposta.Content.ReadFromJsonAsync<MovimentacaoDetalhe>(Json))!.Tipo);
+        Assert.Equal(0m, await SaldoAsync(_refrigerante.Id));
+        Assert.Equal(10m, await SaldoEmAsync(_refrigerante.Id, destino.Id));
+        Assert.Equal(StatusEndereco.Livre, await StatusEnderecoAsync());
+        Assert.Equal(StatusEndereco.Ocupado, (await GetAsync<EnderecoDetalhe>($"/api/v1/enderecos/{destino.Id}")).Status);
+
+        var reenvio = await SendAsync("/api/v1/movimentacoes/transferencias", transferencia);
+        Assert.Equal(HttpStatusCode.OK, reenvio.StatusCode);
+        Assert.Equal(10m, await SaldoEmAsync(_refrigerante.Id, destino.Id));
+
+        var outroArmazem = await PostAsync<ArmazemDetalhe>("/api/v1/armazens", new { codigo = "CD09", nome = "Outro" });
+        outroArmazem = await PostAsync<ArmazemDetalhe>($"/api/v1/armazens/{outroArmazem.Id}/zonas", new { codigo = "SECO", classeArmazenagem = "Normal" });
+        var longe = await CreateEnderecoAsync(outroArmazem.Zonas.Single().Id, modulo: 1);
+        var entreArmazens = await SendAsync("/api/v1/movimentacoes/transferencias", new
+        {
+            produtoId = _refrigerante.Id,
+            enderecoOrigemId = destino.Id,
+            enderecoDestinoId = longe.Id,
+            quantidade = 1,
+        });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, entreArmazens.StatusCode);
+    }
+
+    [DockerFact]
+    public async Task Reservation_holds_stock_until_consumed_or_cancelled()
+    {
+        await SendAsync("/api/v1/movimentacoes/entradas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 10 });
+
+        var reserva = await PostAsync<ReservaDetalhe>("/api/v1/reservas", new
+        {
+            produtoId = _refrigerante.Id,
+            enderecoId = _endereco.Id,
+            quantidade = 7,
+            documentoReferencia = "PED-42",
+        });
+        Assert.Equal(StatusReserva.Ativa, reserva.Status);
+
+        var acimaDoDisponivel = await SendAsync("/api/v1/movimentacoes/saidas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 4 });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, acimaDoDisponivel.StatusCode);
+        var outraReserva = await SendAsync("/api/v1/reservas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 4 });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, outraReserva.StatusCode);
+
+        var consumo = new { idempotencyKey = Guid.NewGuid() };
+        var saida = await SendAsync($"/api/v1/reservas/{reserva.Id}/consumir", consumo);
+        Assert.Equal(HttpStatusCode.Created, saida.StatusCode);
+        var movimento = (await saida.Content.ReadFromJsonAsync<MovimentacaoDetalhe>(Json))!;
+        Assert.Equal(7m, movimento.Quantidade);
+        Assert.Equal("PED-42", movimento.DocumentoReferencia);
+        Assert.Equal(3m, await SaldoAsync(_refrigerante.Id));
+
+        var consumida = await GetAsync<ReservaDetalhe>($"/api/v1/reservas/{reserva.Id}");
+        Assert.Equal(StatusReserva.Consumida, consumida.Status);
+        Assert.Equal(movimento.Id, consumida.MovimentacaoId);
+
+        Assert.Equal(HttpStatusCode.OK, (await SendAsync($"/api/v1/reservas/{reserva.Id}/consumir", consumo)).StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await SendAsync($"/api/v1/reservas/{reserva.Id}/consumir", new { })).StatusCode);
+        Assert.Equal(3m, await SaldoAsync(_refrigerante.Id));
+
+        var segunda = await PostAsync<ReservaDetalhe>("/api/v1/reservas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 3 });
+        var cancelada = await SendAsync($"/api/v1/reservas/{segunda.Id}/cancelar", body: null);
+        Assert.Equal(StatusReserva.Cancelada, (await cancelada.Content.ReadFromJsonAsync<ReservaDetalhe>(Json))!.Status);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, (await SendAsync($"/api/v1/reservas/{segunda.Id}/cancelar", body: null)).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await SendAsync("/api/v1/movimentacoes/saidas", new { produtoId = _refrigerante.Id, enderecoId = _endereco.Id, quantidade = 3 })).StatusCode);
+    }
+
+    private async Task<EnderecoDetalhe> CreateEnderecoAsync(Guid zonaId, int modulo) =>
+        await PostAsync<EnderecoDetalhe>("/api/v1/enderecos", new
+        {
+            zonaId,
+            rua = "B",
+            modulo,
+            nivel = 1,
+            posicao = 1,
+            capacidadePesoKg = 1000,
+            alturaCm = 150,
+            larguraCm = 120,
+            profundidadeCm = 100,
+            distanciaExpedicao = 4,
+        });
+
+    private async Task<decimal> SaldoEmAsync(Guid produtoId, Guid enderecoId) =>
+        await QueryAsync(db => db.Saldos.Where(s => s.ProdutoId == produtoId && s.EnderecoId == enderecoId).SumAsync(s => s.Quantidade));
+
     /// <summary>Até 5 operações simultâneas no mesmo saldo terminam sem erro (ADR-0006).</summary>
     private const int MovimentacaoConcorrencia = 5;
 

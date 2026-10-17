@@ -32,6 +32,27 @@ public sealed class Saldo : Entity
 
     internal void Add(decimal quantidade) => Quantidade += quantidade;
 
+    internal void Reserve(decimal quantidade)
+    {
+        if (quantidade > QuantidadeDisponivel)
+        {
+            throw new DomainException(
+                $"Saldo disponível insuficiente para reservar: disponível {QuantidadeDisponivel:0.####}, solicitado {quantidade:0.####}.");
+        }
+
+        QuantidadeReservada += quantidade;
+    }
+
+    internal void Release(decimal quantidade)
+    {
+        if (quantidade > QuantidadeReservada)
+        {
+            throw new InvalidOperationException("Cannot release more than the reserved quantity.");
+        }
+
+        QuantidadeReservada -= quantidade;
+    }
+
     internal void Remove(decimal quantidade)
     {
         if (quantidade > QuantidadeDisponivel)

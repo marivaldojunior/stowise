@@ -43,6 +43,7 @@ v1.MapCategoriasEndpoints();
 v1.MapProdutosEndpoints();
 v1.MapEstruturaEndpoints();
 v1.MapMovimentacoesEndpoints();
+v1.MapReservasEndpoints();
 
 await app.RunAsync();
 

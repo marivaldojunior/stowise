@@ -91,6 +91,55 @@ public sealed class Movimentacao : Entity
         return movimentacao;
     }
 
+    /// <summary>Move a mercadoria entre dois endereços do mesmo armazém, num único lançamento.</summary>
+    public static Movimentacao Transferencia(
+        Produto produto,
+        Lote? lote,
+        Endereco origem,
+        Saldo saldoOrigem,
+        Endereco destino,
+        Saldo saldoDestino,
+        decimal quantidade,
+        Registro registro,
+        string? documento)
+    {
+        ArgumentNullException.ThrowIfNull(origem);
+        ArgumentNullException.ThrowIfNull(destino);
+
+        if (origem.Id == destino.Id)
+        {
+            throw new DomainException("A origem e o destino da transferência devem ser endereços diferentes.");
+        }
+
+        if (origem.ArmazemId != destino.ArmazemId)
+        {
+            throw new DomainException("A transferência é entre endereços do mesmo armazém. Para outro armazém, registre saída e entrada.");
+        }
+
+        var movimentacao = Create(TipoMovimentacao.Transferencia, produto, lote, origem, destino, quantidade, registro, documento, observacao: null);
+        movimentacao.Apply(saldoOrigem, saldoDestino);
+        return movimentacao;
+    }
+
+    /// <summary>Saída que consome uma reserva ativa: libera a quantidade reservada e baixa o saldo.</summary>
+    public static Movimentacao SaidaReservada(
+        Produto produto,
+        Lote? lote,
+        Endereco origem,
+        Saldo saldoOrigem,
+        Reserva reserva,
+        Registro registro,
+        string? documento)
+    {
+        ArgumentNullException.ThrowIfNull(reserva);
+        ArgumentNullException.ThrowIfNull(registro);
+
+        reserva.Consume(saldoOrigem, registro.UsuarioId, registro.RecebidoEm);
+        var movimentacao = Saida(produto, lote, origem, saldoOrigem, reserva.Quantidade, registro, documento ?? reserva.DocumentoReferencia);
+        reserva.LinkMovimentacao(movimentacao.Id);
+        return movimentacao;
+    }
+
     /// <summary>Correção do saldo de um endereço: <paramref name="delta"/> positivo aumenta, negativo diminui.</summary>
     public static Movimentacao Ajuste(
         Produto produto,
@@ -166,7 +215,8 @@ public sealed class Movimentacao : Entity
         };
     }
 
-    private static void ValidateLote(Produto produto, Lote? lote, bool exigeValidade)
+    /// <summary>Lote obrigatório se o produto controla lote, proibido se não controla; validade exigida na chegada.</summary>
+    internal static void ValidateLote(Produto produto, Lote? lote, bool exigeValidade)
     {
         if (!produto.ControlaLote)
         {

@@ -41,6 +41,26 @@ internal sealed class SaldoConfiguration : IEntityTypeConfiguration<Saldo>
     }
 }
 
+internal sealed class ReservaConfiguration : IEntityTypeConfiguration<Reserva>
+{
+    public void Configure(EntityTypeBuilder<Reserva> builder)
+    {
+        builder.ToTable("reservas");
+        builder.Property(r => r.DocumentoReferencia).HasMaxLength(Reserva.DocumentoReferenciaMaxLength);
+        builder.Property(r => r.Versao).IsRowVersion().HasColumnName("xmin");
+        builder.ToTable(t => t.HasCheckConstraint("ck_reservas_quantidade", "quantidade > 0"));
+
+        builder.HasIndex(r => new { r.EnderecoId, r.ProdutoId, r.LoteId, r.Status });
+        builder.HasIndex(r => r.DocumentoReferencia);
+
+        builder.HasOne<Endereco>().WithMany().HasForeignKey(r => r.EnderecoId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Produto>().WithMany().HasForeignKey(r => r.ProdutoId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Lote>().WithMany().HasForeignKey(r => r.LoteId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Movimentacao>().WithMany().HasForeignKey(r => r.MovimentacaoId).OnDelete(DeleteBehavior.Restrict);
+        builder.HasOne<Usuario>().WithMany().HasForeignKey(r => r.CriadaPor).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 internal sealed class MovimentacaoConfiguration : IEntityTypeConfiguration<Movimentacao>
 {
     public const string IdempotencyKeyIndex = "ix_movimentacoes_idempotency_key";

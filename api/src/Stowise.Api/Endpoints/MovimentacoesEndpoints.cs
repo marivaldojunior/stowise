@@ -42,6 +42,16 @@ public static class MovimentacoesEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
+        group.MapPost("/transferencias", async (RegistrarTransferencia comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, HttpContext http, CancellationToken ct) =>
+                Registrada(await movimentacoes.RegistrarTransferenciaAsync(comando, user.GetUsuarioId(), ct), http))
+            .WithName("RegistrarTransferencia")
+            .WithSummary("Move a mercadoria entre dois endereços do mesmo armazém.")
+            .Produces<MovimentacaoDetalhe>(StatusCodes.Status201Created)
+            .Produces<MovimentacaoDetalhe>(StatusCodes.Status200OK)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
         group.MapPost("/ajustes", async (RegistrarAjuste comando, IMovimentacaoService movimentacoes, ClaimsPrincipal user, HttpContext http, CancellationToken ct) =>
                 Registrada(await movimentacoes.RegistrarAjusteAsync(comando, user.GetUsuarioId(), ct), http))
             .WithName("RegistrarAjuste")
@@ -61,7 +71,7 @@ public static class MovimentacoesEndpoints
     public const string ReplayHeader = "Idempotent-Replayed";
 
     /// <summary>201 para uma operação nova; 200 com o cabeçalho de reenvio quando a chave de idempotência já foi usada.</summary>
-    private static IResult Registrada(Application.Common.Result<MovimentacaoRegistrada> result, HttpContext http) =>
+    internal static IResult Registrada(Application.Common.Result<MovimentacaoRegistrada> result, HttpContext http) =>
         result.ToHttpResult(r =>
         {
             if (!r.Repetida)

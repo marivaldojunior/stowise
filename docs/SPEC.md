@@ -273,7 +273,7 @@ Regras de ordem:
 
 - [x] Serviço de movimentação: grava Movimentacao e atualiza Saldo na mesma transação
 - [x] Idempotência por `IdempotencyKey` e concorrência otimista (`xmin`)
-- [ ] Transferência entre endereços e reservas
+- [x] Transferência entre endereços e reservas
 - [ ] Consultas: saldo por produto, endereço e lote; extrato; saldo em uma data
 
 **1.4 API — Importação de produtos com IA**

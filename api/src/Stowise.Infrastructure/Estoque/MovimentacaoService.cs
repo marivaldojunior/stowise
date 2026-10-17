@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Npgsql;
 using Stowise.Application.Common;
 using Stowise.Application.Estoque;
 using Stowise.Domain.Catalogo;
@@ -17,9 +16,6 @@ namespace Stowise.Infrastructure.Estoque;
 /// </summary>
 internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time) : IMovimentacaoService
 {
-    /// <summary>Com conflito otimista, cada rodada tem ao menos um vencedor: N operações simultâneas precisam de até N tentativas.</summary>
-    internal const int MaxTentativas = 5;
-
     public Task<Result<MovimentacaoRegistrada>> RegistrarEntradaAsync(
         RegistrarEntrada comando,
         Guid usuarioId,
@@ -62,6 +58,43 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
             },
             agora => PrepareAjusteAsync(comando, usuarioId, agora, cancellationToken),
             cancellationToken);
+
+    public Task<Result<MovimentacaoRegistrada>> RegistrarTransferenciaAsync(
+        RegistrarTransferencia comando,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default) =>
+        RegistrarAsync(
+            comando.IdempotencyKey,
+            agora => EstoqueValidation.Validate(comando, agora),
+            () => new Esperado(
+                TipoMovimentacao.Transferencia,
+                comando.ProdutoId!.Value,
+                comando.EmbalagemId,
+                comando.EnderecoOrigemId,
+                comando.EnderecoDestinoId,
+                comando.Quantidade!.Value),
+            agora => PrepareTransferenciaAsync(comando, usuarioId, agora, cancellationToken),
+            cancellationToken);
+
+    public async Task<Result<MovimentacaoRegistrada>> ConsumirReservaAsync(
+        Guid reservaId,
+        ConsumirReserva comando,
+        Guid usuarioId,
+        CancellationToken cancellationToken = default)
+    {
+        var reserva = await db.Reservas.AsNoTracking().FirstOrDefaultAsync(r => r.Id == reservaId, cancellationToken);
+        if (reserva is null)
+        {
+            return AppError.NotFound("Reserva não encontrada.");
+        }
+
+        return await RegistrarAsync(
+            comando.IdempotencyKey,
+            agora => EstoqueValidation.Validate(comando, agora),
+            () => new Esperado(TipoMovimentacao.Saida, reserva.ProdutoId, EmbalagemId: null, reserva.EnderecoId, Destino: null, reserva.Quantidade),
+            agora => PrepareConsumoAsync(reservaId, comando, usuarioId, agora, cancellationToken),
+            cancellationToken);
+    }
 
     public async Task<Result<MovimentacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -107,19 +140,19 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
 
                 return new MovimentacaoRegistrada(await SaveAsync(preparada.Value, cancellationToken), Repetida: false);
             }
-            catch (DbUpdateException e) when (idempotencyKey is not null && IsUniqueViolation(e, MovimentacaoConfiguration.IdempotencyKeyIndex))
+            catch (DbUpdateException e) when (idempotencyKey is not null && EstoqueRetry.IsUniqueViolation(e, MovimentacaoConfiguration.IdempotencyKeyIndex))
             {
                 // Duas requisições simultâneas com a mesma chave: a outra gravou primeiro.
                 db.ChangeTracker.Clear();
                 var vencedora = await DetalheAsync(m => m.IdempotencyKey == idempotencyKey, cancellationToken);
                 return await ReplayAsync(vencedora!, esperado(), cancellationToken);
             }
-            catch (DbUpdateException e) when (tentativa < MaxTentativas && IsRetryable(e))
+            catch (DbUpdateException e) when (tentativa < EstoqueRetry.MaxTentativas && EstoqueRetry.IsRetryable(e))
             {
                 // Outra operação mudou o saldo (ou criou o mesmo saldo ou lote) entre a leitura e a gravação:
                 // repete com dados frescos. Na última tentativa, a exceção vira 409 no handler global.
                 db.ChangeTracker.Clear();
-                await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(5, 25) * tentativa), time, cancellationToken);
+                await EstoqueRetry.DelayAsync(tentativa, time, cancellationToken);
             }
         }
     }
@@ -170,7 +203,7 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
             comando.Quantidade!.Value * fator,
             new Registro(usuarioId, comando.DispositivoId, comando.OcorridoEm ?? agora, agora, comando.IdempotencyKey),
             comando.DocumentoReferencia);
-        return new Preparada(movimentacao, endereco, saldo, lote);
+        return new Preparada(movimentacao, [endereco], [saldo], lote);
     }
 
     private async Task<Result<Preparada>> PrepareSaidaAsync(RegistrarSaida comando, Guid usuarioId, DateTimeOffset agora, CancellationToken cancellationToken)
@@ -196,7 +229,7 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
             comando.Quantidade!.Value * fator,
             new Registro(usuarioId, comando.DispositivoId, comando.OcorridoEm ?? agora, agora, comando.IdempotencyKey),
             comando.DocumentoReferencia);
-        return new Preparada(movimentacao, endereco, saldo, lote.Value);
+        return new Preparada(movimentacao, [endereco], [saldo], lote.Value);
     }
 
     private async Task<Result<Preparada>> PrepareAjusteAsync(RegistrarAjuste comando, Guid usuarioId, DateTimeOffset agora, CancellationToken cancellationToken)
@@ -222,7 +255,78 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
             comando.Quantidade!.Value,
             new Registro(usuarioId, DispositivoId: null, comando.OcorridoEm ?? agora, agora, comando.IdempotencyKey),
             comando.Motivo!);
-        return new Preparada(movimentacao, endereco, saldo, lote.Value);
+        return new Preparada(movimentacao, [endereco], [saldo], lote.Value);
+    }
+
+    private async Task<Result<Preparada>> PrepareTransferenciaAsync(
+        RegistrarTransferencia comando,
+        Guid usuarioId,
+        DateTimeOffset agora,
+        CancellationToken cancellationToken)
+    {
+        var (produto, fator, origem, erro) = await LoadAsync(comando.ProdutoId!.Value, comando.EmbalagemId, comando.EnderecoOrigemId!.Value, cancellationToken);
+        if (erro is not null)
+        {
+            return erro.Fields?.ContainsKey("enderecoId") == true ? AppError.Validation("enderecoOrigemId", "Endereço de origem não encontrado.") : erro;
+        }
+
+        var destino = await db.Enderecos.FindAsync([comando.EnderecoDestinoId!.Value], cancellationToken);
+        if (destino is null)
+        {
+            return AppError.Validation("enderecoDestinoId", "Endereço de destino não encontrado.");
+        }
+
+        var lote = await FindLoteAsync(produto!.Id, comando.Lote, cancellationToken);
+        if (lote.Error is not null)
+        {
+            return lote.Error;
+        }
+
+        var saldoOrigem = await GetOrCreateSaldoAsync(origem!.Id, produto.Id, lote.Value?.Id, cancellationToken);
+        var saldoDestino = await GetOrCreateSaldoAsync(destino.Id, produto.Id, lote.Value?.Id, cancellationToken);
+        var movimentacao = Movimentacao.Transferencia(
+            produto,
+            lote.Value,
+            origem,
+            saldoOrigem,
+            destino,
+            saldoDestino,
+            comando.Quantidade!.Value * fator,
+            new Registro(usuarioId, comando.DispositivoId, comando.OcorridoEm ?? agora, agora, comando.IdempotencyKey),
+            comando.DocumentoReferencia);
+        return new Preparada(movimentacao, [origem, destino], [saldoOrigem, saldoDestino], lote.Value);
+    }
+
+    private async Task<Result<Preparada>> PrepareConsumoAsync(
+        Guid reservaId,
+        ConsumirReserva comando,
+        Guid usuarioId,
+        DateTimeOffset agora,
+        CancellationToken cancellationToken)
+    {
+        var reserva = await db.Reservas.FindAsync([reservaId], cancellationToken);
+        if (reserva is null)
+        {
+            return AppError.NotFound("Reserva não encontrada.");
+        }
+
+        var (produto, _, endereco, erro) = await LoadAsync(reserva.ProdutoId, embalagemId: null, reserva.EnderecoId, cancellationToken);
+        if (erro is not null)
+        {
+            return erro;
+        }
+
+        var lote = reserva.LoteId is { } loteId ? await db.Lotes.FindAsync([loteId], cancellationToken) : null;
+        var saldo = await GetOrCreateSaldoAsync(endereco!.Id, produto!.Id, lote?.Id, cancellationToken);
+        var movimentacao = Movimentacao.SaidaReservada(
+            produto,
+            lote,
+            endereco,
+            saldo,
+            reserva,
+            new Registro(usuarioId, comando.DispositivoId, comando.OcorridoEm ?? agora, agora, comando.IdempotencyKey),
+            comando.DocumentoReferencia);
+        return new Preparada(movimentacao, [endereco], [saldo], lote);
     }
 
     private async Task<(Produto? Produto, decimal Fator, Endereco? Endereco, AppError? Erro)> LoadAsync(
@@ -305,11 +409,14 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
 
     private async Task<MovimentacaoDetalhe> SaveAsync(Preparada preparada, CancellationToken cancellationToken)
     {
-        var (movimentacao, endereco, saldo, lote) = preparada;
-        var outrosSaldos = await db.Saldos.AnyAsync(
-            s => s.EnderecoId == endereco.Id && s.Id != saldo.Id && s.Quantidade > 0,
-            cancellationToken);
-        endereco.SyncOcupacao(saldo.Quantidade > 0 || outrosSaldos);
+        var (movimentacao, enderecos, saldos, lote) = preparada;
+        var afetados = saldos.Select(s => s.Id).ToList();
+        foreach (var endereco in enderecos)
+        {
+            var temSaldo = saldos.Any(s => s.EnderecoId == endereco.Id && s.Quantidade > 0)
+                || await db.Saldos.AnyAsync(s => s.EnderecoId == endereco.Id && !afetados.Contains(s.Id) && s.Quantidade > 0, cancellationToken);
+            endereco.SyncOcupacao(temSaldo);
+        }
 
         db.Movimentacoes.Add(movimentacao);
         await db.SaveChangesAsync(cancellationToken);
@@ -330,14 +437,6 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
         return encontrada is null ? null : ToDetalhe(encontrada.m, encontrada.LoteNumero);
     }
 
-    private static bool IsRetryable(DbUpdateException e) =>
-        e is DbUpdateConcurrencyException
-        || IsUniqueViolation(e, SaldoConfiguration.UniqueIndex)
-        || IsUniqueViolation(e, LoteConfiguration.UniqueIndex);
-
-    private static bool IsUniqueViolation(DbUpdateException e, string index) =>
-        e.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } pg && pg.ConstraintName == index;
-
     private static MovimentacaoDetalhe ToDetalhe(Movimentacao m, string? loteNumero) =>
         new(
             m.Id,
@@ -356,8 +455,8 @@ internal sealed class MovimentacaoService(StowiseDbContext db, TimeProvider time
             m.RecebidoEm,
             m.IdempotencyKey);
 
-    /// <summary>Operação montada pelo domínio, pronta para gravar.</summary>
-    private sealed record Preparada(Movimentacao Movimentacao, Endereco Endereco, Saldo Saldo, Lote? Lote);
+    /// <summary>Operação montada pelo domínio, pronta para gravar, com os endereços e saldos que ela altera.</summary>
+    private sealed record Preparada(Movimentacao Movimentacao, IReadOnlyList<Endereco> Enderecos, IReadOnlyList<Saldo> Saldos, Lote? Lote);
 
     /// <summary>O que o comando pede, para comparar com a movimentação já gravada sob a mesma chave.</summary>
     private sealed record Esperado(

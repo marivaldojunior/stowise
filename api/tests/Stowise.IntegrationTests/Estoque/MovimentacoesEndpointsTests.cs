@@ -49,6 +49,37 @@ public class MovimentacoesEndpointsTests(StowiseApiFactory factory) : IClassFixt
             problem!.Errors.Keys.Order(StringComparer.Ordinal));
     }
 
+    [Fact]
+    public async Task Transfer_to_the_same_address_is_a_validation_error()
+    {
+        using var client = ClientWith(Perfis.Operador);
+        var endereco = Guid.NewGuid();
+
+        var response = await client.PostAsJsonAsync("/api/v1/movimentacoes/transferencias", new
+        {
+            produtoId = Guid.NewGuid(),
+            enderecoOrigemId = endereco,
+            enderecoDestinoId = endereco,
+            quantidade = 1,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        Assert.Equal(["enderecoDestinoId"], problem!.Errors.Keys);
+    }
+
+    [Fact]
+    public async Task Reservation_needs_product_address_and_positive_quantity()
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var response = await client.PostAsJsonAsync("/api/v1/reservas", new { quantidade = 0 });
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        Assert.Equal(["enderecoId", "produtoId", "quantidade"], problem!.Errors.Keys.Order(StringComparer.Ordinal));
+    }
+
     private HttpClient ClientWith(string perfil)
     {
         var client = factory.CreateClient();

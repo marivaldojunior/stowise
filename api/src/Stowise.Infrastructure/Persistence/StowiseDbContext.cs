@@ -30,6 +30,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<Saldo> Saldos => Set<Saldo>();
 
+    public DbSet<Reserva> Reservas => Set<Reserva>();
+
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)
