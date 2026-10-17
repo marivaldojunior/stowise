@@ -26,11 +26,26 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      dashboard:
+        condition: service_started
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ConnectionStrings__Stowise: Host=db;Port=5432;Database=${POSTGRES_DB:-stowise};Username=${POSTGRES_USER:-stowise};Password=${POSTGRES_PASSWORD:-stowise}
+      # Traces, métricas e logs via OTLP para o Aspire Dashboard
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://dashboard:18889
     ports:
       - "${API_PORT:-8080}:8080"
+
+  dashboard:
+    # Aspire Dashboard: interface local para traces, métricas e logs (recebe OTLP gRPC na porta 18889)
+    image: mcr.microsoft.com/dotnet/aspire-dashboard:13.6.1
+    restart: unless-stopped
+    environment:
+      # Só para uso local: sem login no dashboard nem no OTLP
+      DASHBOARD__FRONTEND__AUTHMODE: Unsecured
+      DASHBOARD__OTLP__AUTHMODE: Unsecured
+    ports:
+      - "${DASHBOARD_PORT:-18888}:18888"
 
 volumes:
   db-data:

@@ -1,13 +1,15 @@
 using Microsoft.AspNetCore.Authorization;
 using Stowise.Api.Endpoints;
+using Stowise.Api.Errors;
+using Stowise.Api.Observability;
 using Stowise.Application.Auth;
 using Stowise.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.AddObservability();
 builder.Services.AddOpenApi();
-builder.Services.AddProblemDetails();
-builder.Services.AddHealthChecks();
+builder.Services.AddStowiseProblemDetails();
 builder.Services.AddInfrastructure();
 
 // ADR-0005: todo endpoint exige usuário autenticado, salvo AllowAnonymous explícito.
@@ -22,8 +24,8 @@ var app = builder.Build();
 
 await app.Services.InitializeDatabaseAsync();
 
-app.UseExceptionHandler();
-app.UseStatusCodePages();
+app.UseStowiseProblemDetails();
+app.UseStowiseRequestLogging();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -33,7 +35,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi().AllowAnonymous();
 }
 
-app.MapHealthChecks("/health").AllowAnonymous();
+app.MapStowiseHealthChecks();
 app.MapAuthEndpoints();
 app.MapUsuariosEndpoints();
 

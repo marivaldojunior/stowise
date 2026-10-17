@@ -11,7 +11,8 @@ public class StowiseApiFactory : WebApplicationFactory<Program>
 {
     public const string TestSigningKey = "test-only-signing-key-0123456789abcdef-0123";
 
-    public string ConnectionString { get; init; } = "Host=localhost;Database=stowise_unused";
+    /// <summary>Porta 1: a conexão falha na hora, sem depender de um PostgreSQL local.</summary>
+    public string ConnectionString { get; init; } = "Host=127.0.0.1;Port=1;Database=stowise_unused;Timeout=2";
 
     /// <summary>Configurações extras, no formato <c>Secao:Chave</c>.</summary>
     public Dictionary<string, string?> Settings { get; init; } = [];
@@ -21,6 +22,7 @@ public class StowiseApiFactory : WebApplicationFactory<Program>
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:Stowise", ConnectionString);
         builder.UseSetting("Jwt:SigningKey", TestSigningKey);
+        builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
 
         foreach (var (key, value) in Settings)
         {

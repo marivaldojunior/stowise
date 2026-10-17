@@ -15,6 +15,9 @@ public static class DependencyInjection
 {
     public const string ConnectionStringName = "Stowise";
 
+    /// <summary>Tag dos health checks de dependências, usados em <c>/health/ready</c>.</summary>
+    public const string ReadyTag = "ready";
+
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
         services.AddSingleton(TimeProvider.System);
@@ -28,6 +31,7 @@ public static class DependencyInjection
 
         services.AddOptions<DatabaseOptions>().BindConfiguration(DatabaseOptions.SectionName);
         services.AddScoped<DatabaseInitializer>();
+        services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 
         services.AddIdentityAndJwt();
 

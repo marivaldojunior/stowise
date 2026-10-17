@@ -32,7 +32,8 @@ cp .env.example .env
 docker compose up -d --build
 ```
 
-- API: http://localhost:8080/health
+- API: http://localhost:8080/health/live (processo) e http://localhost:8080/health/ready (banco)
+- Aspire Dashboard (traces, métricas e logs): http://localhost:18888
 - PostgreSQL: `localhost:5432` (usuário, senha e banco `stowise`)
 
 Rodando cada parte fora do Docker:
