@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Stowise.Api.Common;
 using Stowise.Application.Auth;
+using Stowise.Application.Common;
 using Stowise.Application.Usuarios;
 
 namespace Stowise.Api.Endpoints;
@@ -11,13 +12,15 @@ public static class UsuariosEndpoints
 
     public static IEndpointRouteBuilder MapUsuariosEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/v1/usuarios")
+        var group = app.MapGroup("/usuarios")
             .WithTags("Usuários")
             .RequireAuthorization(Perfis.Admin)
             .ProducesProblem(StatusCodes.Status401Unauthorized)
             .ProducesProblem(StatusCodes.Status403Forbidden);
 
-        group.MapGet("/", ListAsync).WithName("ListarUsuarios");
+        group.MapGet("/", ListAsync)
+            .WithName("ListarUsuarios")
+            .Produces<PagedResult<UsuarioDetalhe>>();
 
         group.MapGet("/{id:guid}", GetAsync)
             .WithName(ObterUsuarioRoute)
@@ -54,8 +57,9 @@ public static class UsuariosEndpoints
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound);
 
-        app.MapGet("/api/v1/perfis", () => TypedResults.Ok(Perfis.Todos))
+        app.MapGet("/perfis", () => TypedResults.Ok(Perfis.Todos))
             .WithName("ListarPerfis")
+            .Produces<IReadOnlyList<string>>()
             .WithTags("Usuários")
             .RequireAuthorization(Perfis.Admin);
 

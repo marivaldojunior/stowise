@@ -6,17 +6,31 @@ namespace Stowise.Api.Endpoints;
 
 public static class AuthEndpoints
 {
-    public const string RoutePrefix = "/api/v1/auth";
+    /// <summary>Caminho real das rotas de autenticação da v1; o cookie do refresh token fica restrito a ele.</summary>
+    public const string CookiePath = "/api/v1/auth";
     public const string RefreshCookieName = "stowise_refresh";
 
     public static IEndpointRouteBuilder MapAuthEndpoints(this IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup(RoutePrefix).WithTags("Autenticação");
+        var group = app.MapGroup("/auth").WithTags("Autenticação");
 
-        group.MapPost("/login", LoginAsync).AllowAnonymous();
-        group.MapPost("/refresh", RefreshAsync).AllowAnonymous();
-        group.MapPost("/logout", LogoutAsync).AllowAnonymous();
-        group.MapGet("/me", MeAsync);
+        group.MapPost("/login", LoginAsync)
+            .WithName("Login")
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .AllowAnonymous();
+
+        group.MapPost("/refresh", RefreshAsync)
+            .WithName("RenovarSessao")
+            .ProducesProblem(StatusCodes.Status401Unauthorized)
+            .AllowAnonymous();
+
+        group.MapPost("/logout", LogoutAsync)
+            .WithName("Logout")
+            .AllowAnonymous();
+
+        group.MapGet("/me", MeAsync)
+            .WithName("UsuarioAtual")
+            .ProducesProblem(StatusCodes.Status401Unauthorized);
 
         return app;
     }
@@ -115,7 +129,7 @@ public static class AuthEndpoints
         HttpOnly = true,
         Secure = true,
         SameSite = SameSiteMode.Strict,
-        Path = RoutePrefix,
+        Path = CookiePath,
         Expires = expires,
     };
 

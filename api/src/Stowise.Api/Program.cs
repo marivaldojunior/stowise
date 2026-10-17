@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authorization;
 using Stowise.Api.Endpoints;
 using Stowise.Api.Errors;
 using Stowise.Api.Observability;
+using Stowise.Api.OpenApi;
 using Stowise.Application.Auth;
 using Stowise.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddObservability();
-builder.Services.AddOpenApi();
+builder.Services.AddStowiseOpenApi();
 builder.Services.AddStowiseProblemDetails();
 builder.Services.AddInfrastructure();
 
@@ -30,14 +31,12 @@ app.UseStowiseRequestLogging();
 app.UseAuthentication();
 app.UseAuthorization();
 
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi().AllowAnonymous();
-}
-
 app.MapStowiseHealthChecks();
-app.MapAuthEndpoints();
-app.MapUsuariosEndpoints();
+app.MapStowiseOpenApi();
+
+var v1 = app.MapApiV1();
+v1.MapAuthEndpoints();
+v1.MapUsuariosEndpoints();
 
 await app.RunAsync();
 

@@ -33,6 +33,7 @@ docker compose up -d --build
 ```
 
 - API: http://localhost:8080/health/live (processo) e http://localhost:8080/health/ready (banco)
+- Referência da API (Scalar): http://localhost:8080/scalar · contrato OpenAPI: http://localhost:8080/openapi/v1.json
 - Aspire Dashboard (traces, métricas e logs): http://localhost:18888
 - PostgreSQL: `localhost:5432` (usuário, senha e banco `stowise`)
 
