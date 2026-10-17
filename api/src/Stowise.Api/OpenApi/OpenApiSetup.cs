@@ -35,10 +35,14 @@ public static class OpenApiSetup
                     document.Info ??= new OpenApiInfo();
                     document.Info.Title = "Stowise API";
                     document.Info.Version = version;
-                    document.Info.Description =
+                    document.Info.Description = (
                         "Inventário e armazenagem com IA: a IA sugere e uma pessoa confirma.\n\n"
                         + "Erros seguem o padrão ProblemDetails (RFC 9457) e sempre trazem `traceId`. "
-                        + (document.Info.Description ?? string.Empty);
+                        + document.Info.Description).TrimEnd();
+
+                    // Sem "servers": o endereço muda por ambiente e quebraria o contrato versionado (api/openapi).
+                    // Os clientes definem a URL base na configuração deles.
+                    document.Servers?.Clear();
                     return Task.CompletedTask;
                 });
                 options.Document.AddDocumentTransformer<BearerSecurityTransformer>();

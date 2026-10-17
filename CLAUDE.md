@@ -28,6 +28,9 @@ dotnet build
 dotnet test
 dotnet format --verify-no-changes
 
+# Contrato OpenAPI: regrava api/openapi/v1.json após mudar endpoints (PowerShell, em api/)
+$env:STOWISE_UPDATE_CONTRACT='true'; dotnet test --filter OpenApiContract; Remove-Item Env:STOWISE_UPDATE_CONTRACT
+
 # Migrations (em api/; rode dotnet tool restore uma vez)
 dotnet ef migrations add <Nome> -p src/Stowise.Infrastructure -s src/Stowise.Infrastructure -o Persistence/Migrations
 
@@ -52,4 +55,4 @@ Camadas com dependência em um só sentido ([ADR-0002](docs/adr/0002-solucao-em-
 - **Autorização:** todo endpoint exige usuário autenticado (política de fallback, [ADR-0005](docs/adr/0005-autenticacao.md)). Restrinja por perfil com `.RequireAuthorization(Perfis.Gestor)`; use `.AllowAnonymous()` só com motivo explícito. O id do usuário está na claim `sub`.
 - **Erros de caso de uso:** serviços da Application devolvem `Result`/`Result<T>` com `AppError` (Validation 400, NotFound 404, Conflict 409, BusinessRule 422), e não lançam exceção para falhas esperadas. Nos endpoints, use `ToHttpResult`/`ToNoContent` de `Stowise.Api.Common.ErrorResults`. Listas paginadas usam `PagedResult<T>` e `Paging.Normalize`.
 - **Observabilidade:** use `ILogger` com `[LoggerMessage]` (Serilog por baixo; JSON com `@tr`/`@sp` fora de Development). Traces e métricas do OpenTelemetry só são exportados quando `OTEL_EXPORTER_OTLP_ENDPOINT` existe (no docker-compose, o Aspire Dashboard em http://localhost:18888). Exceções inesperadas viram 500 sem detalhes; regras do domínio (`DomainException`) viram 422. Dependências novas ganham um health check com a tag `ready`.
-- **Rotas e contrato:** módulos mapeiam rotas relativas dentro do grupo versionado (`var v1 = app.MapApiV1(); v1.MapXxxEndpoints();` → `/api/v1/...`). Toda operação tem `.WithName("VerboRecurso")` em português (vira o `operationId` e o nome no cliente gerado) e declara as respostas (`.Produces<T>()`, `.ProducesProblem(status)`, `.ProducesValidationProblem()`). O contrato fica em `/openapi/v1.json` e a referência em `/scalar`.
+- **Rotas e contrato:** módulos mapeiam rotas relativas dentro do grupo versionado (`var v1 = app.MapApiV1(); v1.MapXxxEndpoints();` → `/api/v1/...`). Toda operação tem `.WithName("VerboRecurso")` em português (vira o `operationId` e o nome no cliente gerado) e declara as respostas (`.Produces<T>()`, `.ProducesProblem(status)`, `.ProducesValidationProblem()`). O contrato fica em `/openapi/v1.json` e a referência em `/scalar`. O arquivo versionado `api/openapi/v1.json` é verificado por teste: ao mudar um endpoint, regrave o arquivo (comando acima) e inclua o diff no commit.

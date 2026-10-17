@@ -258,7 +258,7 @@ Regras de ordem:
 - [x] Endpoints de gestão de usuários e perfis (Admin), usados pela tela do painel
 - [x] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks
 - [x] OpenAPI com Scalar e versionamento de rotas
-- [ ] Contrato OpenAPI versionado no repositório e verificado no CI (o build falha se o contrato mudar sem atualização)
+- [x] Contrato OpenAPI versionado no repositório e verificado no CI (o build falha se o contrato mudar sem atualização)
 - [ ] Projetos de teste: unidade e integração com Testcontainers
 
 **1.2 API — Catálogo e estrutura física**
