@@ -255,7 +255,7 @@ Regras de ordem:
 - [x] EF Core + Npgsql + pgvector, migrations e seed com um armazém de exemplo
 - [x] ADR de autenticação (ASP.NET Core Identity × Keycloak)
 - [x] Autenticação JWT com refresh token rotativo e perfis (Admin, Gestor, Operador)
-- [ ] Endpoints de gestão de usuários e perfis (Admin), usados pela tela do painel
+- [x] Endpoints de gestão de usuários e perfis (Admin), usados pela tela do painel
 - [ ] Erros em ProblemDetails, logs estruturados (Serilog), OpenTelemetry (traces, métricas e logs) e health checks
 - [ ] OpenAPI com Scalar e versionamento de rotas
 - [ ] Contrato OpenAPI versionado no repositório e verificado no CI (o build falha se o contrato mudar sem atualização)

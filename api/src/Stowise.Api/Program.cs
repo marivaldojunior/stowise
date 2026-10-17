@@ -35,6 +35,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthChecks("/health").AllowAnonymous();
 app.MapAuthEndpoints();
+app.MapUsuariosEndpoints();
 
 await app.RunAsync();
 

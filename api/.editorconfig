@@ -18,6 +18,8 @@ dotnet_sort_system_directives_first = true
 [tests/**.cs]
 # Nomes de teste descritivos com underscore (Metodo_cenario_resultado)
 dotnet_diagnostic.CA1707.severity = none
+# Arrays literais em asserts e payloads deixam o teste legível; desempenho não importa aqui
+dotnet_diagnostic.CA1861.severity = none
 
 [src/**/Migrations/**.cs]
 # Código gerado pelo dotnet ef: fora dos analisadores e do dotnet format

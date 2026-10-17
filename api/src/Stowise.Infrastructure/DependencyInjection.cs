@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Stowise.Application.Auth;
+using Stowise.Application.Usuarios;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence;
 
@@ -51,6 +52,7 @@ public static class DependencyInjection
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
             })
             .AddRoles<Perfil>()
+            .AddErrorDescriber<PortugueseIdentityErrorDescriber>()
             .AddEntityFrameworkStores<StowiseDbContext>();
 
         services.AddOptions<JwtOptions>()
@@ -61,6 +63,7 @@ public static class DependencyInjection
 
         services.AddSingleton<TokenService>();
         services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<AdminBootstrapper>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();

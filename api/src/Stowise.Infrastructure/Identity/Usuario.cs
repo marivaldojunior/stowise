@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Identity;
+using Stowise.Application.Usuarios;
 
 namespace Stowise.Infrastructure.Identity;
 
 public sealed class Usuario : IdentityUser<Guid>
 {
-    public const int NomeMaxLength = 120;
+    public const int NomeMaxLength = UsuarioValidation.NomeMaxLength;
 
     public Usuario()
     {
