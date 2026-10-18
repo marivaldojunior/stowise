@@ -83,7 +83,7 @@ public sealed class IaFlowTests : IAsyncLifetime
         await using var scope = _factory.Services.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<StowiseDbContext>();
         var registrada = await db.ChamadasIa.SingleAsync(c => c.Id == ok.ChamadaId);
-        Assert.Equal((usuarioId, "Anthropic", "claude-opus-5-5", "mapeamento-v1"), (registrada.UsuarioId, registrada.Provedor, registrada.Modelo, registrada.PromptVersao));
+        Assert.Equal((usuarioId, "anthropic", "claude-opus-5-5", "mapeamento-v1"), (registrada.UsuarioId, registrada.Provedor, registrada.Modelo, registrada.PromptVersao));
         Assert.Equal((1200, 300, 0.0108m, true), (registrada.TokensEntrada, registrada.TokensSaida, registrada.CustoEstimado, registrada.Sucesso));
         Assert.True(registrada.LatenciaMs >= 0);
 
