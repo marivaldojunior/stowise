@@ -12,8 +12,13 @@ public static class OpenApiSetup
 
     public static IServiceCollection AddStowiseOpenApi(this IServiceCollection services)
     {
-        // Enums como texto no JSON e no contrato OpenAPI (ex.: "Refrigerado", não 1).
-        services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+        // Enums como texto no JSON e no contrato OpenAPI (ex.: "Refrigerado", não 1). Números só como número: o padrão
+        // da web aceita "10" como 10, e o contrato passaria a tipar todo inteiro como "integer ou string" nos clientes.
+        services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict;
+        });
 
         services.AddApiVersioning(options =>
             {
