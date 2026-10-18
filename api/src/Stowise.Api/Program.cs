@@ -62,6 +62,7 @@ v1.MapMovimentacoesEndpoints();
 v1.MapReservasEndpoints();
 v1.MapConsultasEstoqueEndpoints();
 v1.MapImportacoesEndpoints();
+v1.MapIaEndpoints();
 
 await app.RunAsync();
 

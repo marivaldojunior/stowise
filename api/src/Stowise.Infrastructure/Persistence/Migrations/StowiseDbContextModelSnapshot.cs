@@ -751,6 +751,95 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("zonas", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Ia.ChamadaIa", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CorrelacaoId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("correlacao_id");
+
+                    b.Property<DateTimeOffset>("CriadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criada_em");
+
+                    b.Property<decimal?>("CustoEstimado")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("numeric(18,6)")
+                        .HasColumnName("custo_estimado");
+
+                    b.Property<string>("Erro")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("erro");
+
+                    b.Property<string>("Funcionalidade")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("funcionalidade");
+
+                    b.Property<int>("LatenciaMs")
+                        .HasColumnType("integer")
+                        .HasColumnName("latencia_ms");
+
+                    b.Property<string>("Modelo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("modelo");
+
+                    b.Property<string>("PromptVersao")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("prompt_versao");
+
+                    b.Property<string>("Provedor")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("provedor");
+
+                    b.Property<bool>("Sucesso")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sucesso");
+
+                    b.Property<int>("Tentativas")
+                        .HasColumnType("integer")
+                        .HasColumnName("tentativas");
+
+                    b.Property<int?>("TokensEntrada")
+                        .HasColumnType("integer")
+                        .HasColumnName("tokens_entrada");
+
+                    b.Property<int?>("TokensSaida")
+                        .HasColumnType("integer")
+                        .HasColumnName("tokens_saida");
+
+                    b.Property<bool>("UsouFallback")
+                        .HasColumnType("boolean")
+                        .HasColumnName("usou_fallback");
+
+                    b.Property<Guid?>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_chamadas_ia");
+
+                    b.HasIndex("Funcionalidade", "CriadaEm")
+                        .HasDatabaseName("ix_chamadas_ia_funcionalidade_criada_em");
+
+                    b.HasIndex("UsuarioId", "CriadaEm")
+                        .HasDatabaseName("ix_chamadas_ia_usuario_id_criada_em");
+
+                    b.ToTable("chamadas_ia", (string)null);
+                });
+
             modelBuilder.Entity("Stowise.Domain.Importacoes.ArquivoImportacao", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1527,6 +1616,15 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_zonas_armazens_armazem_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Ia.ChamadaIa", b =>
+                {
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_chamadas_ia_usuarios_usuario_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Importacoes.ArquivoImportacao", b =>

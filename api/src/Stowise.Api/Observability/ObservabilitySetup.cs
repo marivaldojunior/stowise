@@ -7,6 +7,7 @@ using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
+using Stowise.Infrastructure.Ia;
 using Stowise.Infrastructure.Jobs;
 
 namespace Stowise.Api.Observability;
@@ -52,7 +53,8 @@ public static class ObservabilitySetup
                 .AddAspNetCoreInstrumentation(options => options.Filter = http => !IsHealthCheck(http.Request.Path))
                 .AddHttpClientInstrumentation()
                 .AddNpgsql()
-                .AddSource(JobsTelemetry.SourceName))
+                .AddSource(JobsTelemetry.SourceName)
+                .AddSource(IaTelemetry.SourceName))
             .WithMetrics(metrics => metrics
                 .AddAspNetCoreInstrumentation()
                 .AddHttpClientInstrumentation()

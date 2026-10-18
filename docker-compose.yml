@@ -33,6 +33,13 @@ services:
       ConnectionStrings__Stowise: Host=db;Port=5432;Database=${POSTGRES_DB:-stowise};Username=${POSTGRES_USER:-stowise};Password=${POSTGRES_PASSWORD:-stowise}
       # Traces, métricas e logs via OTLP para o Aspire Dashboard
       OTEL_EXPORTER_OTLP_ENDPOINT: http://dashboard:18889
+      # IA (ADR-0004): desligada sem chave. A chave vem do .env e fica só no servidor.
+      Ia__Habilitada: ${STOWISE_IA_HABILITADA:-false}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Fallback local: Ollama rodando na máquina host
+      Ia__Reserva__Endpoint: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "${API_PORT:-8080}:8080"
 

@@ -8,11 +8,13 @@ using Stowise.Application.Auth;
 using Stowise.Application.Catalogo;
 using Stowise.Application.Estoque;
 using Stowise.Application.Estrutura;
+using Stowise.Application.Ia;
 using Stowise.Application.Importacoes;
 using Stowise.Application.Usuarios;
 using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Estoque;
 using Stowise.Infrastructure.Estrutura;
+using Stowise.Infrastructure.Ia;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Importacoes;
 using Stowise.Infrastructure.Jobs;
@@ -54,6 +56,12 @@ public static class DependencyInjection
         services.AddScoped<StagingProdutos>();
         services.AddScoped<EfetivacaoProdutos>();
         services.AddJobs();
+
+        // ADR-0004: camada de IA atrás da API. Desligada (Ia:Habilitada=false), os fluxos seguem manuais.
+        services.AddOptions<IaOptions>().BindConfiguration(IaOptions.SectionName);
+        services.AddSingleton<IProvedoresIa, ProvedoresIa>();
+        services.AddSingleton<GatewayIa>();
+        services.AddScoped<IConsultaIaService, ConsultaIaService>();
         services.AddScoped<ITemplateImportacaoService, TemplateImportacaoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 

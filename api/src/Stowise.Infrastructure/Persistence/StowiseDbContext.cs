@@ -4,6 +4,7 @@ using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
 using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
+using Stowise.Domain.Ia;
 using Stowise.Domain.Importacoes;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence.Configurations;
@@ -40,6 +41,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
     public DbSet<TemplateImportacao> TemplatesImportacao => Set<TemplateImportacao>();
 
     public DbSet<ImportacaoLinha> ImportacaoLinhas => Set<ImportacaoLinha>();
+
+    public DbSet<ChamadaIa> ChamadasIa => Set<ChamadaIa>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

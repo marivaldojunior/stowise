@@ -5315,6 +5315,116 @@
           }
         ]
       }
+    },
+    "/api/v1/ia/chamadas": {
+      "get": {
+        "tags": [
+          "IA"
+        ],
+        "summary": "Chamadas aos provedores de IA, mais recentes primeiro: modelo, tokens, custo estimado, latência e falhas.",
+        "operationId": "ListarChamadasIa",
+        "parameters": [
+          {
+            "name": "funcionalidade",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/FuncionalidadeIa"
+            }
+          },
+          {
+            "name": "usuarioId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "sucesso",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "de",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "ate",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfChamadaIaDetalhe"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -5652,6 +5762,117 @@
           },
           "caminho": {
             "type": "string"
+          }
+        }
+      },
+      "ChamadaIaDetalhe": {
+        "required": [
+          "id",
+          "funcionalidade",
+          "usuarioId",
+          "provedor",
+          "modelo",
+          "promptVersao",
+          "tokensEntrada",
+          "tokensSaida",
+          "custoEstimado",
+          "latenciaMs",
+          "tentativas",
+          "usouFallback",
+          "sucesso",
+          "erro",
+          "correlacaoId",
+          "criadaEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "funcionalidade": {
+            "$ref": "#/components/schemas/FuncionalidadeIa"
+          },
+          "usuarioId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "provedor": {
+            "type": "string"
+          },
+          "modelo": {
+            "type": "string"
+          },
+          "promptVersao": {
+            "type": "string"
+          },
+          "tokensEntrada": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tokensSaida": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "custoEstimado": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "latenciaMs": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tentativas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "usouFallback": {
+            "type": "boolean"
+          },
+          "sucesso": {
+            "type": "boolean"
+          },
+          "erro": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "correlacaoId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "criadaEm": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -6503,6 +6724,20 @@
           "NFeXml"
         ]
       },
+      "FuncionalidadeIa": {
+        "enum": [
+          "Mapeamento",
+          "CasamentoItens",
+          "Camera",
+          "CadastroPorFoto",
+          "Consulta",
+          "Embeddings",
+          "Documentos",
+          "LeituraPlaqueta",
+          "EstadoConservacao",
+          "CasamentoBens"
+        ]
+      },
       "GeracaoEnderecosResultado": {
         "required": [
           "total",
@@ -7321,6 +7556,55 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "PagedResultOfChamadaIaDetalhe": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChamadaIaDetalhe"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -9135,6 +9419,9 @@
     },
     {
       "name": "Importação"
+    },
+    {
+      "name": "IA"
     }
   ]
 }
