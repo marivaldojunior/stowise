@@ -26,6 +26,8 @@ export default defineConfig(({ mode }) => {
       environment: 'jsdom',
       globals: true,
       setupFiles: ['./src/test/setup.ts'],
+      // Só os testes de unidade e de componente; os de ponta a ponta (e2e/) rodam no Playwright.
+      include: ['src/**/*.test.{ts,tsx}'],
       css: false,
     },
   }

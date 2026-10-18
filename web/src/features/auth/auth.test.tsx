@@ -1,34 +1,15 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { apiFetch } from '@/api/mutator'
-import {
-  comSessao,
-  jsonResponse,
-  problemResponse,
-  renderRoute,
-  type Responder,
-  sessaoResponse,
-  stubFetch,
-} from '@/test/renderRoute'
+import { gravarRequisicoes, problema, requisicoesPara, server, sessao, usarSessao } from '@/test/msw/api'
+import { renderRoute } from '@/test/renderRoute'
 import { type ContextoAuth, ContextoDaAuth, Perfis } from './contexto'
 import { ExigePerfil } from './RotaProtegida'
 import { esperaAteRenovar, getSessao, renovar, setSessao } from './sessao'
 
-const saudavel = () => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] })
-
-/** API sem sessão: o refresh do cookie é recusado e o login segue o `login`. */
-function semSessao(login: Responder = () => sessaoResponse()): Responder {
-  return (url, init) => {
-    if (url === '/api/v1/auth/refresh') {
-      return problemResponse(401, 'Sessão inválida')
-    }
-
-    return url === '/api/v1/auth/login' ? login(url, init) : saudavel()
-  }
-}
-
-function autorizacao(init: RequestInit | undefined): string | null {
-  return new Headers(init?.headers).get('Authorization')
+function loginResponde(resposta: () => Response) {
+  server.use(http.post('/api/v1/auth/login', resposta))
 }
 
 async function preencherLogin(email: string, senha: string) {
@@ -38,13 +19,21 @@ async function preencherLogin(email: string, senha: string) {
   await user.click(screen.getByRole('button', { name: 'Entrar' }))
 }
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
+/** Rota protegida qualquer que só aceita o token indicado; com outro token, responde 401. */
+function rotaQueExigeToken(caminho: string, token: string) {
+  server.use(
+    http.get(caminho, ({ request }) =>
+      request.headers.get('Authorization') === `Bearer ${token}`
+        ? HttpResponse.json({ caminho })
+        : problema(401, 'Unauthorized'),
+    ),
+  )
+}
 
 describe('rotas protegidas', () => {
   it('sem sessão, leva ao login e volta para a página pedida depois de entrar', async () => {
-    const fetchMock = stubFetch(semSessao())
+    loginResponde(() => HttpResponse.json(sessao()))
+    const requisicoes = gravarRequisicoes()
     const { router } = renderRoute('/catalogo?pagina=2')
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
@@ -52,8 +41,7 @@ describe('rotas protegidas', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/catalogo'))
     expect(router.state.location.search).toBe('?pagina=2')
-    const chamada = fetchMock.mock.calls.find(([url]) => url === '/api/v1/auth/login')
-    expect(JSON.parse(String(chamada?.[1]?.body))).toEqual({
+    expect(requisicoesPara(requisicoes, '/api/v1/auth/login')[0].corpo).toEqual({
       email: 'ana@stowise.dev',
       senha: 'senha-forte',
       useCookie: true,
@@ -62,19 +50,20 @@ describe('rotas protegidas', () => {
   })
 
   it('retoma a sessão pelo cookie de refresh, sem pedir a senha', async () => {
-    const fetchMock = stubFetch(comSessao(saudavel))
+    usarSessao()
+    const requisicoes = gravarRequisicoes()
     renderRoute('/')
 
     expect(await screen.findByRole('heading', { name: 'Stowise' })).toBeInTheDocument()
-    const refresh = fetchMock.mock.calls.find(([url]) => url === '/api/v1/auth/refresh')
-    expect(JSON.parse(String(refresh?.[1]?.body))).toEqual({ refreshToken: null, useCookie: true })
-    expect(refresh?.[1]?.credentials).toBe('same-origin')
-    const health = fetchMock.mock.calls.find(([url]) => url === '/health/ready')
-    expect(autorizacao(health?.[1])).toBe('Bearer token-1')
+    expect(requisicoesPara(requisicoes, '/api/v1/auth/refresh')[0].corpo).toEqual({
+      refreshToken: null,
+      useCookie: true,
+    })
+    await waitFor(() => expect(requisicoesPara(requisicoes, '/health/ready')[0]?.autorizacao).toBe('Bearer token-1'))
   })
 
   it('com sessão, a página de login leva ao início', async () => {
-    stubFetch(comSessao(saudavel))
+    usarSessao()
     const { router } = renderRoute('/login')
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/'))
@@ -83,10 +72,8 @@ describe('rotas protegidas', () => {
 
 describe('login', () => {
   it('mostra o motivo quando a API recusa as credenciais', async () => {
-    stubFetch(
-      semSessao(() =>
-        problemResponse(401, 'Credenciais inválidas', 'E-mail ou senha incorretos, ou usuário bloqueado.'),
-      ),
+    loginResponde(() =>
+      problema(401, 'Credenciais inválidas', 'E-mail ou senha incorretos, ou usuário bloqueado.'),
     )
     renderRoute('/login')
 
@@ -98,12 +85,8 @@ describe('login', () => {
   })
 
   it('mostra os erros de cada campo', async () => {
-    stubFetch(
-      semSessao(() =>
-        problemResponse(400, 'One or more validation errors occurred.', undefined, {
-          email: ['Informe um e-mail válido.'],
-        }),
-      ),
+    loginResponde(() =>
+      problema(400, 'One or more validation errors occurred.', undefined, { email: ['Informe um e-mail válido.'] }),
     )
     renderRoute('/login')
 
@@ -115,7 +98,7 @@ describe('login', () => {
   })
 
   it('avisa quando a API não responde', async () => {
-    stubFetch(semSessao(() => Promise.reject(new TypeError('Failed to fetch'))))
+    loginResponde(() => HttpResponse.error())
     renderRoute('/login')
 
     await preencherLogin('ana@stowise.dev', 'senha')
@@ -126,53 +109,49 @@ describe('login', () => {
 
 describe('renovação do token', () => {
   it('renova depois de um 401 e repete a chamada com o token novo', async () => {
-    setSessao(await sessaoResponse(['Gestor'], 'token-vencido').json())
-    const fetchMock = stubFetch((url, init) => {
-      if (url === '/api/v1/auth/refresh') {
-        return sessaoResponse(['Gestor'], 'token-novo')
-      }
+    setSessao(sessao(['Gestor'], 'token-vencido'))
+    server.use(http.post('/api/v1/auth/refresh', () => HttpResponse.json(sessao(['Gestor'], 'token-novo'))))
+    rotaQueExigeToken('/api/v1/produtos', 'token-novo')
+    const requisicoes = gravarRequisicoes()
 
-      return autorizacao(init) === 'Bearer token-novo' ? jsonResponse({ ok: true }) : problemResponse(401, 'x')
-    })
+    await expect(apiFetch('/api/v1/produtos')).resolves.toEqual({ caminho: '/api/v1/produtos' })
 
-    await expect(apiFetch('/api/v1/produtos')).resolves.toEqual({ ok: true })
-
-    const produtos = fetchMock.mock.calls.filter(([url]) => url === '/api/v1/produtos')
-    expect(produtos.map(([, init]) => autorizacao(init))).toEqual(['Bearer token-vencido', 'Bearer token-novo'])
+    expect(requisicoesPara(requisicoes, '/api/v1/produtos').map((r) => r.autorizacao)).toEqual([
+      'Bearer token-vencido',
+      'Bearer token-novo',
+    ])
   })
 
   it('vários 401 ao mesmo tempo usam um só refresh (a API gira o refresh token)', async () => {
-    setSessao(await sessaoResponse(['Gestor'], 'token-vencido').json())
-    const fetchMock = stubFetch((url, init) => {
-      if (url === '/api/v1/auth/refresh') {
-        return sessaoResponse(['Gestor'], 'token-novo')
-      }
-
-      return autorizacao(init) === 'Bearer token-novo' ? jsonResponse({ url }) : problemResponse(401, 'x')
-    })
+    setSessao(sessao(['Gestor'], 'token-vencido'))
+    server.use(http.post('/api/v1/auth/refresh', () => HttpResponse.json(sessao(['Gestor'], 'token-novo'))))
+    for (const caminho of ['/api/v1/a', '/api/v1/b', '/api/v1/c']) {
+      rotaQueExigeToken(caminho, 'token-novo')
+    }
+    const requisicoes = gravarRequisicoes()
 
     await Promise.all([apiFetch('/api/v1/a'), apiFetch('/api/v1/b'), apiFetch('/api/v1/c')])
 
-    expect(fetchMock.mock.calls.filter(([url]) => url === '/api/v1/auth/refresh')).toHaveLength(1)
+    expect(requisicoesPara(requisicoes, '/api/v1/auth/refresh')).toHaveLength(1)
   })
 
   it('não tenta renovar quando a própria rota de autenticação responde 401', async () => {
-    const fetchMock = stubFetch(() => problemResponse(401, 'Credenciais inválidas'))
+    loginResponde(() => problema(401, 'Credenciais inválidas'))
+    const requisicoes = gravarRequisicoes()
 
     await expect(apiFetch('/api/v1/auth/login', { method: 'POST' })).rejects.toMatchObject({ status: 401 })
-    expect(fetchMock).toHaveBeenCalledTimes(1)
+    expect(requisicoes).toHaveLength(1)
   })
 
   it('refresh recusado encerra a sessão e leva ao login', async () => {
     let refreshes = 0
-    stubFetch((url) => {
-      if (url === '/api/v1/auth/refresh') {
+    server.use(
+      http.post('/api/v1/auth/refresh', () => {
         refreshes += 1
-        return refreshes === 1 ? sessaoResponse() : problemResponse(401, 'Sessão inválida')
-      }
-
-      return problemResponse(401, 'Unauthorized')
-    })
+        return refreshes === 1 ? HttpResponse.json(sessao()) : problema(401, 'Sessão inválida')
+      }),
+      http.get('/health/ready', () => problema(401, 'Unauthorized')),
+    )
     const { router } = renderRoute('/')
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
@@ -181,12 +160,12 @@ describe('renovação do token', () => {
   })
 
   it.each([
-    ['falha de rede', () => Promise.reject(new TypeError('Failed to fetch'))],
-    ['502 do proxy', () => new Response('Bad Gateway', { status: 502 })],
-    ['503 da API', () => problemResponse(503, 'Service Unavailable')],
+    ['falha de rede', () => HttpResponse.error()],
+    ['502 do proxy', () => new HttpResponse('Bad Gateway', { status: 502 })],
+    ['503 da API', () => problema(503, 'Service Unavailable')],
   ])('%s no refresh mantém a sessão para tentar de novo', async (_, resposta) => {
-    setSessao(await sessaoResponse().json())
-    stubFetch(resposta)
+    setSessao(sessao())
+    server.use(http.post('/api/v1/auth/refresh', resposta))
 
     await expect(renovar()).resolves.toBe(false)
     expect(getSessao()?.accessToken).toBe('token-1')
@@ -195,18 +174,18 @@ describe('renovação do token', () => {
   it('agenda a renovação um minuto antes do vencimento, com espera mínima', () => {
     const agora = Date.parse('2026-10-18T12:00:00Z')
     const usuario = { id: '', nome: '', email: '', perfis: [] }
-    const sessao = { accessToken: 't', expiraEm: agora + 15 * 60_000, usuario }
+    const atual = { accessToken: 't', expiraEm: agora + 15 * 60_000, usuario }
 
-    expect(esperaAteRenovar(sessao, agora)).toBe(14 * 60_000)
-    expect(esperaAteRenovar({ ...sessao, expiraEm: agora + 30_000 }, agora)).toBe(5_000)
+    expect(esperaAteRenovar(atual, agora)).toBe(14 * 60_000)
+    expect(esperaAteRenovar({ ...atual, expiraEm: agora + 30_000 }, agora)).toBe(5_000)
   })
 })
 
 describe('sair', () => {
   it('encerra a sessão na API e volta ao login', async () => {
-    const fetchMock = stubFetch(
-      comSessao((url) => (url === '/api/v1/auth/logout' ? new Response(null, { status: 204 }) : saudavel())),
-    )
+    usarSessao()
+    server.use(http.post('/api/v1/auth/logout', () => new HttpResponse(null, { status: 204 })))
+    const requisicoes = gravarRequisicoes()
     const { router } = renderRoute('/')
     const user = userEvent.setup()
 
@@ -217,8 +196,7 @@ describe('sair', () => {
     await user.click(within(menu).getByRole('menuitem', { name: 'Sair' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
-    const logout = fetchMock.mock.calls.find(([url]) => url === '/api/v1/auth/logout')
-    expect(JSON.parse(String(logout?.[1]?.body))).toEqual({ refreshToken: null, useCookie: true })
+    expect(requisicoesPara(requisicoes, '/api/v1/auth/logout')[0].corpo).toEqual({ refreshToken: null, useCookie: true })
     expect(getSessao()).toBeNull()
   })
 })
@@ -229,7 +207,7 @@ describe('perfis', () => {
     [['Gestor'], ['Início', 'Catálogo', 'Endereços', 'Estoque', 'Importações']],
     [['Admin'], ['Início', 'Catálogo', 'Endereços', 'Estoque', 'Importações', 'Uso de IA', 'Usuários']],
   ])('o menu de %j mostra só as seções permitidas', async (perfis, esperado) => {
-    stubFetch(comSessao(saudavel, perfis))
+    usarSessao(perfis)
     renderRoute('/')
 
     const menu = await screen.findByRole('navigation', { name: 'Principal' })

@@ -82,7 +82,9 @@ async function send(url: string, init: RequestInit): Promise<Response> {
   try {
     return await fetch(url, { ...init, headers, credentials: 'same-origin' })
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
+    // Cancelamento (TanStack Query, troca de página) não é falha de rede. O sinal diz isso melhor que o tipo do
+    // erro, que muda entre ambientes (DOMException do navegador ou do Node).
+    if (init.signal?.aborted) {
       throw error
     }
 

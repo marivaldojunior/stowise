@@ -1,13 +1,13 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { comSessao, jsonResponse, renderRoute, stubFetch } from '../test/renderRoute'
+import { usarSessao } from '../test/msw/api'
+import { renderRoute } from '../test/renderRoute'
 
 beforeEach(() => {
-  stubFetch(comSessao(() => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] }), ['Admin']))
+  usarSessao(['Admin'])
 })
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   localStorage.clear()
   document.documentElement.className = ''
 })

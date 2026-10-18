@@ -299,7 +299,7 @@ Regras de ordem:
 - [x] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
 - [x] Login, renovação de token e rotas protegidas por perfil
 - [x] Gestão de usuários e perfis (Admin)
-- [ ] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
+- [x] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
 - [ ] Catálogo: lista com filtros, formulário de produto e embalagens
 - [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
 - [ ] Saldos e extrato de movimentações

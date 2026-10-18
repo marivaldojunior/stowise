@@ -1,10 +1,11 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import type { UsuarioDetalhe } from '@/api/gerado/modelos'
-import { comSessao, jsonResponse, problemResponse, renderRoute, stubFetch } from '@/test/renderRoute'
+import { gravarRequisicoes, problema, requisicoesPara, server, USUARIO_DA_SESSAO, usarSessao } from '@/test/msw/api'
+import { renderRoute } from '@/test/renderRoute'
 
-/** Id do usuário da sessão de teste (sessaoResponse). */
-const EU = '0192f5e0-0000-7000-8000-000000000001'
+const EU = USUARIO_DA_SESSAO
 
 function usuario(id: string, nome: string, extra: Partial<UsuarioDetalhe> = {}): UsuarioDetalhe {
   return {
@@ -19,83 +20,85 @@ function usuario(id: string, nome: string, extra: Partial<UsuarioDetalhe> = {}):
   }
 }
 
-/** API de usuários em memória: lista com filtros e as escritas que a página usa. */
+const semConteudo = () => new HttpResponse(null, { status: 204 })
+
+/** API de usuários em memória (handlers do MSW): lista com filtros e as escritas que a página usa. */
 function apiDeUsuarios(iniciais: UsuarioDetalhe[]) {
   const usuarios = [...iniciais]
-  const fetchMock = stubFetch(
-    comSessao(async (url, init) => {
-      const { pathname, searchParams } = new URL(url, 'http://localhost')
-      const metodo = init.method ?? 'GET'
-      const corpo = init.body ? (JSON.parse(String(init.body)) as Record<string, unknown>) : {}
-
-      if (pathname === '/api/v1/perfis') {
-        return jsonResponse(['Admin', 'Gestor', 'Operador'])
+  const buscar = (id: unknown) => usuarios.find((u) => u.id === id)
+  usarSessao(['Admin'])
+  server.use(
+    http.get('/api/v1/perfis', () => HttpResponse.json(['Admin', 'Gestor', 'Operador'])),
+    http.get('/api/v1/usuarios', ({ request }) => {
+      const params = new URL(request.url).searchParams
+      const busca = params.get('busca')?.toLowerCase()
+      const perfil = params.get('perfil')
+      const ativo = params.get('ativo')
+      const itens = usuarios.filter(
+        (u) =>
+          (!busca || u.nome.toLowerCase().includes(busca) || u.email.includes(busca)) &&
+          (!perfil || u.perfis.includes(perfil)) &&
+          (ativo === null || String(u.ativo) === ativo),
+      )
+      const pagina = Number(params.get('pagina') ?? '1')
+      const tamanho = Number(params.get('tamanhoPagina') ?? '20')
+      return HttpResponse.json({
+        itens: itens.slice((pagina - 1) * tamanho, pagina * tamanho),
+        pagina,
+        tamanhoPagina: tamanho,
+        total: itens.length,
+      })
+    }),
+    http.post('/api/v1/usuarios', async ({ request }) => {
+      const corpo = (await request.json()) as { nome: string; email: string; senha: string; perfis: string[] }
+      if (usuarios.some((u) => u.email === corpo.email)) {
+        return problema(409, 'Já existe um usuário com este e-mail.')
       }
 
-      if (pathname === '/api/v1/usuarios' && metodo === 'GET') {
-        const busca = searchParams.get('busca')?.toLowerCase()
-        const perfil = searchParams.get('perfil')
-        const ativo = searchParams.get('ativo')
-        const itens = usuarios.filter(
-          (u) =>
-            (!busca || u.nome.toLowerCase().includes(busca) || u.email.includes(busca)) &&
-            (!perfil || u.perfis.includes(perfil)) &&
-            (ativo === null || String(u.ativo) === ativo),
-        )
-        const pagina = Number(searchParams.get('pagina') ?? '1')
-        const tamanho = Number(searchParams.get('tamanhoPagina') ?? '20')
-        return jsonResponse({
-          itens: itens.slice((pagina - 1) * tamanho, pagina * tamanho),
-          pagina,
-          tamanhoPagina: tamanho,
-          total: itens.length,
-        })
+      if (corpo.senha.length < 8) {
+        return problema(400, 'Dados inválidos.', undefined, { Senha: ['A senha deve ter ao menos 8 caracteres.'] })
       }
 
-      if (pathname === '/api/v1/usuarios' && metodo === 'POST') {
-        if (usuarios.some((u) => u.email === corpo.email)) {
-          return problemResponse(409, 'Já existe um usuário com este e-mail.')
-        }
-
-        if (String(corpo.senha).length < 8) {
-          return problemResponse(400, 'Dados inválidos.', undefined, { Senha: ['A senha deve ter ao menos 8 caracteres.'] })
-        }
-
-        const novo = usuario('novo', String(corpo.nome), { email: String(corpo.email), perfis: corpo.perfis as string[] })
-        usuarios.push(novo)
-        return jsonResponse(novo, 201)
-      }
-
-      const [, id, acao] = /^\/api\/v1\/usuarios\/([^/]+)\/?(.*)$/.exec(pathname) ?? []
-      const alvo = usuarios.find((u) => u.id === id)
+      const novo = usuario('novo', corpo.nome, { email: corpo.email, perfis: corpo.perfis })
+      usuarios.push(novo)
+      return HttpResponse.json(novo, { status: 201 })
+    }),
+    http.put('/api/v1/usuarios/:id', async ({ params, request }) => {
+      const alvo = buscar(params.id)
       if (!alvo) {
-        return problemResponse(404, 'Usuário não encontrado.')
+        return problema(404, 'Usuário não encontrado.')
       }
 
-      if (metodo === 'PUT') {
-        Object.assign(alvo, { nome: corpo.nome, perfis: corpo.perfis })
-        return jsonResponse(alvo)
+      Object.assign(alvo, await request.json())
+      return HttpResponse.json(alvo)
+    }),
+    http.post('/api/v1/usuarios/:id/desativar', ({ params }) => {
+      const alvo = buscar(params.id)
+      if (!alvo) {
+        return problema(404, 'Usuário não encontrado.')
       }
 
-      if (acao === 'desativar') {
-        if (alvo.perfis.includes('Admin') && usuarios.filter((u) => u.ativo && u.perfis.includes('Admin')).length === 1) {
-          return problemResponse(422, 'O sistema precisa de ao menos um Admin ativo.')
-        }
-
-        alvo.ativo = false
-        return new Response(null, { status: 204 })
+      const admins = usuarios.filter((u) => u.ativo && u.perfis.includes('Admin'))
+      if (alvo.perfis.includes('Admin') && admins.length === 1) {
+        return problema(422, 'O sistema precisa de ao menos um Admin ativo.')
       }
 
-      if (acao === 'reativar') {
-        alvo.ativo = true
-        return new Response(null, { status: 204 })
+      alvo.ativo = false
+      return semConteudo()
+    }),
+    http.post('/api/v1/usuarios/:id/reativar', ({ params }) => {
+      const alvo = buscar(params.id)
+      if (!alvo) {
+        return problema(404, 'Usuário não encontrado.')
       }
 
-      return acao === 'senha' ? new Response(null, { status: 204 }) : problemResponse(405, 'x')
-    }, ['Admin']),
+      alvo.ativo = true
+      return semConteudo()
+    }),
+    http.post('/api/v1/usuarios/:id/senha', semConteudo),
   )
 
-  return { usuarios, fetchMock }
+  return { usuarios, requisicoes: gravarRequisicoes() }
 }
 
 async function linhaDe(nome: string) {
@@ -109,10 +112,6 @@ async function abrirAcao(nome: string, acao: string) {
   await user.click(await screen.findByRole('menuitem', { name: acao }))
   return user
 }
-
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
 
 describe('gestão de usuários', () => {
   it('lista os usuários com perfis e situação', async () => {
@@ -131,7 +130,7 @@ describe('gestão de usuários', () => {
   })
 
   it('filtra pela busca e guarda o filtro na URL', async () => {
-    const { fetchMock } = apiDeUsuarios([usuario(EU, 'Ana Souza'), usuario('2', 'Bruno Lima')])
+    const { requisicoes } = apiDeUsuarios([usuario(EU, 'Ana Souza'), usuario('2', 'Bruno Lima')])
     const { router } = renderRoute('/usuarios')
     const user = userEvent.setup()
 
@@ -140,7 +139,7 @@ describe('gestão de usuários', () => {
 
     await waitFor(() => expect(screen.queryByRole('cell', { name: 'Ana Souza' })).not.toBeInTheDocument())
     expect(router.state.location.search).toBe('?busca=bruno')
-    expect(fetchMock.mock.calls.some(([url]) => String(url).includes('busca=bruno'))).toBe(true)
+    expect(requisicoes.some((r) => r.url.includes('busca=bruno'))).toBe(true)
   })
 
   it('filtra por situação', async () => {
@@ -232,7 +231,7 @@ describe('gestão de usuários', () => {
   })
 
   it('redefine a senha', async () => {
-    const { fetchMock } = apiDeUsuarios([usuario(EU, 'Ana Souza'), usuario('2', 'Bruno Lima')])
+    const { requisicoes } = apiDeUsuarios([usuario(EU, 'Ana Souza'), usuario('2', 'Bruno Lima')])
     renderRoute('/usuarios')
 
     const user = await abrirAcao('Bruno Lima', 'Redefinir a senha')
@@ -241,8 +240,7 @@ describe('gestão de usuários', () => {
     await user.click(within(dialogo).getByRole('button', { name: 'Redefinir' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
-    const chamada = fetchMock.mock.calls.find(([url]) => url === '/api/v1/usuarios/2/senha')
-    expect(JSON.parse(String(chamada?.[1]?.body))).toEqual({ novaSenha: 'nova-senha-1' })
+    expect(requisicoesPara(requisicoes, '/api/v1/usuarios/2/senha')[0].corpo).toEqual({ novaSenha: 'nova-senha-1' })
   })
 
   it('pagina a lista', async () => {
@@ -261,7 +259,7 @@ describe('gestão de usuários', () => {
   })
 
   it('mostra "Acesso negado" para quem não é Admin', async () => {
-    stubFetch(comSessao(() => jsonResponse({}), ['Gestor']))
+    usarSessao(['Gestor'])
     renderRoute('/usuarios')
 
     expect(await screen.findByRole('heading', { name: 'Acesso negado' })).toBeInTheDocument()

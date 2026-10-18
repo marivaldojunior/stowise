@@ -1,26 +1,30 @@
 import { screen } from '@testing-library/react'
 import { HttpError } from './api/mutator'
 import { shouldRetry } from './app/queryClient'
-import { comSessao, jsonResponse, renderRoute, stubFetch } from './test/renderRoute'
+import { http, HttpResponse } from 'msw'
+import { gravarRequisicoes, server, usarSessao } from './test/msw/api'
+import { renderRoute } from './test/renderRoute'
 
-afterEach(() => {
-  vi.unstubAllGlobals()
-})
+beforeEach(() => usarSessao())
+
+function saude(status: string, codigo = 200) {
+  server.use(http.get('/health/ready', () => HttpResponse.json({ status, totalDurationMs: 3, checks: [] }, { status: codigo })))
+}
 
 describe('painel', () => {
   it('mostra a página inicial com a API e o banco disponíveis', async () => {
-    const fetchMock = stubFetch(comSessao(() => jsonResponse({ status: 'Healthy', totalDurationMs: 3.2, checks: [] })))
+    const requisicoes = gravarRequisicoes()
 
     renderRoute('/')
 
     expect(await screen.findByRole('heading', { name: 'Stowise' })).toBeInTheDocument()
     expect(await screen.findByText('API e banco disponíveis.')).toBeInTheDocument()
-    expect(fetchMock).toHaveBeenCalledWith('/health/ready', expect.anything())
+    expect(requisicoes.some((r) => r.url === '/health/ready')).toBe(true)
     expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('avisa quando o banco está fora do ar', async () => {
-    stubFetch(comSessao(() => jsonResponse({ status: 'Unhealthy', totalDurationMs: 5, checks: [] }, 503)))
+    saude('Unhealthy', 503)
 
     renderRoute('/')
 
@@ -28,7 +32,7 @@ describe('painel', () => {
   })
 
   it('avisa quando a API não responde', async () => {
-    stubFetch(comSessao(() => Promise.reject(new TypeError('Failed to fetch'))))
+    server.use(http.get('/health/ready', () => HttpResponse.error()))
 
     renderRoute('/')
 
@@ -36,8 +40,6 @@ describe('painel', () => {
   })
 
   it('mostra a página não encontrada para um endereço desconhecido', async () => {
-    stubFetch(comSessao(() => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] })))
-
     renderRoute('/endereco-que-nao-existe')
 
     expect(await screen.findByRole('heading', { name: 'Página não encontrada' })).toBeInTheDocument()

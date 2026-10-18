@@ -1,5 +1,6 @@
 import '@testing-library/jest-dom/vitest'
 import { limparSessao } from '@/features/auth/sessao'
+import { server } from './msw/api'
 
 // O jsdom não implementa estas APIs do navegador. O tema do painel usa matchMedia (tema do sistema) e os componentes
 // do Radix usam ResizeObserver, captura de ponteiro e scrollIntoView.
@@ -48,7 +49,12 @@ Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.releasePointerCapture ??= () => {}
 Element.prototype.scrollIntoView ??= () => {}
 
-// A sessão fica num módulo (memória do navegador). Cada teste começa sem sessão.
+// A rede dos testes é o MSW: requisição sem handler falha o teste, e cada teste começa só com os handlers padrão.
+beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
 afterEach(() => {
+  server.resetHandlers()
+  server.events.removeAllListeners()
+  // A sessão fica num módulo (memória do navegador). Cada teste começa sem sessão.
   limparSessao()
 })
+afterAll(() => server.close())

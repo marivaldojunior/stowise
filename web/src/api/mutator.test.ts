@@ -1,43 +1,47 @@
-import { jsonResponse, stubFetch } from '../test/renderRoute'
+import { http, HttpResponse } from 'msw'
+import { gravarRequisicoes, server } from '../test/msw/api'
 import { getObterProdutoUrl, listarCategorias } from './gerado/stowise'
 import { apiFetch, HttpError, setTokenProvider } from './mutator'
 
 afterEach(() => {
-  vi.unstubAllGlobals()
   setTokenProvider(() => null)
 })
 
 describe('apiFetch', () => {
   it('envia o token de acesso e devolve o corpo da resposta', async () => {
-    const fetchMock = stubFetch(() => jsonResponse([{ id: '1', nome: 'Grãos' }]))
+    server.use(http.get('/api/v1/categorias', () => HttpResponse.json([{ id: '1', nome: 'Grãos' }])))
+    const requisicoes = gravarRequisicoes()
     setTokenProvider(() => 'token-de-teste')
 
     const categorias = await listarCategorias()
 
     expect(categorias).toEqual([{ id: '1', nome: 'Grãos' }])
-    const [url, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(url).toBe('/api/v1/categorias')
-    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer token-de-teste')
+    expect(requisicoes).toMatchObject([{ metodo: 'GET', url: '/api/v1/categorias', autorizacao: 'Bearer token-de-teste' }])
   })
 
   it('não envia token quando não há sessão', async () => {
-    const fetchMock = stubFetch(() => jsonResponse({ status: 'Healthy' }))
+    server.use(http.get('/health/live', () => HttpResponse.json({ status: 'Healthy' })))
+    const requisicoes = gravarRequisicoes()
 
     await apiFetch('/health/live')
 
-    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
-    expect(new Headers(init.headers).has('Authorization')).toBe(false)
+    expect(requisicoes[0].autorizacao).toBeNull()
   })
 
   it('devolve undefined numa resposta sem corpo (204)', async () => {
-    stubFetch(() => new Response(null, { status: 204 }))
+    server.use(http.delete('/api/v1/categorias/1', () => new HttpResponse(null, { status: 204 })))
 
     await expect(apiFetch('/api/v1/categorias/1', { method: 'DELETE' })).resolves.toBeUndefined()
   })
 
   it('transforma o ProblemDetails em HttpError com os erros por campo', async () => {
-    stubFetch(() =>
-      jsonResponse({ title: 'Um ou mais campos são inválidos.', status: 400, errors: { sku: ['Informe o SKU.'] } }, 400),
+    server.use(
+      http.post('/api/v1/produtos', () =>
+        HttpResponse.json(
+          { title: 'Um ou mais campos são inválidos.', status: 400, errors: { sku: ['Informe o SKU.'] } },
+          { status: 400 },
+        ),
+      ),
     )
 
     const erro = await apiFetch('/api/v1/produtos', { method: 'POST' }).catch((e: unknown) => e)
@@ -49,13 +53,13 @@ describe('apiFetch', () => {
   })
 
   it('marca com status 0 quando a API não responde', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))))
+    server.use(http.get('/api/v1/categorias', () => HttpResponse.error()))
 
     await expect(apiFetch('/api/v1/categorias')).rejects.toMatchObject({ status: 0 })
   })
 
   it.each([502, 504])('trata o %i do proxy, sem ProblemDetails, como API fora do ar', async (status) => {
-    stubFetch(() => new Response('Bad Gateway', { status }))
+    server.use(http.get('/api/v1/categorias', () => new HttpResponse('Bad Gateway', { status })))
 
     await expect(apiFetch('/api/v1/categorias')).rejects.toMatchObject({
       status,
@@ -64,9 +68,13 @@ describe('apiFetch', () => {
   })
 
   it('repassa o cancelamento sem transformar em erro de rede', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new DOMException('aborted', 'AbortError'))))
+    server.use(http.get('/api/v1/categorias', () => new Promise<never>(() => {})))
+    const controle = new AbortController()
 
-    await expect(apiFetch('/api/v1/categorias')).rejects.toMatchObject({ name: 'AbortError' })
+    const chamada = apiFetch('/api/v1/categorias', { signal: controle.signal })
+    controle.abort()
+
+    await expect(chamada).rejects.toMatchObject({ name: 'AbortError' })
   })
 
   it('monta as URLs do contrato com os parâmetros de rota', () => {

@@ -1,0 +1,62 @@
+name: e2e
+
+# Ponta a ponta: o painel (Vite) contra a API e o banco reais do docker compose, com o Playwright.
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', 'api/**', 'infra/**', 'docker-compose.yml', '.github/workflows/e2e.yml']
+  pull_request:
+    paths: ['web/**', 'api/**', 'infra/**', 'docker-compose.yml', '.github/workflows/e2e.yml']
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      # Ambiente Development: migrations, dados de exemplo e o Admin de desenvolvimento (AdminBootstrap).
+      - name: Banco e API (docker compose)
+        run: docker compose up -d --build db api
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: web/.nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+
+      - name: Esperar a API ficar pronta
+        run: |
+          for i in $(seq 1 90); do
+            if curl -fsS http://localhost:8080/health/ready > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          echo "::error::A API não ficou pronta em 3 minutos."
+          docker compose logs api
+          exit 1
+
+      - run: npm run e2e
+        working-directory: web
+        env:
+          STOWISE_API_URL: http://localhost:8080
+
+      - name: Logs da API
+        if: failure()
+        run: docker compose logs api
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: web/playwright-report
+          retention-days: 7
