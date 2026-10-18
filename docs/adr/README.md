@@ -10,5 +10,6 @@ Uma decisão por arquivo, numerada em sequência (`NNNN-titulo-curto.md`), a par
 | [0004](0004-camada-de-ia.md) | Camada de IA atrás da API: chave no servidor, saída validada, resiliência e cota | Aceito |
 | [0005](0005-autenticacao.md) | Autenticação com ASP.NET Core Identity, JWT próprio e refresh token rotativo | Aceito |
 | [0006](0006-idempotencia-e-concorrencia.md) | Idempotência por chave do cliente e concorrência otimista (xmin) com nova tentativa | Aceito |
+| [0007](0007-jobs-em-background.md) | Jobs em background com Hangfire e armazenamento no PostgreSQL | Aceito |
 
-Decisões já previstas no [SPEC](../SPEC.md#decisões-de-arquitetura-adrs), a registrar quando forem implementadas: quantidades na unidade base, relacional no núcleo e `jsonb` no staging, snapshot das decisões automáticas, IA só sugere, aprendizado por confirmação, jobs em background e pipeline de RAG.
+Decisões já previstas no [SPEC](../SPEC.md#decisões-de-arquitetura-adrs), a registrar quando forem implementadas: quantidades na unidade base, relacional no núcleo e `jsonb` no staging, snapshot das decisões automáticas, IA só sugere, aprendizado por confirmação e pipeline de RAG.

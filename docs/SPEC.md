@@ -219,6 +219,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 10. **Camada de IA atrás da API**: chave só no servidor, saída estruturada e validada, timeout, retry e fallback, cota por usuário ([ADR-0004](adr/0004-camada-de-ia.md))
 11. **Autenticação com ASP.NET Core Identity e JWT próprio**, com refresh token rotativo e detecção de reuso ([ADR-0005](adr/0005-autenticacao.md))
 12. **Idempotência e concorrência no estoque**: chave do cliente única no livro-razão e `xmin` no Saldo e no Endereco, com nova tentativa ([ADR-0006](adr/0006-idempotencia-e-concorrencia.md))
+13. **Jobs em background com Hangfire** no mesmo PostgreSQL: fila durável, nova tentativa só para falha transitória e jobs idempotentes ([ADR-0007](adr/0007-jobs-em-background.md))
 
 ## Plano de tarefas
 
@@ -282,7 +283,7 @@ Regras de ordem:
 - [x] Leitura de Excel (`.xlsx`), com a mesma detecção de cabeçalho e colunas do texto
 - [x] Fingerprint do cabeçalho e templates de importação
 - [x] Staging, validações determinísticas (GTIN, NCM, unidades) e máquina de estados
-- [ ] ADR de jobs em background (fila durável, retry e agendamento)
+- [x] ADR de jobs em background (fila durável, retry e agendamento)
 - [ ] Processamento em background com status e progresso consultáveis por endpoint e por SignalR, bulk insert e relatório final
 - [ ] Camada de IA plugável (Microsoft.Extensions.AI) com registro em ChamadaIa, conforme o ADR-0004
 - [ ] Resiliência da IA: timeout, retry com backoff e fallback de provedor; sem IA disponível, o fluxo segue manual
