@@ -147,8 +147,8 @@ public class DetectorLayoutTests
     }
 
     [Theory]
-    [InlineData(new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x14, 0x00 }, "Excel")]
-    [InlineData(new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1 }, "Excel")]
+    [InlineData(new byte[] { 0x50, 0x4B, 0x03, 0x04, 0x14, 0x00 }, "compactado")]
+    [InlineData(new byte[] { 0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1 }, ".xls (Excel 97-2003)")]
     [InlineData(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x00, 0x00 }, "não é texto")]
     [InlineData(new byte[] { 0x20, 0x0A, 0x0D, 0x0A }, "não tem linhas")]
     [InlineData(new byte[0], "vazio")]
@@ -160,6 +160,48 @@ public class DetectorLayoutTests
         var erro = Assert.Single(resultado.Error!.Fields!);
         Assert.Equal("arquivo", erro.Key);
         Assert.Contains(trecho, erro.Value.Single(), StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Spreadsheet_rows_use_the_same_header_rules_and_drop_empty_leading_columns()
+    {
+        string[][] linhas =
+        [
+            ["", "SKU", "Descrição", "Preço"],
+            [],
+            ["", "CAN-01", "Caneta azul", "1.5"],
+            ["", "LAP-02", "Lápis preto"],
+        ];
+
+        var resultado = DetectorLayout.DetectPlanilha("Produtos", linhas);
+
+        Assert.True(resultado.IsSuccess);
+        var layout = resultado.Value.Layout;
+        Assert.Equal((FormatoArquivo.Excel, null, null, ".", "Produtos"), (layout.Formato, layout.Encoding, layout.Delimitador, layout.SeparadorDecimal, layout.Planilha));
+        Assert.True(layout.TemCabecalho);
+        Assert.Equal(["SKU", "Descrição", "Preço"], layout.Colunas.Select(c => c.Nome));
+        Assert.Equal(2, resultado.Value.TotalLinhas);
+        Assert.Equal(["LAP-02", "Lápis preto"], resultado.Value.Amostra[1]);
+    }
+
+    [Fact]
+    public void Long_sheet_names_are_cut_to_the_excel_limit()
+    {
+        var resultado = DetectorLayout.DetectPlanilha(new string('a', 40), [["SKU"], ["A1"]]);
+
+        Assert.Equal(Importacao.PlanilhaMaxLength, resultado.Value.Layout.Planilha!.Length);
+    }
+
+    [Fact]
+    public void Files_above_the_row_limit_are_rejected()
+    {
+        string[] linha = ["A1"];
+        var linhas = Enumerable.Repeat(linha, Importacao.MaxLinhas + 1).Prepend(["SKU"]);
+
+        var resultado = DetectorLayout.DetectPlanilha("Produtos", linhas);
+
+        Assert.False(resultado.IsSuccess);
+        Assert.Contains("Divida o arquivo", resultado.Error!.Fields!["arquivo"].Single(), StringComparison.Ordinal);
     }
 
     private static ArquivoDetectado Detect(string texto) => DetectBytes(Encoding.UTF8.GetBytes(texto));

@@ -49,13 +49,15 @@ public class ImportacoesEndpointsTests(StowiseApiFactory factory) : IClassFixtur
     }
 
     [Fact]
-    public async Task Excel_file_is_refused_with_a_hint()
+    public async Task Old_xls_and_broken_xlsx_are_refused_with_a_hint()
     {
         using var client = ClientWith(Perfis.Gestor);
 
-        var response = await client.PostAsync(new Uri(Url, UriKind.Relative), Arquivo("produtos.xlsx", [0x50, 0x4B, 0x03, 0x04, 0x14, 0x00]));
+        var xls = await client.PostAsync(new Uri(Url, UriKind.Relative), Arquivo("produtos.xls", [0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1]));
+        var xlsx = await client.PostAsync(new Uri(Url, UriKind.Relative), Arquivo("produtos.xlsx", [0x50, 0x4B, 0x03, 0x04, 0x14, 0x00]));
 
-        await AssertArquivoInvalidoAsync(response, "Arquivos Excel ainda não são aceitos. Salve a planilha como CSV e envie de novo.");
+        await AssertArquivoInvalidoAsync(xls, "Arquivos .xls (Excel 97-2003) não são aceitos. Salve a planilha como .xlsx ou CSV e envie de novo.");
+        await AssertArquivoInvalidoAsync(xlsx, "O arquivo não é uma planilha .xlsx válida. Abra no Excel, salve de novo e envie.");
     }
 
     [Fact]

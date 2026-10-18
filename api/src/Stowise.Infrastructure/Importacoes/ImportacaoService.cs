@@ -20,7 +20,7 @@ internal sealed class ImportacaoService(StowiseDbContext db, TimeProvider time) 
         var conteudo = comando.Conteudo!;
 
         // A detecção não usa o banco: um arquivo ilegível é recusado antes de qualquer consulta.
-        var deteccao = DetectorLayout.Detect(conteudo);
+        var deteccao = DetectorLayout.IsZip(conteudo) ? LeitorXlsx.Detect(conteudo) : DetectorLayout.Detect(conteudo);
         if (!deteccao.IsSuccess)
         {
             return deteccao.Error!;

@@ -824,6 +824,7 @@
           "Microsoft.AspNetCore.Identity.EntityFrameworkCore": "[10.0.13, )",
           "Microsoft.EntityFrameworkCore.Relational": "[10.0.13, )",
           "Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore": "[10.0.13, )",
+          "MiniExcel": "[1.46.0, )",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "[10.0.3, )",
           "Pgvector.EntityFrameworkCore": "[0.3.0, )",
           "Stowise.Application": "[1.0.0, )"
@@ -919,6 +920,12 @@
           "Microsoft.Extensions.Diagnostics.HealthChecks": "10.0.13",
           "Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions": "10.0.13"
         }
+      },
+      "MiniExcel": {
+        "type": "CentralTransitive",
+        "requested": "[1.46.0, )",
+        "resolved": "1.46.0",
+        "contentHash": "IMmli1Hc3/Axst8hcuUx30q/2HTKH2f3nmduiy59wvpth1u0881fZMEMAy4Inl3GBkdrVXA8UUpF5lyoWREdLQ=="
       },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
         "type": "CentralTransitive",

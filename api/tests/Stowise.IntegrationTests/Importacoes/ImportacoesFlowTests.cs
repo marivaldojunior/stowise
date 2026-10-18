@@ -106,6 +106,24 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     }
 
     [DockerFact]
+    public async Task Xlsx_upload_reads_the_first_sheet()
+    {
+        var conteudo = Planilhas.Xlsx(("Cadastro", [
+            ["SKU", "Descrição", "Preço"],
+            ["CAN-01", "Caneta azul", 1.5],
+        ]));
+
+        var response = await UploadAsync("produtos.xlsx", conteudo);
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var id = (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!.Id;
+        var lida = (await _client.GetFromJsonAsync<ImportacaoDetalhe>($"/api/v1/importacoes/{id}", Json))!;
+        Assert.Equal((FormatoArquivo.Excel, null, "Cadastro"), (lida.Layout.Formato, lida.Layout.Encoding, lida.Layout.Planilha));
+        Assert.Equal(["CAN-01", "Caneta azul", "1.5"], Assert.Single(lida.Amostra));
+        Assert.Equal(conteudo, (await QueryAsync(db => db.ArquivosImportacao.SingleAsync(a => a.ImportacaoId == id))).Conteudo);
+    }
+
+    [DockerFact]
     public async Task Unknown_import_is_not_found()
     {
         var response = await _client.GetAsync(new Uri($"/api/v1/importacoes/{Guid.NewGuid()}", UriKind.Relative));

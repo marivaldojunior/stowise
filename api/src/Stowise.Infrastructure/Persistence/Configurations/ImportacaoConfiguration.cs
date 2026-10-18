@@ -18,6 +18,7 @@ internal sealed class ImportacaoConfiguration : IEntityTypeConfiguration<Importa
         builder.Property(i => i.HashArquivo).HasMaxLength(Importacao.HashArquivoLength).IsFixedLength();
         builder.Property(i => i.Encoding).HasMaxLength(30);
         builder.Property(i => i.Delimitador).HasMaxLength(1);
+        builder.Property(i => i.Planilha).HasMaxLength(Importacao.PlanilhaMaxLength);
         builder.Property(i => i.SeparadorDecimal).HasMaxLength(1);
         builder.Property(i => i.Colunas).HasJsonConversion();
         builder.Property(i => i.Amostra).HasJsonConversion();

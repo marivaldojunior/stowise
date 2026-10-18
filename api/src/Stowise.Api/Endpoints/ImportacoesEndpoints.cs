@@ -34,7 +34,7 @@ public static class ImportacoesEndpoints
         group.MapPost("/produtos", ImportarProdutosAsync)
             .DisableAntiforgery()
             .WithName("ImportarProdutos")
-            .WithSummary("Envia um arquivo de produtos (CSV ou TXT, delimitado ou posicional). Detecta o layout e guarda o original.")
+            .WithSummary("Envia um arquivo de produtos (CSV ou TXT, delimitado ou posicional, ou planilha .xlsx). Detecta o layout e guarda o original.")
             .Produces<ImportacaoDetalhe>(StatusCodes.Status201Created)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status409Conflict)

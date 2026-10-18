@@ -46,9 +46,14 @@ public static partial class DetectorLayout
             return Erro("O arquivo está vazio.");
         }
 
-        if (IsExcel(conteudo))
+        if (conteudo.AsSpan().StartsWith(AssinaturaOle))
         {
-            return Erro("Arquivos Excel ainda não são aceitos. Salve a planilha como CSV e envie de novo.");
+            return Erro("Arquivos .xls (Excel 97-2003) não são aceitos. Salve a planilha como .xlsx ou CSV e envie de novo.");
+        }
+
+        if (IsZip(conteudo))
+        {
+            return Erro("Arquivo compactado não é texto. Envie um arquivo CSV, TXT ou uma planilha .xlsx.");
         }
 
         if (Decode(conteudo) is not { } decodificado)
@@ -72,28 +77,14 @@ public static partial class DetectorLayout
         var registros = posicoes is null
             ? [.. ParseDelimited(texto, delimitador).Where(r => r.Any(c => c.Length > 0))]
             : linhas.Select(l => Slice(l, posicoes)).ToList();
-        if (registros.Count == 0)
+
+        var organizado = Organize(registros, posicoes?.Count ?? registros.Take(LinhasAnalise).DefaultIfEmpty([]).Max(r => r.Length), posicoes);
+        if (!organizado.IsSuccess)
         {
-            return Erro("O arquivo não tem linhas com dados.");
+            return organizado.Error!;
         }
 
-        var totalColunas = posicoes?.Count ?? registros.Take(LinhasAnalise).Max(r => r.Length);
-        if (totalColunas > Importacao.MaxColunas)
-        {
-            return Erro($"O arquivo tem {totalColunas} colunas. O limite é {Importacao.MaxColunas}.");
-        }
-
-        var temCabecalho = IsHeader(registros[0], totalColunas);
-        var dados = temCabecalho ? registros.Skip(1).ToList() : registros;
-
-        var colunas = Enumerable.Range(0, totalColunas)
-            .Select(i => new ColunaArquivo(
-                i,
-                temCabecalho ? Truncate(registros[0][i]) : $"Coluna {i + 1}",
-                posicoes?[i].Inicio,
-                posicoes?[i].Tamanho))
-            .ToList();
-
+        var (temCabecalho, colunas, dados) = organizado.Value;
         var layout = new LayoutArquivo(
             posicoes is null ? FormatoArquivo.Delimitado : FormatoArquivo.Posicional,
             encoding,
@@ -105,11 +96,79 @@ public static partial class DetectorLayout
         return new ArquivoDetectado(layout, [.. dados.Take(LinhasAmostra)], dados.Count);
     }
 
-    private static AppError Erro(string mensagem) => AppError.Validation("arquivo", mensagem);
+    /// <summary>
+    /// Planilha já lida como texto (uma linha por registro, uma célula por campo). Aplica as mesmas regras de
+    /// cabeçalho e de colunas do arquivo de texto e descarta as colunas vazias à esquerda.
+    /// </summary>
+    public static Result<ArquivoDetectado> DetectPlanilha(string planilha, IEnumerable<string[]> linhas)
+    {
+        ArgumentNullException.ThrowIfNull(planilha);
+        ArgumentNullException.ThrowIfNull(linhas);
 
-    /// <summary>XLSX é um ZIP (<c>PK\3\4</c>); XLS é um documento OLE (<c>D0 CF 11 E0</c>).</summary>
-    private static bool IsExcel(byte[] conteudo) =>
-        conteudo.AsSpan().StartsWith("PK\u0003\u0004"u8) || conteudo.AsSpan().StartsWith(AssinaturaOle);
+        var registros = linhas.Where(r => r.Any(c => c.Length > 0)).ToList();
+        var primeira = registros.Count == 0 ? 0 : registros.Min(r => Array.FindIndex(r, c => c.Length > 0));
+        if (primeira > 0)
+        {
+            registros = [.. registros.Select(r => r[primeira..])];
+        }
+
+        var organizado = Organize(registros, registros.DefaultIfEmpty([]).Max(r => r.Length), posicoes: null);
+        if (!organizado.IsSuccess)
+        {
+            return organizado.Error!;
+        }
+
+        var (temCabecalho, colunas, dados) = organizado.Value;
+        var layout = new LayoutArquivo(
+            FormatoArquivo.Excel,
+            Encoding: null,
+            Delimitador: null,
+            SeparadorDecimal: ".",
+            temCabecalho,
+            colunas,
+            planilha.Length <= Importacao.PlanilhaMaxLength ? planilha : planilha[..Importacao.PlanilhaMaxLength]);
+
+        return new ArquivoDetectado(layout, [.. dados.Take(LinhasAmostra)], dados.Count);
+    }
+
+    /// <summary>ZIP (<c>PK\3\4</c>): o formato do <c>.xlsx</c>.</summary>
+    public static bool IsZip(ReadOnlySpan<byte> conteudo) => conteudo.StartsWith("PK\u0003\u0004"u8);
+
+    /// <summary>Limites, cabeçalho e nomes das colunas: a parte comum ao texto e à planilha.</summary>
+    private static Result<(bool TemCabecalho, List<ColunaArquivo> Colunas, List<string[]> Dados)> Organize(
+        List<string[]> registros,
+        int totalColunas,
+        List<(int Inicio, int Tamanho)>? posicoes)
+    {
+        if (registros.Count == 0)
+        {
+            return Erro("O arquivo não tem linhas com dados.");
+        }
+
+        if (totalColunas > Importacao.MaxColunas)
+        {
+            return Erro($"O arquivo tem {totalColunas} colunas. O limite é {Importacao.MaxColunas}.");
+        }
+
+        var temCabecalho = IsHeader(registros[0], totalColunas);
+        var dados = temCabecalho ? registros.Skip(1).ToList() : registros;
+        if (dados.Count > Importacao.MaxLinhas)
+        {
+            return Erro($"O arquivo tem mais de {Importacao.MaxLinhas} linhas. Divida o arquivo e envie as partes.");
+        }
+
+        var colunas = Enumerable.Range(0, totalColunas)
+            .Select(i => new ColunaArquivo(
+                i,
+                temCabecalho ? Truncate(registros[0][i]) : $"Coluna {i + 1}",
+                posicoes?[i].Inicio,
+                posicoes?[i].Tamanho))
+            .ToList();
+
+        return (temCabecalho, colunas, dados);
+    }
+
+    private static AppError Erro(string mensagem) => AppError.Validation("arquivo", mensagem);
 
     /// <summary>
     /// BOM primeiro; sem BOM, UTF-8 estrito; se houver byte inválido em UTF-8, Windows-1252 (o padrão dos

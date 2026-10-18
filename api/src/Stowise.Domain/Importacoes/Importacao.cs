@@ -40,14 +40,18 @@ public enum StatusImportacao
 public sealed record ColunaArquivo(int Indice, string Nome, int? Inicio = null, int? Tamanho = null);
 
 /// <summary>Como o arquivo foi lido: encoding, separadores, cabeçalho e colunas.</summary>
-/// <param name="Delimitador">Nulo no layout posicional e em arquivo de uma coluna só.</param>
+/// <param name="Encoding">Nulo na planilha Excel, que não é texto.</param>
+/// <param name="Delimitador">Nulo no layout posicional, na planilha e em arquivo de uma coluna só.</param>
+/// <param name="SeparadorDecimal">Na planilha, sempre ponto: os números saem na cultura invariante.</param>
+/// <param name="Planilha">Nome da aba lida, só no Excel.</param>
 public sealed record LayoutArquivo(
     FormatoArquivo Formato,
-    string Encoding,
+    string? Encoding,
     string? Delimitador,
     string SeparadorDecimal,
     bool TemCabecalho,
-    IReadOnlyList<ColunaArquivo> Colunas);
+    IReadOnlyList<ColunaArquivo> Colunas,
+    string? Planilha = null);
 
 /// <summary>
 /// Um arquivo enviado para importação. Guarda o layout detectado e uma amostra das primeiras linhas, que é o
@@ -58,6 +62,12 @@ public sealed class Importacao : Entity
     public const int NomeArquivoMaxLength = 255;
     public const int HashArquivoLength = 64;
     public const int MaxColunas = 200;
+
+    /// <summary>Linhas de dados aceitas num arquivo. Protege contra planilhas compactadas que expandem demais.</summary>
+    public const int MaxLinhas = 1_000_000;
+
+    /// <summary>Limite do Excel para o nome de uma aba.</summary>
+    public const int PlanilhaMaxLength = 31;
 
     private Importacao()
     {
@@ -74,13 +84,15 @@ public sealed class Importacao : Entity
 
     public long TamanhoBytes { get; private set; }
 
-    public string Encoding { get; private set; } = null!;
+    public string? Encoding { get; private set; }
 
     public string? Delimitador { get; private set; }
 
     public string SeparadorDecimal { get; private set; } = null!;
 
     public bool TemCabecalho { get; private set; }
+
+    public string? Planilha { get; private set; }
 
     public IReadOnlyList<ColunaArquivo> Colunas { get; private set; } = [];
 
@@ -122,6 +134,11 @@ public sealed class Importacao : Entity
             throw new DomainException("O arquivo está vazio.");
         }
 
+        if (totalLinhas > MaxLinhas)
+        {
+            throw new DomainException($"O arquivo deve ter no máximo {MaxLinhas} linhas.");
+        }
+
         if (layout.Colunas.Count is 0 or > MaxColunas)
         {
             throw new DomainException($"O arquivo deve ter entre 1 e {MaxColunas} colunas.");
@@ -135,6 +152,7 @@ public sealed class Importacao : Entity
             HashArquivo = hashArquivo.ToLowerInvariant(),
             TamanhoBytes = tamanhoBytes,
             Encoding = layout.Encoding,
+            Planilha = layout.Planilha,
             Delimitador = layout.Delimitador,
             SeparadorDecimal = layout.SeparadorDecimal,
             TemCabecalho = layout.TemCabecalho,
@@ -147,7 +165,7 @@ public sealed class Importacao : Entity
         };
     }
 
-    public LayoutArquivo Layout => new(Formato, Encoding, Delimitador, SeparadorDecimal, TemCabecalho, Colunas);
+    public LayoutArquivo Layout => new(Formato, Encoding, Delimitador, SeparadorDecimal, TemCabecalho, Colunas, Planilha);
 }
 
 /// <summary>Conteúdo original do arquivo, separado da importação para não ser carregado nas consultas.</summary>

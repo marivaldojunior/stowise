@@ -4489,7 +4489,7 @@
         "tags": [
           "Importação"
         ],
-        "summary": "Envia um arquivo de produtos (CSV ou TXT, delimitado ou posicional). Detecta o layout e guarda o original.",
+        "summary": "Envia um arquivo de produtos (CSV ou TXT, delimitado ou posicional, ou planilha .xlsx). Detecta o layout e guarda o original.",
         "operationId": "ImportarProdutos",
         "requestBody": {
           "content": {
@@ -6071,7 +6071,10 @@
             "$ref": "#/components/schemas/FormatoArquivo"
           },
           "encoding": {
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "delimitador": {
             "type": [
@@ -6090,6 +6093,12 @@
             "items": {
               "$ref": "#/components/schemas/ColunaArquivo"
             }
+          },
+          "planilha": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },

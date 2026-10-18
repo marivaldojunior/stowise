@@ -65,6 +65,12 @@
           "Microsoft.EntityFrameworkCore.Relational": "10.0.13"
         }
       },
+      "MiniExcel": {
+        "type": "Direct",
+        "requested": "[1.46.0, )",
+        "resolved": "1.46.0",
+        "contentHash": "IMmli1Hc3/Axst8hcuUx30q/2HTKH2f3nmduiy59wvpth1u0881fZMEMAy4Inl3GBkdrVXA8UUpF5lyoWREdLQ=="
+      },
       "Npgsql.EntityFrameworkCore.PostgreSQL": {
         "type": "Direct",
         "requested": "[10.0.3, )",

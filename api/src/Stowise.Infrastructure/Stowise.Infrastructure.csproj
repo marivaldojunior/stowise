@@ -15,6 +15,7 @@
     <!-- Fixa o EF Core no mesmo patch do pacote Design (o Npgsql traz uma versão anterior) -->
     <PackageReference Include="Microsoft.EntityFrameworkCore.Relational" />
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
+    <PackageReference Include="MiniExcel" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Pgvector.EntityFrameworkCore" />
   </ItemGroup>

@@ -802,7 +802,6 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnName("delimitador");
 
                     b.Property<string>("Encoding")
-                        .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("encoding");
@@ -829,6 +828,11 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("character varying(255)")
                         .HasColumnName("nome_arquivo");
+
+                    b.Property<string>("Planilha")
+                        .HasMaxLength(31)
+                        .HasColumnType("character varying(31)")
+                        .HasColumnName("planilha");
 
                     b.Property<string>("SeparadorDecimal")
                         .IsRequired()

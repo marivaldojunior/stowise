@@ -26,13 +26,15 @@ public class ImportacaoTests
     }
 
     [Fact]
-    public void Import_needs_a_file_name_and_at_least_one_column()
+    public void Import_needs_a_file_name_columns_and_a_row_count_within_the_limit()
     {
         Assert.Throws<DomainException>(() => Create(" "));
         Assert.Throws<DomainException>(() => Importacao.Create(
             TipoImportacao.Produtos, "a.csv", Hash, 10, Layout with { Colunas = [] }, [], 0, Guid.NewGuid(), Agora));
         Assert.Throws<ArgumentException>(() => Importacao.Create(
             TipoImportacao.Produtos, "a.csv", "abc", 10, Layout, [], 0, Guid.NewGuid(), Agora));
+        Assert.Throws<DomainException>(() => Importacao.Create(
+            TipoImportacao.Produtos, "a.csv", Hash, 10, Layout, [], Importacao.MaxLinhas + 1, Guid.NewGuid(), Agora));
     }
 
     [Fact]
