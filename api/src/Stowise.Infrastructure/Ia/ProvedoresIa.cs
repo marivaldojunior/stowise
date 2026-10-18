@@ -54,6 +54,13 @@ public sealed class ProvedorIaOptions
 
     public int MaxTokensSaida { get; set; } = 4096;
 
+    /// <summary>
+    /// Como pedir JSON (<see cref="ModosJson"/>): <c>JsonSchema</c> (padrão, saída estruturada nativa), <c>Json</c>
+    /// (só "responda em JSON", schema no prompt) ou <c>Prompt</c> (schema só no prompt). Use <c>Json</c> ou
+    /// <c>Prompt</c> em provedores sem suporte a JSON Schema. A validação pelo schema acontece sempre.
+    /// </summary>
+    public string ModoJson { get; set; } = ModosJson.JsonSchema;
+
     /// <summary>Preço em dólares por milhão de tokens de entrada, para o custo estimado.</summary>
     public decimal PrecoEntradaPorMilhao { get; set; }
 
@@ -128,6 +135,12 @@ internal sealed class ProvedoresIa : IProvedoresIa, IDisposable
             if (string.IsNullOrWhiteSpace(opcoes.Nome) || string.IsNullOrWhiteSpace(opcoes.Modelo))
             {
                 throw new InvalidOperationException("Each AI provider needs a Nome and a Modelo.");
+            }
+
+            if (!((string[])[ModosJson.JsonSchema, ModosJson.Json, ModosJson.Prompt]).Contains(opcoes.ModoJson, StringComparer.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    $"Unknown ModoJson '{opcoes.ModoJson}' for '{opcoes.Nome}'. Use {ModosJson.JsonSchema}, {ModosJson.Json} or {ModosJson.Prompt}.");
             }
 
             if (!porTipo.TryGetValue(opcoes.Tipo, out var fabrica))

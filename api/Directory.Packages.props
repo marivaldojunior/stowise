@@ -35,6 +35,7 @@
     <PackageVersion Include="MiniExcel" Version="1.46.0" />
     <!-- O Hangfire.Core aceita Newtonsoft.Json 11.0.1, que tem vulnerabilidade alta (GHSA-5crp-9r3c-p9vr). -->
     <PackageVersion Include="Newtonsoft.Json" Version="13.0.4" />
+    <PackageVersion Include="NJsonSchema" Version="11.6.1" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="OllamaSharp" Version="5.5.0" />
     <PackageVersion Include="Pgvector.EntityFrameworkCore" Version="0.3.0" />

@@ -288,7 +288,7 @@ Regras de ordem:
 - [x] Efetivação em background: gravação no catálogo em lote (bulk insert), idempotente, e relatório final
 - [x] Camada de IA plugável (Microsoft.Extensions.AI) com registro em ChamadaIa, conforme o ADR-0004
 - [x] Resiliência da IA: timeout, retry com backoff e fallback de provedor; sem IA disponível, o fluxo segue manual (provedores em lista ordenada, com fábricas por tipo: Anthropic, OpenAI compatível, Gemini e Ollama)
-- [ ] Saídas estruturadas: JSON Schema por funcionalidade, validação e rejeição de resposta inválida
+- [x] Saídas estruturadas: JSON Schema por funcionalidade, validação e rejeição de resposta inválida
 - [ ] Cota de IA por perfil e por usuário (CotaIa), com HTTP 429 acima do limite
 - [ ] Sugestão de mapeamento de colunas e de regras de normalização (data, decimal, unidade) por IA, a partir do cabeçalho + amostra; a aplicação das regras é determinística
 

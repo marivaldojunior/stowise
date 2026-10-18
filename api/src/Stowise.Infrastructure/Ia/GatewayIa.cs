@@ -25,75 +25,47 @@ internal sealed record RespostaIa(bool Sucesso, ChatResponse? Resposta, Guid? Ch
     public string? Texto => Resposta?.Text;
 }
 
+/// <summary>Resultado de uma chamada com saída estruturada: o valor já validado pelo schema da funcionalidade.</summary>
+internal sealed record RespostaIa<T>(bool Sucesso, T? Valor, Guid? ChamadaId)
+    where T : class;
+
 /// <summary>
 /// Porta única para os provedores de IA (ADR-0004). Para cada pedido, percorre a cadeia de provedores da
 /// funcionalidade: cada tentativa tem timeout; falha transitória (timeout, 408, 429, 5xx, rede) tenta de novo no
-/// mesmo provedor com espera exponencial e jitter; outra falha (chave inválida, modelo inexistente) passa direto
-/// para o próximo provedor. O pedido inteiro vira um único <see cref="ChamadaIa"/>, gravado em escopo próprio.
+/// mesmo provedor com espera exponencial e jitter; outra falha (chave inválida, modelo inexistente, resposta fora do
+/// schema) passa direto para o próximo provedor. O pedido inteiro vira um único <see cref="ChamadaIa"/>.
 /// </summary>
 internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChamadasIa registro, TimeProvider time, ILogger<GatewayIa> logger)
 {
     private static readonly TimeSpan EsperaMaxima = TimeSpan.FromSeconds(10);
 
-    public async Task<RespostaIa> SendAsync(PedidoIa pedido, CancellationToken cancellationToken)
+    /// <summary>Texto livre, sem schema. Para saída que vira dado, use a sobrecarga com <see cref="ContratoSaidaIa{T}"/>.</summary>
+    public Task<RespostaIa> SendAsync(PedidoIa pedido, CancellationToken cancellationToken) =>
+        SendCoreAsync(pedido, preparar: null, validar: null, cancellationToken);
+
+    /// <summary>
+    /// Saída estruturada (ADR-0004, item 3): pede JSON no modo de cada provedor (<see cref="ProvedorIaOptions.ModoJson"/>)
+    /// e só aceita a resposta que passa no schema do contrato. A versão do contrato vai para o registro.
+    /// </summary>
+    public async Task<RespostaIa<T>> SendAsync<T>(PedidoIa pedido, ContratoSaidaIa<T> contrato, CancellationToken cancellationToken)
+        where T : class
     {
         ArgumentNullException.ThrowIfNull(pedido);
+        ArgumentNullException.ThrowIfNull(contrato);
 
-        if (provedores.Para(pedido.Funcionalidade) is not { Provedores.Count: > 0 } cadeia)
-        {
-            return RespostaIa.Indisponivel;
-        }
-
-        var inicio = time.GetTimestamp();
-        var tentativas = 0;
-        ProvedorIa usado = cadeia.Provedores[0];
-        string modelo = usado.Opcoes.Modelo;
-        string? erro = null;
-
-        for (var indice = 0; indice < cadeia.Provedores.Count; indice++)
-        {
-            usado = cadeia.Provedores[indice];
-            var opcoes = OptionsFor(pedido, usado);
-            modelo = opcoes.ModelId!;
-
-            for (var tentativa = 1; tentativa <= cadeia.TentativasPorProvedor; tentativa++)
+        T? valor = null;
+        var resposta = await SendCoreAsync(
+            pedido with { PromptVersao = contrato.Versao },
+            (opcoes, mensagens, provedor) => ApplyContract(contrato, opcoes, mensagens, provedor),
+            r =>
             {
-                tentativas++;
-                using var limite = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                limite.CancelAfter(cadeia.Timeout);
-                try
-                {
-                    var resposta = await usado.Cliente.GetResponseAsync(pedido.Mensagens, opcoes, limite.Token);
-                    var chamada = await RecordAsync(pedido, usado, resposta.ModelId ?? modelo, resposta.Usage, inicio, tentativas, indice > 0, erro: null);
-                    return new RespostaIa(true, resposta, chamada.Id);
-                }
-                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
-                {
-                    erro = $"Timeout: no answer from {usado.Nome} in {cadeia.Timeout.TotalSeconds:0.#} s.";
-                    LogAttemptFailed(null, pedido.Funcionalidade, usado.Nome, tentativa, "timeout");
-                }
-                catch (Exception e) when (e is not OperationCanceledException)
-                {
-                    erro = $"{e.GetType().Name}: {e.Message}";
-                    if (!(usado.Transitoria?.Invoke(e) ?? IsTransient(e)))
-                    {
-                        // Erro de configuração ou de pedido: repetir no mesmo provedor não resolve.
-                        LogAttemptFailed(e, pedido.Funcionalidade, usado.Nome, tentativa, "permanent");
-                        break;
-                    }
+                var saida = contrato.Parse(r.Text);
+                valor = saida.Valor;
+                return saida.Erro;
+            },
+            cancellationToken);
 
-                    LogAttemptFailed(e, pedido.Funcionalidade, usado.Nome, tentativa, "transient");
-                }
-
-                if (tentativa < cadeia.TentativasPorProvedor)
-                {
-                    await Task.Delay(Backoff(cadeia.EsperaInicial, tentativa), time, cancellationToken);
-                }
-            }
-        }
-
-        var falha = await RecordAsync(pedido, usado, modelo, usage: null, inicio, tentativas, cadeia.Provedores.Count > 1, erro);
-        return new RespostaIa(false, null, falha.Id);
+        return new RespostaIa<T>(resposta.Sucesso, resposta.Sucesso ? valor : null, resposta.ChamadaId);
     }
 
     /// <summary>Espera antes da próxima tentativa: dobra a cada vez, entre 50% e 100% do valor (jitter), até 10 s.</summary>
@@ -124,6 +96,23 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Modo nativo: o schema vai no <see cref="ChatOptions.ResponseFormat"/>. Nos outros modos, vai como mensagem de
+    /// sistema no início da conversa, e o provedor recebe só "responda em JSON" (ou nada).
+    /// </summary>
+    private static IReadOnlyList<ChatMessage> ApplyContract<T>(ContratoSaidaIa<T> contrato, ChatOptions opcoes, IReadOnlyList<ChatMessage> mensagens, ProvedorIa provedor)
+        where T : class
+    {
+        if (string.Equals(provedor.Opcoes.ModoJson, ModosJson.JsonSchema, StringComparison.OrdinalIgnoreCase))
+        {
+            opcoes.ResponseFormat = ChatResponseFormat.ForJsonSchema(contrato.Schema, contrato.Nome);
+            return mensagens;
+        }
+
+        opcoes.ResponseFormat = string.Equals(provedor.Opcoes.ModoJson, ModosJson.Json, StringComparison.OrdinalIgnoreCase) ? ChatResponseFormat.Json : null;
+        return [new ChatMessage(ChatRole.System, contrato.InstrucaoNoPrompt()), .. mensagens];
     }
 
     private static int? StatusOf(Exception e)
@@ -160,22 +149,102 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
         return opcoes;
     }
 
-    private async Task<ChamadaIa> RecordAsync(
+    private static int? Sum(int? atual, long? mais) =>
+        mais is null ? atual : (int)Math.Min((atual ?? 0) + mais.Value, int.MaxValue);
+
+    /// <param name="preparar">Ajusta opções e mensagens para cada provedor (ex.: modo de JSON).</param>
+    /// <param name="validar">Devolve o motivo de recusa da resposta, ou nulo se ela serve.</param>
+    private async Task<RespostaIa> SendCoreAsync(
         PedidoIa pedido,
-        ProvedorIa provedor,
-        string modelo,
-        UsageDetails? usage,
-        long inicio,
-        int tentativas,
-        bool usouFallback,
-        string? erro)
+        Func<ChatOptions, IReadOnlyList<ChatMessage>, ProvedorIa, IReadOnlyList<ChatMessage>>? preparar,
+        Func<ChatResponse, string?>? validar,
+        CancellationToken cancellationToken)
     {
-        var uso = new UsoIa(
-            ToInt(usage?.InputTokenCount),
-            ToInt(usage?.OutputTokenCount),
-            (int)time.GetElapsedTime(inicio).TotalMilliseconds,
-            tentativas,
-            usouFallback);
+        ArgumentNullException.ThrowIfNull(pedido);
+
+        if (provedores.Para(pedido.Funcionalidade) is not { Provedores.Count: > 0 } cadeia)
+        {
+            return RespostaIa.Indisponivel;
+        }
+
+        var inicio = time.GetTimestamp();
+        var tentativas = 0;
+        int? tokensEntrada = null, tokensSaida = null;
+        decimal? custo = null;
+        var usado = cadeia.Provedores[0];
+        var modelo = usado.Opcoes.Modelo;
+        string? erro = null;
+
+        for (var indice = 0; indice < cadeia.Provedores.Count; indice++)
+        {
+            usado = cadeia.Provedores[indice];
+            var opcoes = OptionsFor(pedido, usado);
+            var mensagens = preparar?.Invoke(opcoes, pedido.Mensagens, usado) ?? pedido.Mensagens;
+            modelo = opcoes.ModelId!;
+
+            for (var tentativa = 1; tentativa <= cadeia.TentativasPorProvedor; tentativa++)
+            {
+                tentativas++;
+                using var limite = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                limite.CancelAfter(cadeia.Timeout);
+                try
+                {
+                    var resposta = await usado.Cliente.GetResponseAsync(mensagens, opcoes, limite.Token);
+
+                    // Respostas recusadas também custam: tokens e custo de cada uma entram no total, cada uma pelo
+                    // preço do provedor que a gerou.
+                    tokensEntrada = Sum(tokensEntrada, resposta.Usage?.InputTokenCount);
+                    tokensSaida = Sum(tokensSaida, resposta.Usage?.OutputTokenCount);
+                    if (usado.Opcoes.EstimateCost(ToInt(resposta.Usage?.InputTokenCount), ToInt(resposta.Usage?.OutputTokenCount)) is { } custoDaResposta)
+                    {
+                        custo = (custo ?? 0) + custoDaResposta;
+                    }
+
+                    if (validar?.Invoke(resposta) is { } invalida)
+                    {
+                        erro = $"SaidaInvalida: {invalida}";
+                        LogAttemptFailed(null, pedido.Funcionalidade, usado.Nome, tentativa, "invalid output");
+                        break;
+                    }
+
+                    var chamada = await RecordAsync(pedido, usado, resposta.ModelId ?? modelo, new UsoIa(tokensEntrada, tokensSaida, Elapsed(inicio), tentativas, indice > 0), custo, erro: null);
+                    return new RespostaIa(true, resposta, chamada.Id);
+                }
+                catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+                {
+                    erro = $"Timeout: no answer from {usado.Nome} in {cadeia.Timeout.TotalSeconds:0.#} s.";
+                    LogAttemptFailed(null, pedido.Funcionalidade, usado.Nome, tentativa, "timeout");
+                }
+                catch (Exception e) when (e is not OperationCanceledException)
+                {
+                    erro = $"{e.GetType().Name}: {e.Message}";
+                    if (!(usado.Transitoria?.Invoke(e) ?? IsTransient(e)))
+                    {
+                        // Erro de configuração ou de pedido: repetir no mesmo provedor não resolve.
+                        LogAttemptFailed(e, pedido.Funcionalidade, usado.Nome, tentativa, "permanent");
+                        break;
+                    }
+
+                    LogAttemptFailed(e, pedido.Funcionalidade, usado.Nome, tentativa, "transient");
+                }
+
+                if (tentativa < cadeia.TentativasPorProvedor)
+                {
+                    await Task.Delay(Backoff(cadeia.EsperaInicial, tentativa), time, cancellationToken);
+                }
+            }
+        }
+
+        var falha = await RecordAsync(pedido, usado, modelo, new UsoIa(tokensEntrada, tokensSaida, Elapsed(inicio), tentativas, cadeia.Provedores.Count > 1), custo, erro);
+        return new RespostaIa(false, null, falha.Id);
+    }
+
+    private static int? ToInt(long? valor) => valor is null ? null : (int)Math.Min(valor.Value, int.MaxValue);
+
+    private int Elapsed(long inicio) => (int)time.GetElapsedTime(inicio).TotalMilliseconds;
+
+    private async Task<ChamadaIa> RecordAsync(PedidoIa pedido, ProvedorIa provedor, string modelo, UsoIa uso, decimal? custo, string? erro)
+    {
         var chamada = ChamadaIa.Create(
             pedido.Funcionalidade,
             pedido.UsuarioId,
@@ -183,7 +252,7 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
             modelo,
             pedido.PromptVersao,
             uso,
-            provedor.Opcoes.EstimateCost(uso.TokensEntrada, uso.TokensSaida),
+            custo,
             erro,
             Activity.Current?.TraceId.ToString(),
             time.GetUtcNow());
@@ -191,8 +260,6 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
         await registro.SaveAsync(chamada);
         return chamada;
     }
-
-    private static int? ToInt(long? valor) => valor is null ? null : (int)Math.Min(valor.Value, int.MaxValue);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "AI attempt {Tentativa} for {Funcionalidade} failed on {Provedor} ({Tipo})")]
     private partial void LogAttemptFailed(Exception? exception, FuncionalidadeIa funcionalidade, string provedor, int tentativa, string tipo);

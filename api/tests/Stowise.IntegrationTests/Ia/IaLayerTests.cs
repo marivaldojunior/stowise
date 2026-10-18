@@ -66,6 +66,7 @@ public class IaLayerTests(StowiseApiFactory factory) : IClassFixture<StowiseApiF
     [InlineData("Ia:Funcionalidades:Mapeamento:Provedores:0", "inexistente", "unknown provider 'inexistente'")]
     [InlineData("Ia:Funcionalidades:Contabilidade:TimeoutSegundos", "5", "Unknown AI feature 'Contabilidade'")]
     [InlineData("Ia:Provedores:1:ApiKey", "", "needs an ApiKey")]
+    [InlineData("Ia:Provedores:0:ModoJson", "Xml", "Unknown ModoJson 'Xml'")]
     public void Configuration_mistakes_fail_at_startup_with_a_clear_message(string chave, string valor, string trecho)
     {
         var config = Config(

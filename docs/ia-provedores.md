@@ -79,4 +79,14 @@ Dois modelos do mesmo provedor são duas entradas com nomes diferentes.
 
 ## Saída estruturada
 
-Os provedores tratam JSON de formas diferentes. A API valida toda resposta contra o JSON Schema da funcionalidade no próprio código (ADR-0004, item 3), então o resultado não depende do suporte de cada provedor.
+Cada funcionalidade tem um contrato (`ContratoSaidaIa<T>`): um JSON Schema versionado junto do prompt e o tipo C# que ela recebe. A API valida toda resposta contra o schema no próprio código (ADR-0004, item 3), então o resultado não depende do suporte de cada provedor.
+
+- A resposta inteira tem de ser um JSON válido pelo schema. Texto antes ou depois, bloco de código em Markdown e campo a mais são recusados. A API não corrige a resposta.
+- Uma resposta recusada conta como falha do provedor: a API passa para o próximo da lista e grava o motivo em `ChamadaIa.Erro`, com o prefixo `SaidaInvalida`. Os tokens da resposta recusada entram no custo.
+- `ModoJson` diz como pedir JSON a cada provedor:
+
+| `ModoJson` | O que a API envia | Use quando |
+| --- | --- | --- |
+| `JsonSchema` (padrão) | O schema na saída estruturada nativa do provedor | Anthropic, OpenAI, Gemini, Ollama |
+| `Json` | Só "responda em JSON", com o schema numa mensagem de sistema | O provedor aceita modo JSON, mas não schema (alguns compatíveis com OpenAI) |
+| `Prompt` | O schema só numa mensagem de sistema | O provedor não tem modo JSON |
