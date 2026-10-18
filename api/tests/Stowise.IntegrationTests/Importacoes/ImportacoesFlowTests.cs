@@ -187,6 +187,52 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     }
 
     [DockerFact]
+    public async Task Confirmation_builds_the_staging_against_the_catalog()
+    {
+        await PostOkAsync("/api/v1/categorias", new { nome = "Grãos" });
+        await PostOkAsync("/api/v1/produtos", new { sku = "ARROZ-5", descricao = "Arroz 5kg", unidadeBase = "UN", classeArmazenagem = "Normal", embalagemBase = new { gtin = "7891000100103" } });
+        var feijao = await PostOkAsync("/api/v1/produtos", new { sku = "FEIJAO-1", descricao = "Feijão 1kg", unidadeBase = "UN", classeArmazenagem = "Normal", embalagemBase = new { gtin = "7891000053508" } });
+        var feijaoId = JsonDocument.Parse(feijao).RootElement.GetProperty("id").GetGuid();
+
+        var importacao = await CreatedAsync("catalogo.csv", string.Join('\n', [
+            "SKU;Descrição;Unidade;GTIN;Categoria;Peso",
+            "arroz-5;Arroz tipo 1 5kg;UN;7891000100103;graos;5",
+            "MILHO-1;Milho 1kg;UN;7891000053508;Grãos;1,5",
+            "NOVO-1;Lentilha 500g;kg;;;0,5",
+            "NOVO-1;Lentilha repetida;UN;;;",
+            "OUTRO-1;Suco;UN;7891000100104;Bebidas;",
+        ]));
+        object[] mapeamento =
+        [
+            new { campo = "sku", coluna = 0 }, new { campo = "descricao", coluna = 1 }, new { campo = "unidadeBase", coluna = 2 },
+            new { campo = "gtin", coluna = 3 }, new { campo = "categoria", coluna = 4 }, new { campo = "pesoKg", coluna = 5 },
+        ];
+
+        var revisao = await ConfirmAsync(importacao.Id, new { colunas = mapeamento, versao = importacao.Versao });
+
+        Assert.Equal(StatusImportacao.AguardandoRevisao, revisao.Status);
+        Assert.Equal((2, 2, 1), (revisao.LinhasValidas, revisao.LinhasComErro, revisao.LinhasPossivelDuplicata));
+
+        var linhas = (await _client.GetFromJsonAsync<PagedResult<ImportacaoLinhaDetalhe>>($"/api/v1/importacoes/{importacao.Id}/linhas", Json))!.Itens;
+        Assert.Equal([1, 2, 3, 4, 5], linhas.Select(l => l.NumeroLinha));
+        Assert.Equal((StatusLinha.Valida, AcaoLinha.Atualizar), (linhas[0].Status, linhas[0].Acao));
+        Assert.Equal("ARROZ-5", linhas[0].DadosNormalizados["sku"]);
+        Assert.NotNull(linhas[0].DadosNormalizados["categoriaId"]);
+        Assert.Equal((StatusLinha.PossivelDuplicata, feijaoId), (linhas[1].Status, linhas[1].ProdutoCorrespondenteId));
+        Assert.Equal((StatusLinha.Valida, AcaoLinha.Criar, "KG", "0.5"), (linhas[2].Status, linhas[2].Acao, linhas[2].DadosNormalizados["unidadeBase"], linhas[2].DadosNormalizados["pesoKg"]));
+        Assert.Contains("linha 3", Assert.Single(linhas[3].Erros).Mensagem, StringComparison.Ordinal);
+        Assert.Equal(["categoria", "gtin"], linhas[4].Erros.Select(e => e.Campo).Order(StringComparer.Ordinal));
+        Assert.Equal(["NOVO-1", "Lentilha repetida", "UN", "", "", ""], linhas[3].DadosBrutos);
+
+        var erros = (await _client.GetFromJsonAsync<PagedResult<ImportacaoLinhaDetalhe>>($"/api/v1/importacoes/{importacao.Id}/linhas?status=Erro", Json))!;
+        Assert.Equal([4, 5], erros.Itens.Select(l => l.NumeroLinha));
+
+        // Nova confirmação na revisão refaz o staging, sem acumular linhas.
+        await ConfirmAsync(importacao.Id, new { colunas = mapeamento, versao = revisao.Versao });
+        Assert.Equal(5, await QueryAsync(db => db.ImportacaoLinhas.CountAsync(l => l.ImportacaoId == importacao.Id)));
+    }
+
+    [DockerFact]
     public async Task Unknown_import_is_not_found()
     {
         var response = await _client.GetAsync(new Uri($"/api/v1/importacoes/{Guid.NewGuid()}", UriKind.Relative));
@@ -199,6 +245,14 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
         var response = await UploadAsync(nome, Encoding.UTF8.GetBytes(texto));
         Assert.True(response.StatusCode == HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
         return (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!;
+    }
+
+    private async Task<string> PostOkAsync(string url, object body)
+    {
+        var response = await _client.PostAsJsonAsync(url, body);
+        var texto = await response.Content.ReadAsStringAsync();
+        Assert.True(response.IsSuccessStatusCode, $"POST {url} → {(int)response.StatusCode}: {texto}");
+        return texto;
     }
 
     private async Task<ImportacaoDetalhe> ConfirmAsync(Guid id, object body)

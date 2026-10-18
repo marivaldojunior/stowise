@@ -48,12 +48,18 @@ public static class ImportacoesEndpoints
         group.MapPut("/{id:guid}/mapeamento", async (Guid id, ConfirmarMapeamento comando, IImportacaoService importacoes, ClaimsPrincipal user, CancellationToken ct) =>
                 (await importacoes.ConfirmarMapeamentoAsync(id, comando, user.GetUsuarioId(), ct)).ToHttpResult(TypedResults.Ok))
             .WithName("ConfirmarMapeamentoImportacao")
-            .WithSummary("Confirma qual coluna do arquivo preenche cada campo. Com salvarTemplate, o próximo arquivo igual já chega mapeado.")
+            .WithSummary("Confirma qual coluna preenche cada campo e valida as linhas (staging). Com salvarTemplate, o próximo arquivo igual já chega mapeado.")
             .Produces<ImportacaoDetalhe>()
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        group.MapGet("/{id:guid}/linhas", ListLinhasAsync)
+            .WithName("ListarLinhasImportacao")
+            .WithSummary("Linhas do staging na ordem do arquivo, com valores normalizados, erros e a ação prevista.")
+            .Produces<PagedResult<ImportacaoLinhaDetalhe>>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
 
         MapTemplates(group.MapGroup("/templates"));
         return app;
@@ -113,6 +119,16 @@ public static class ImportacoesEndpoints
         return (await importacoes.ReceberAsync(comando, user.GetUsuarioId(), ct))
             .ToHttpResult(i => TypedResults.CreatedAtRoute(i, ObterImportacaoRoute, new { id = i.Id }));
     }
+
+    private static async Task<IResult> ListLinhasAsync(
+        Guid id,
+        IImportacaoService importacoes,
+        StatusLinha? status,
+        AcaoLinha? acao,
+        int? pagina,
+        int? tamanhoPagina,
+        CancellationToken ct) =>
+        (await importacoes.ListLinhasAsync(id, new LinhaFiltro(status, acao, pagina, tamanhoPagina), ct)).ToHttpResult(TypedResults.Ok);
 
     private static async Task<IResult> ListAsync(
         IImportacaoService importacoes,

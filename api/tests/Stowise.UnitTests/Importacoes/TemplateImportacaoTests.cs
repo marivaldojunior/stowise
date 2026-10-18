@@ -52,10 +52,21 @@ public class TemplateImportacaoTests
         Assert.Equal([new("sku", 0), new("descricao", 1), new MapeamentoColuna("unidadeBase", 2)], importacao.Mapeamento);
         Assert.Equal((Usuario, Agora), (importacao.MapeamentoConfirmadoPor, importacao.MapeamentoConfirmadoEm));
 
-        Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento([.. Mapeamento, new("gtin", 3)], Usuario, Agora));
-        Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento([.. Mapeamento, new("fabricante", 0)], Usuario, Agora));
-        Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento([.. Mapeamento, new("sku", 1)], Usuario, Agora));
-        Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento([new("sku", 0)], Usuario, Agora));
+        Assert.Equal(StatusImportacao.Validando, importacao.Status);
+
+        IReadOnlyList<MapeamentoColuna>[] invalidos =
+        [
+            [.. Mapeamento, new("gtin", 3)],
+            [.. Mapeamento, new("fabricante", 0)],
+            [.. Mapeamento, new("sku", 1)],
+            [new("sku", 0)],
+        ];
+        Assert.All(invalidos, m =>
+        {
+            var nova = NovaImportacao();
+            Assert.Throws<DomainException>(() => nova.ConfirmMapeamento(m, Usuario, Agora));
+            Assert.Equal(StatusImportacao.Recebido, nova.Status);
+        });
     }
 
     [Fact]
@@ -107,6 +118,7 @@ public class TemplateImportacaoTests
         Assert.Equal((2, Agora), (template.VezesUsado, template.ConfirmadoEm));
 
         var outro = Guid.NewGuid();
+        segunda.CompleteValidacao(1, 0, 0);
         segunda.ConfirmMapeamento([new("sku", 0), new("descricao", 2), new("unidadeBase", 1)], outro, Agora.AddDays(2));
         template.RegisterUse(segunda, novoUso: false, sugeridoPorIa: true, outro, Agora.AddDays(2));
 

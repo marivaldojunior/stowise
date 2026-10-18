@@ -4629,7 +4629,7 @@
         "tags": [
           "Importação"
         ],
-        "summary": "Confirma qual coluna do arquivo preenche cada campo. Com salvarTemplate, o próximo arquivo igual já chega mapeado.",
+        "summary": "Confirma qual coluna preenche cada campo e valida as linhas (staging). Com salvarTemplate, o próximo arquivo igual já chega mapeado.",
         "operationId": "ConfirmarMapeamentoImportacao",
         "parameters": [
           {
@@ -4715,6 +4715,111 @@
           },
           "422": {
             "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/{id}/linhas": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Linhas do staging na ordem do arquivo, com valores normalizados, erros e a ação prevista.",
+        "operationId": "ListarLinhasImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StatusLinha"
+            }
+          },
+          {
+            "name": "acao",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/AcaoLinha"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfImportacaoLinhaDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
             "content": {
               "application/problem+json": {
                 "schema": {
@@ -5040,6 +5145,13 @@
   },
   "components": {
     "schemas": {
+      "AcaoLinha": {
+        "enum": [
+          "Criar",
+          "Atualizar",
+          "Ignorar"
+        ]
+      },
       "AdicionarEmbalagem": {
         "required": [
           "tipo",
@@ -6093,6 +6205,21 @@
           }
         }
       },
+      "ErroLinha": {
+        "required": [
+          "campo",
+          "mensagem"
+        ],
+        "type": "object",
+        "properties": {
+          "campo": {
+            "type": "string"
+          },
+          "mensagem": {
+            "type": "string"
+          }
+        }
+      },
       "ExtratoItem": {
         "required": [
           "id",
@@ -6460,6 +6587,10 @@
           "mapeamento",
           "mapeamentoConfirmadoPor",
           "mapeamentoConfirmadoEm",
+          "linhasValidas",
+          "linhasComErro",
+          "linhasPossivelDuplicata",
+          "motivoFalha",
           "versao"
         ],
         "type": "object",
@@ -6559,6 +6690,36 @@
             ],
             "format": "date-time"
           },
+          "linhasValidas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasComErro": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasPossivelDuplicata": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "motivoFalha": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "versao": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
@@ -6566,6 +6727,74 @@
               "string"
             ],
             "format": "uint32"
+          }
+        }
+      },
+      "ImportacaoLinhaDetalhe": {
+        "required": [
+          "id",
+          "numeroLinha",
+          "dadosBrutos",
+          "dadosNormalizados",
+          "status",
+          "acao",
+          "produtoCorrespondenteId",
+          "similaridade",
+          "erros"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroLinha": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "dadosBrutos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "dadosNormalizados": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusLinha"
+          },
+          "acao": {
+            "$ref": "#/components/schemas/AcaoLinha"
+          },
+          "produtoCorrespondenteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "similaridade": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "erros": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErroLinha"
+            }
           }
         }
       },
@@ -6577,6 +6806,8 @@
           "status",
           "nomeArquivo",
           "totalLinhas",
+          "linhasValidas",
+          "linhasComErro",
           "usuarioId",
           "iniciadoEm",
           "concluidoEm"
@@ -6600,6 +6831,22 @@
             "type": "string"
           },
           "totalLinhas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasValidas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasComErro": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -6913,6 +7160,55 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ExtratoItem"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfImportacaoLinhaDetalhe": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportacaoLinhaDetalhe"
             }
           },
           "pagina": {
@@ -8254,6 +8550,14 @@
           "Efetivando",
           "Concluido",
           "Falhou"
+        ]
+      },
+      "StatusLinha": {
+        "enum": [
+          "Valida",
+          "Erro",
+          "PossivelDuplicata",
+          "Ignorada"
         ]
       },
       "StatusReserva": {

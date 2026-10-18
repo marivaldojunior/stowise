@@ -829,6 +829,18 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("iniciado_em");
 
+                    b.Property<int>("LinhasComErro")
+                        .HasColumnType("integer")
+                        .HasColumnName("linhas_com_erro");
+
+                    b.Property<int>("LinhasPossivelDuplicata")
+                        .HasColumnType("integer")
+                        .HasColumnName("linhas_possivel_duplicata");
+
+                    b.Property<int>("LinhasValidas")
+                        .HasColumnType("integer")
+                        .HasColumnName("linhas_validas");
+
                     b.Property<string>("Mapeamento")
                         .HasColumnType("jsonb")
                         .HasColumnName("mapeamento");
@@ -840,6 +852,11 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.Property<Guid?>("MapeamentoConfirmadoPor")
                         .HasColumnType("uuid")
                         .HasColumnName("mapeamento_confirmado_por");
+
+                    b.Property<string>("MotivoFalha")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_falha");
 
                     b.Property<string>("NomeArquivo")
                         .IsRequired()
@@ -917,6 +934,72 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasFilter("status <> 'Falhou'");
 
                     b.ToTable("importacoes", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.ImportacaoLinha", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Acao")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("acao");
+
+                    b.Property<string>("DadosBrutos")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("dados_brutos");
+
+                    b.Property<string>("DadosNormalizados")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("dados_normalizados");
+
+                    b.Property<string>("Erros")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("erros");
+
+                    b.Property<Guid>("ImportacaoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("importacao_id");
+
+                    b.Property<int>("NumeroLinha")
+                        .HasColumnType("integer")
+                        .HasColumnName("numero_linha");
+
+                    b.Property<Guid?>("ProdutoCorrespondenteId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_correspondente_id");
+
+                    b.Property<decimal?>("Similaridade")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("similaridade");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.HasKey("Id")
+                        .HasName("pk_importacao_linhas");
+
+                    b.HasIndex("ProdutoCorrespondenteId")
+                        .HasDatabaseName("ix_importacao_linhas_produto_correspondente_id");
+
+                    b.HasIndex("ImportacaoId", "NumeroLinha")
+                        .IsUnique()
+                        .HasDatabaseName("ix_importacao_linhas_importacao_id_numero_linha");
+
+                    b.HasIndex("ImportacaoId", "Status")
+                        .HasDatabaseName("ix_importacao_linhas_importacao_id_status");
+
+                    b.ToTable("importacao_linhas", (string)null);
                 });
 
             modelBuilder.Entity("Stowise.Domain.Importacoes.TemplateImportacao", b =>
@@ -1460,6 +1543,22 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_importacoes_usuarios_usuario_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.ImportacaoLinha", b =>
+                {
+                    b.HasOne("Stowise.Domain.Importacoes.Importacao", null)
+                        .WithMany()
+                        .HasForeignKey("ImportacaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_importacao_linhas_importacoes_importacao_id");
+
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoCorrespondenteId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_importacao_linhas_produtos_produto_correspondente_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Importacoes.TemplateImportacao", b =>

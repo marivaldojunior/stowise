@@ -23,7 +23,7 @@ public static class CamposImportacao
         new("ncm", "NCM com 8 dígitos.", false),
         new("cest", "CEST com 7 dígitos.", false),
         new("categoria", "Nome da categoria.", false),
-        new("classeArmazenagem", "Normal, Refrigerado, Congelado, Inflamavel ou Fragil.", false),
+        new("classeArmazenagem", "Normal, Refrigerado, Inflamável ou Frágil. Vazio vale Normal.", false),
         new("controlaLote", "Se o produto controla lote (sim/não).", false),
         new("controlaValidade", "Se o produto controla validade (sim/não).", false),
         new("pesoKg", "Peso da unidade em kg.", false),

@@ -69,6 +69,8 @@ public sealed class Importacao : Entity
     /// <summary>Limite do Excel para o nome de uma aba.</summary>
     public const int PlanilhaMaxLength = 31;
 
+    public const int MotivoFalhaMaxLength = 500;
+
     private Importacao()
     {
     }
@@ -125,6 +127,14 @@ public sealed class Importacao : Entity
 
     /// <summary>Versão para concorrência otimista (<c>xmin</c>): duas confirmações ao mesmo tempo não podem valer.</summary>
     public uint Versao { get; private set; }
+
+    public int LinhasValidas { get; private set; }
+
+    public int LinhasComErro { get; private set; }
+
+    public int LinhasPossivelDuplicata { get; private set; }
+
+    public string? MotivoFalha { get; private set; }
 
     public static Importacao Create(
         TipoImportacao tipo,
@@ -197,6 +207,8 @@ public sealed class Importacao : Entity
         {
             SeparadorDecimal = template.SeparadorDecimal;
         }
+
+        Status = StatusImportacao.AguardandoConfirmacao;
     }
 
     /// <summary>Liga a importação ao template que guardou o mapeamento confirmado.</summary>
@@ -212,20 +224,83 @@ public sealed class Importacao : Entity
         TemplateId = template.Id;
     }
 
-    /// <summary>A pessoa confirma o mapeamento (sugerido ou feito à mão). Pode confirmar de novo até a validação começar.</summary>
+    /// <summary>
+    /// A pessoa confirma o mapeamento (sugerido ou feito à mão) e a validação das linhas começa. Na revisão, uma
+    /// nova confirmação descarta o staging e valida de novo.
+    /// </summary>
     public void ConfirmMapeamento(IReadOnlyList<MapeamentoColuna> mapeamento, Guid usuarioId, DateTimeOffset agora)
     {
         EnsureMapeamentoAberto();
         Mapeamento = CamposImportacao.Validate(Tipo, mapeamento, Colunas.Count);
         MapeamentoConfirmadoPor = usuarioId;
         MapeamentoConfirmadoEm = agora;
+        (LinhasValidas, LinhasComErro, LinhasPossivelDuplicata) = (0, 0, 0);
+        Status = StatusImportacao.Validando;
+    }
+
+    /// <summary>O staging terminou: as contagens vêm das linhas gravadas e a importação vai para a revisão.</summary>
+    public void CompleteValidacao(int validas, int comErro, int possivelDuplicata)
+    {
+        EnsureStatus(StatusImportacao.Validando);
+        if (validas < 0 || comErro < 0 || possivelDuplicata < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(validas), "Line counts cannot be negative.");
+        }
+
+        (LinhasValidas, LinhasComErro, LinhasPossivelDuplicata) = (validas, comErro, possivelDuplicata);
+        Status = StatusImportacao.AguardandoRevisao;
+    }
+
+    /// <summary>Depois da revisão, a pessoa manda gravar no catálogo as linhas válidas.</summary>
+    public void StartEfetivacao()
+    {
+        if (Status != StatusImportacao.AguardandoRevisao)
+        {
+            throw new DomainException($"Só uma importação em revisão pode ser efetivada. Ela está em {Status}.");
+        }
+
+        if (LinhasValidas == 0)
+        {
+            throw new DomainException("Não há linhas válidas para efetivar.");
+        }
+
+        Status = StatusImportacao.Efetivando;
+    }
+
+    public void Complete(DateTimeOffset agora)
+    {
+        EnsureStatus(StatusImportacao.Efetivando);
+        Status = StatusImportacao.Concluido;
+        ConcluidoEm = agora;
+    }
+
+    /// <summary>Encerra a importação com o motivo. O mesmo arquivo pode ser enviado de novo depois.</summary>
+    public void Fail(string motivo, DateTimeOffset agora)
+    {
+        if (Status is StatusImportacao.Concluido or StatusImportacao.Falhou)
+        {
+            throw new DomainException($"A importação já está encerrada ({Status}).");
+        }
+
+        var texto = motivo?.Trim();
+        MotivoFalha = Guard.Required(texto?.Length > MotivoFalhaMaxLength ? texto[..MotivoFalhaMaxLength] : texto, "Motivo da falha", MotivoFalhaMaxLength);
+        Status = StatusImportacao.Falhou;
+        ConcluidoEm = agora;
     }
 
     private void EnsureMapeamentoAberto()
     {
-        if (Status is not (StatusImportacao.Recebido or StatusImportacao.Mapeando or StatusImportacao.AguardandoConfirmacao))
+        if (Status is not (StatusImportacao.Recebido or StatusImportacao.Mapeando or StatusImportacao.AguardandoConfirmacao or StatusImportacao.AguardandoRevisao))
         {
             throw new DomainException($"O mapeamento não pode mais mudar: a importação está em {Status}.");
+        }
+    }
+
+    private void EnsureStatus(StatusImportacao esperado)
+    {
+        if (Status != esperado)
+        {
+            throw new InvalidOperationException($"The import is {Status}, expected {esperado}.");
         }
     }
 }

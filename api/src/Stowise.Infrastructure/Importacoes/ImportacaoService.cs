@@ -7,7 +7,7 @@ using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Importacoes;
 
-internal sealed class ImportacaoService(StowiseDbContext db, TimeProvider time) : IImportacaoService
+internal sealed class ImportacaoService(StowiseDbContext db, StagingProdutos staging, TimeProvider time) : IImportacaoService
 {
     public async Task<Result<ImportacaoDetalhe>> ReceberAsync(ReceberArquivo comando, Guid usuarioId, CancellationToken cancellationToken = default)
     {
@@ -129,7 +129,11 @@ internal sealed class ImportacaoService(StowiseDbContext db, TimeProvider time) 
             importacao.LinkTemplate(template);
         }
 
+        // Síncrono por enquanto: o processamento em background (próxima etapa do plano) vai assumir o staging.
+        await using var transacao = await db.Database.BeginTransactionAsync(cancellationToken);
+        await staging.BuildAsync(importacao, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
+        await transacao.CommitAsync(cancellationToken);
         return ToDetalhe(importacao);
     }
 
@@ -137,6 +141,41 @@ internal sealed class ImportacaoService(StowiseDbContext db, TimeProvider time) 
     {
         var importacao = await db.Importacoes.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
         return importacao is null ? NotFound() : ToDetalhe(importacao);
+    }
+
+    public async Task<Result<PagedResult<ImportacaoLinhaDetalhe>>> ListLinhasAsync(Guid id, LinhaFiltro filtro, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filtro);
+
+        if (!await db.Importacoes.AnyAsync(i => i.Id == id, cancellationToken))
+        {
+            return NotFound();
+        }
+
+        var (pagina, tamanhoPagina) = Paging.Normalize(filtro.Pagina, filtro.TamanhoPagina);
+        var query = db.ImportacaoLinhas.AsNoTracking().Where(l => l.ImportacaoId == id);
+        if (filtro.Status is { } status)
+        {
+            query = query.Where(l => l.Status == status);
+        }
+
+        if (filtro.Acao is { } acao)
+        {
+            query = query.Where(l => l.Acao == acao);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+        var itens = await query
+            .OrderBy(l => l.NumeroLinha)
+            .Skip((pagina - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToListAsync(cancellationToken);
+
+        return new PagedResult<ImportacaoLinhaDetalhe>(
+            [.. itens.Select(l => new ImportacaoLinhaDetalhe(l.Id, l.NumeroLinha, l.DadosBrutos, l.DadosNormalizados, l.Status, l.Acao, l.ProdutoCorrespondenteId, l.Similaridade, l.Erros))],
+            pagina,
+            tamanhoPagina,
+            total);
     }
 
     public async Task<PagedResult<ImportacaoResumo>> ListAsync(ImportacaoFiltro filtro, CancellationToken cancellationToken = default)
@@ -161,7 +200,7 @@ internal sealed class ImportacaoService(StowiseDbContext db, TimeProvider time) 
             .ThenByDescending(i => i.Id)
             .Skip((pagina - 1) * tamanhoPagina)
             .Take(tamanhoPagina)
-            .Select(i => new ImportacaoResumo(i.Id, i.Tipo, i.Formato, i.Status, i.NomeArquivo, i.TotalLinhas, i.UsuarioId, i.IniciadoEm, i.ConcluidoEm))
+            .Select(i => new ImportacaoResumo(i.Id, i.Tipo, i.Formato, i.Status, i.NomeArquivo, i.TotalLinhas, i.LinhasValidas, i.LinhasComErro, i.UsuarioId, i.IniciadoEm, i.ConcluidoEm))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ImportacaoResumo>(itens, pagina, tamanhoPagina, total);
@@ -186,6 +225,10 @@ internal sealed class ImportacaoService(StowiseDbContext db, TimeProvider time) 
             i.Mapeamento,
             i.MapeamentoConfirmadoPor,
             i.MapeamentoConfirmadoEm,
+            i.LinhasValidas,
+            i.LinhasComErro,
+            i.LinhasPossivelDuplicata,
+            i.MotivoFalha,
             i.Versao);
 
     private static AppError NotFound() => AppError.NotFound("Importação não encontrada.");

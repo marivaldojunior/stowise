@@ -105,13 +105,7 @@ public static partial class DetectorLayout
         ArgumentNullException.ThrowIfNull(planilha);
         ArgumentNullException.ThrowIfNull(linhas);
 
-        var registros = linhas.Where(r => r.Any(c => c.Length > 0)).ToList();
-        var primeira = registros.Count == 0 ? 0 : registros.Min(r => Array.FindIndex(r, c => c.Length > 0));
-        if (primeira > 0)
-        {
-            registros = [.. registros.Select(r => r[primeira..])];
-        }
-
+        var registros = TrimPlanilha(linhas);
         var organizado = Organize(registros, registros.DefaultIfEmpty([]).Max(r => r.Length), posicoes: null);
         if (!organizado.IsSuccess)
         {
@@ -129,6 +123,45 @@ public static partial class DetectorLayout
             planilha.Length <= Importacao.PlanilhaMaxLength ? planilha : planilha[..Importacao.PlanilhaMaxLength]);
 
         return new ArquivoDetectado(layout, [.. dados.Take(LinhasAmostra)], dados.Count);
+    }
+
+    /// <summary>
+    /// Todas as linhas de dados de um arquivo de texto, lidas com o layout guardado na importação (o mesmo
+    /// encoding da detecção). Sem cabeçalho e sem linhas em branco, na ordem do arquivo.
+    /// </summary>
+    public static IEnumerable<string[]> ReadRows(byte[] conteudo, LayoutArquivo layout)
+    {
+        ArgumentNullException.ThrowIfNull(conteudo);
+        ArgumentNullException.ThrowIfNull(layout);
+
+        if (layout.Formato is not (FormatoArquivo.Delimitado or FormatoArquivo.Posicional))
+        {
+            throw new ArgumentException($"Format {layout.Formato} is not a text layout.", nameof(layout));
+        }
+
+        var (texto, _) = Decode(conteudo) ?? throw new InvalidOperationException("The stored file is not text.");
+        IEnumerable<string[]> registros = layout.Formato == FormatoArquivo.Posicional
+            ? texto.Split(["\r\n", "\r", "\n"], StringSplitOptions.None)
+                .Where(l => !string.IsNullOrWhiteSpace(l))
+                .Select(l => Slice(l, [.. layout.Colunas.Select(c => (c.Inicio ?? 0, c.Tamanho ?? 0))]))
+            : ParseDelimited(texto, layout.Delimitador?[0]).Where(r => r.Any(c => c.Length > 0));
+
+        return layout.TemCabecalho ? registros.Skip(1) : registros;
+    }
+
+    /// <summary>Linhas de dados de uma planilha já lida como texto, com o mesmo recorte de <see cref="DetectPlanilha"/>.</summary>
+    public static IEnumerable<string[]> PlanilhaRows(IEnumerable<string[]> linhas, bool temCabecalho)
+    {
+        var registros = TrimPlanilha(linhas);
+        return temCabecalho ? registros.Skip(1) : registros;
+    }
+
+    /// <summary>Sem linhas em branco e sem as colunas vazias à esquerda (planilha que começa na coluna B).</summary>
+    private static List<string[]> TrimPlanilha(IEnumerable<string[]> linhas)
+    {
+        var registros = linhas.Where(r => r.Any(c => c.Length > 0)).ToList();
+        var primeira = registros.Count == 0 ? 0 : registros.Min(r => Array.FindIndex(r, c => c.Length > 0));
+        return primeira > 0 ? [.. registros.Select(r => r[primeira..])] : registros;
     }
 
     /// <summary>ZIP (<c>PK\3\4</c>): o formato do <c>.xlsx</c>.</summary>

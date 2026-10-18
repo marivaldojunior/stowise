@@ -39,6 +39,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<TemplateImportacao> TemplatesImportacao => Set<TemplateImportacao>();
 
+    public DbSet<ImportacaoLinha> ImportacaoLinhas => Set<ImportacaoLinha>();
+
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)

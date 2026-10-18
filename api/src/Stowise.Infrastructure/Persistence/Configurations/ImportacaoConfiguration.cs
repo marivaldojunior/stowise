@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Stowise.Domain.Catalogo;
 using Stowise.Domain.Importacoes;
 using Stowise.Infrastructure.Identity;
 
@@ -25,6 +26,7 @@ internal sealed class ImportacaoConfiguration : IEntityTypeConfiguration<Importa
         builder.Property(i => i.Mapeamento).HasJsonConversion();
         builder.Property(i => i.Fingerprint).HasMaxLength(FingerprintLayout.Length).IsFixedLength();
         builder.Property(i => i.Versao).IsRowVersion().HasColumnName("xmin");
+        builder.Property(i => i.MotivoFalha).HasMaxLength(Importacao.MotivoFalhaMaxLength);
         builder.Ignore(i => i.Layout);
 
         // O mesmo arquivo não entra duas vezes, a não ser que a importação anterior tenha falhado.
@@ -37,6 +39,22 @@ internal sealed class ImportacaoConfiguration : IEntityTypeConfiguration<Importa
         builder.HasOne<Usuario>().WithMany().HasForeignKey(i => i.UsuarioId).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<Usuario>().WithMany().HasForeignKey(i => i.MapeamentoConfirmadoPor).OnDelete(DeleteBehavior.Restrict);
         builder.HasOne<TemplateImportacao>().WithMany().HasForeignKey(i => i.TemplateId).OnDelete(DeleteBehavior.SetNull);
+    }
+}
+
+internal sealed class ImportacaoLinhaConfiguration : IEntityTypeConfiguration<ImportacaoLinha>
+{
+    public void Configure(EntityTypeBuilder<ImportacaoLinha> builder)
+    {
+        builder.ToTable("importacao_linhas");
+        builder.Property(l => l.DadosBrutos).HasJsonConversion();
+        builder.Property(l => l.DadosNormalizados).HasJsonConversion();
+        builder.Property(l => l.Erros).HasJsonConversion();
+
+        builder.HasIndex(l => new { l.ImportacaoId, l.NumeroLinha }).IsUnique();
+        builder.HasIndex(l => new { l.ImportacaoId, l.Status });
+        builder.HasOne<Importacao>().WithMany().HasForeignKey(l => l.ImportacaoId).OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<Produto>().WithMany().HasForeignKey(l => l.ProdutoCorrespondenteId).OnDelete(DeleteBehavior.SetNull);
     }
 }
 

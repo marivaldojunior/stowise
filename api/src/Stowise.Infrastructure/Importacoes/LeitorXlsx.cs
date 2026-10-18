@@ -48,6 +48,20 @@ internal static class LeitorXlsx
         }
     }
 
+    /// <summary>Todas as linhas de dados da aba guardada no layout, com o mesmo recorte da detecção.</summary>
+    public static List<string[]> ReadRows(byte[] conteudo, LayoutArquivo layout)
+    {
+        ArgumentNullException.ThrowIfNull(conteudo);
+        ArgumentNullException.ThrowIfNull(layout);
+
+        // PlanilhaRows materializa as linhas antes de devolver, então o fluxo pode ser fechado aqui.
+        using var stream = new MemoryStream(conteudo, writable: false);
+        var linhas = MiniExcel.Query(stream, useHeaderRow: false, sheetName: layout.Planilha, excelType: ExcelType.XLSX, configuration: Configuracao)
+            .Cast<IDictionary<string, object?>>()
+            .Select(ToRow);
+        return [.. DetectorLayout.PlanilhaRows(linhas, layout.TemCabecalho)];
+    }
+
     /// <summary>Células em ordem de coluna (A, B, ...), sem as vazias no fim da linha.</summary>
     private static string[] ToRow(IDictionary<string, object?> celulas)
     {
