@@ -59,7 +59,12 @@ public static class DependencyInjection
 
         // ADR-0004: camada de IA atrás da API. Desligada (Ia:Habilitada=false), os fluxos seguem manuais.
         services.AddOptions<IaOptions>().BindConfiguration(IaOptions.SectionName);
+        services.AddSingleton<IFabricaProvedorIa, AnthropicFabrica>();
+        services.AddSingleton<IFabricaProvedorIa, OpenAICompativelFabrica>();
+        services.AddSingleton<IFabricaProvedorIa, GeminiFabrica>();
+        services.AddSingleton<IFabricaProvedorIa, OllamaFabrica>();
         services.AddSingleton<IProvedoresIa, ProvedoresIa>();
+        services.AddSingleton<IRegistroChamadasIa, RegistroChamadasIaEf>();
         services.AddSingleton<GatewayIa>();
         services.AddScoped<IConsultaIaService, ConsultaIaService>();
         services.AddScoped<ITemplateImportacaoService, TemplateImportacaoService>();

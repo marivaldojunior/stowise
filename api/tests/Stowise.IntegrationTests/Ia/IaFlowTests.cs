@@ -34,7 +34,7 @@ public sealed class IaFlowTests : IAsyncLifetime
     public IaFlowTests(PostgresFixture postgres)
     {
         _base = StowiseApiFactory.WithDatabase(postgres, AdminEmail, AdminPassword);
-        _factory = _base.WithWebHostBuilder(b => b.ConfigureTestServices(s => s.AddSingleton<IProvedoresIa>(new FakeProvedoresIa(_principal))));
+        _factory = _base.WithWebHostBuilder(b => b.ConfigureTestServices(s => s.AddSingleton<IProvedoresIa>(FakeProvedoresIa.With(_principal))));
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 
@@ -71,8 +71,8 @@ public sealed class IaFlowTests : IAsyncLifetime
         Assert.Equal(("claude-opus-5-5", 4096), (opcoes!.ModelId, opcoes.MaxOutputTokens));
 
         var falha = await new GatewayIa(
-                new FakeProvedoresIa(FakeChatClient.Failing(new HttpRequestException("connection refused"))),
-                _factory.Services.GetRequiredService<IServiceScopeFactory>(),
+                FakeProvedoresIa.With(FakeChatClient.Failing(new HttpRequestException("connection refused"))),
+                _factory.Services.GetRequiredService<IRegistroChamadasIa>(),
                 TimeProvider.System,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<GatewayIa>.Instance)
             .SendAsync(new PedidoIa(FuncionalidadeIa.Consulta, "consulta-v1", [new ChatMessage(ChatRole.User, "x")], null), CancellationToken.None);
@@ -91,6 +91,7 @@ public sealed class IaFlowTests : IAsyncLifetime
         var falhou = Assert.Single(lista.Itens);
         Assert.Equal(FuncionalidadeIa.Consulta, falhou.Funcionalidade);
         Assert.StartsWith("HttpRequestException: connection refused", falhou.Erro, StringComparison.Ordinal);
+        Assert.Equal(3, falhou.Tentativas);
         Assert.Null(falhou.CustoEstimado);
     }
 

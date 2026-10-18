@@ -1,30 +1,51 @@
 using Microsoft.Extensions.AI;
+using Stowise.Domain.Ia;
 using Stowise.Infrastructure.Ia;
 
 namespace Stowise.IntegrationTests.Ia;
 
 /// <summary>
 /// <see cref="IChatClient"/> com respostas definidas pelo teste (ADR-0004: os testes nunca chamam o provedor real).
-/// Guarda as mensagens recebidas para o teste conferir o que foi enviado.
+/// Cada chamada recebe o próprio número (a partir de 0), para simular falha e depois sucesso.
 /// </summary>
-internal sealed class FakeChatClient(Func<IReadOnlyList<ChatMessage>, ChatOptions?, ChatResponse> responder) : IChatClient
+internal sealed class FakeChatClient(Func<int, ChatOptions?, CancellationToken, Task<ChatResponse>> responder) : IChatClient
 {
     public List<(IReadOnlyList<ChatMessage> Mensagens, ChatOptions? Opcoes)> Recebidas { get; } = [];
 
     public static FakeChatClient Responding(string texto, long tokensEntrada = 1200, long tokensSaida = 300) =>
-        new((_, opcoes) => new ChatResponse(new ChatMessage(ChatRole.Assistant, texto))
+        new((_, opcoes, _) => Task.FromResult(Ok(texto, opcoes, tokensEntrada, tokensSaida)));
+
+    public static FakeChatClient Failing(Exception erro) => new((_, _, _) => Task.FromException<ChatResponse>(erro));
+
+    /// <summary>Uma resposta por chamada, na ordem; a última se repete.</summary>
+    public static FakeChatClient Sequence(params Func<ChatOptions?, CancellationToken, Task<ChatResponse>>[] passos) =>
+        new((n, opcoes, ct) => passos[Math.Min(n, passos.Length - 1)](opcoes, ct));
+
+    /// <summary>Nunca responde: só termina quando o token é cancelado (timeout do gateway).</summary>
+    public static async Task<ChatResponse> Hang(ChatOptions? opcoes, CancellationToken ct)
+    {
+        await Task.Delay(Timeout.Infinite, ct);
+        throw new InvalidOperationException("Unreachable.");
+    }
+
+    public static ChatResponse Ok(string texto, ChatOptions? opcoes, long tokensEntrada = 1200, long tokensSaida = 300) =>
+        new(new ChatMessage(ChatRole.Assistant, texto))
         {
             ModelId = opcoes?.ModelId,
             Usage = new UsageDetails { InputTokenCount = tokensEntrada, OutputTokenCount = tokensSaida },
-        });
-
-    public static FakeChatClient Failing(Exception erro) => new((_, _) => throw erro);
+        };
 
     public Task<ChatResponse> GetResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default)
     {
         var mensagens = messages.ToList();
-        Recebidas.Add((mensagens, options));
-        return Task.FromResult(responder(mensagens, options));
+        int numero;
+        lock (Recebidas)
+        {
+            numero = Recebidas.Count;
+            Recebidas.Add((mensagens, options));
+        }
+
+        return responder(numero, options, cancellationToken);
     }
 
     public IAsyncEnumerable<ChatResponseUpdate> GetStreamingResponseAsync(IEnumerable<ChatMessage> messages, ChatOptions? options = null, CancellationToken cancellationToken = default) =>
@@ -37,12 +58,25 @@ internal sealed class FakeChatClient(Func<IReadOnlyList<ChatMessage>, ChatOption
     }
 }
 
-/// <summary>Provedores fixos para os testes, no lugar dos criados pela configuração.</summary>
-internal sealed class FakeProvedoresIa(IChatClient? principal, IChatClient? reserva = null) : IProvedoresIa
+/// <summary>Cadeia fixa para os testes: o primeiro cliente é o "anthropic" (com preço), os seguintes são reservas.</summary>
+internal sealed class FakeProvedoresIa(CadeiaIa? cadeia) : IProvedoresIa
 {
-    public ProvedorIa? Principal { get; } = principal is null ? null : new ProvedorIa(ProvedorIaOptions.Anthropic, principal, Opcoes("claude-opus-5-5", 4m, 20m));
+    public static readonly FakeProvedoresIa Desligada = new(cadeia: null);
 
-    public ProvedorIa? Reserva { get; } = reserva is null ? null : new ProvedorIa(ProvedorIaOptions.Ollama, reserva, Opcoes("llama3.2", 0m, 0m));
+    public CadeiaIa? Cadeia { get; } = cadeia;
+
+    public static FakeProvedoresIa With(params IChatClient[] clientes) => With(TimeSpan.FromSeconds(5), 3, clientes);
+
+    public static FakeProvedoresIa With(TimeSpan timeout, int tentativas, params IChatClient[] clientes) =>
+        new(new CadeiaIa(
+            [.. clientes.Select((c, i) => i == 0
+                ? new ProvedorIa("anthropic", c, Opcoes("claude-opus-5-5", 4m, 20m))
+                : new ProvedorIa($"reserva-{i}", c, Opcoes("llama3.2", 0m, 0m)))],
+            timeout,
+            tentativas,
+            TimeSpan.FromMilliseconds(1)));
+
+    public CadeiaIa? Para(FuncionalidadeIa funcionalidade) => Cadeia;
 
     private static ProvedorIaOptions Opcoes(string modelo, decimal entrada, decimal saida) => new()
     {
@@ -50,4 +84,16 @@ internal sealed class FakeProvedoresIa(IChatClient? principal, IChatClient? rese
         PrecoEntradaPorMilhao = entrada,
         PrecoSaidaPorMilhao = saida,
     };
+}
+
+/// <summary>Registro em memória, para testar o gateway sem banco.</summary>
+internal sealed class RegistroEmMemoria : IRegistroChamadasIa
+{
+    public List<ChamadaIa> Chamadas { get; } = [];
+
+    public Task SaveAsync(ChamadaIa chamada)
+    {
+        Chamadas.Add(chamada);
+        return Task.CompletedTask;
+    }
 }

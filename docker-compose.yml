@@ -37,7 +37,7 @@ services:
       Ia__Habilitada: ${STOWISE_IA_HABILITADA:-false}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       # Fallback local: Ollama rodando na máquina host
-      Ia__Reserva__Endpoint: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434}
+      Ia__Provedores__1__Endpoint: ${OLLAMA_ENDPOINT:-http://host.docker.internal:11434}
     extra_hosts:
       - "host.docker.internal:host-gateway"
     ports:

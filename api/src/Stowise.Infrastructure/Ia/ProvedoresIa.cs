@@ -1,12 +1,14 @@
-using Anthropic;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OllamaSharp;
+using Stowise.Domain.Ia;
 
 namespace Stowise.Infrastructure.Ia;
 
-/// <summary>Configuração da camada de IA (seção <c>Ia</c>). A chave do provedor fica só no servidor (ADR-0004, item 1).</summary>
+/// <summary>
+/// Configuração da camada de IA (seção <c>Ia</c>, ADR-0004). As chaves ficam só no servidor. Trocar de modelo ou
+/// de provedor entre os tipos suportados é só configuração: nenhum código de funcionalidade conhece o provedor.
+/// </summary>
 public sealed class IaOptions
 {
     public const string SectionName = "Ia";
@@ -14,26 +16,40 @@ public sealed class IaOptions
     /// <summary>Desligada, nenhuma funcionalidade chama IA e os fluxos seguem manuais.</summary>
     public bool Habilitada { get; set; }
 
-    public ProvedorIaOptions Principal { get; set; } = new();
+    /// <summary>Tempo máximo de cada tentativa.</summary>
+    public double TimeoutSegundos { get; set; } = 60;
 
-    /// <summary>Provedor usado quando o principal falha (fallback, ADR-0004 item 4). Opcional.</summary>
-    public ProvedorIaOptions? Reserva { get; set; }
+    /// <summary>Tentativas em cada provedor para falhas transitórias (timeout, 408, 429, 5xx, rede).</summary>
+    public int TentativasPorProvedor { get; set; } = 3;
+
+    /// <summary>Espera antes da segunda tentativa; dobra a cada nova tentativa, com variação aleatória (jitter).</summary>
+    public int EsperaInicialMs { get; set; } = 500;
+
+    /// <summary>Provedores em ordem de preferência: o primeiro é o principal, os seguintes são o fallback.</summary>
+    public List<ProvedorIaOptions> Provedores { get; } = [];
+
+    /// <summary>Ajustes por funcionalidade (chave = nome de <see cref="FuncionalidadeIa"/>). Sem ajuste, vale a lista global.</summary>
+    public Dictionary<string, FuncionalidadeIaOptions> Funcionalidades { get; } = new(StringComparer.OrdinalIgnoreCase);
 }
 
+/// <summary>Um modelo num provedor. Dois modelos do mesmo provedor são duas entradas com nomes diferentes.</summary>
 public sealed class ProvedorIaOptions
 {
-    public const string Anthropic = "Anthropic";
-    public const string Ollama = "Ollama";
+    /// <summary>Identifica a entrada nas listas por funcionalidade e no registro <c>ChamadaIa</c>.</summary>
+    public string Nome { get; set; } = string.Empty;
 
-    /// <summary><see cref="Anthropic"/> ou <see cref="Ollama"/>.</summary>
-    public string Provedor { get; set; } = Anthropic;
+    /// <summary>Tipo de provedor: <c>Anthropic</c>, <c>OpenAICompativel</c>, <c>Gemini</c> ou <c>Ollama</c>.</summary>
+    public string Tipo { get; set; } = string.Empty;
 
-    public string Modelo { get; set; } = "claude-opus-5-5";
+    public string Modelo { get; set; } = string.Empty;
 
-    /// <summary>Endereço do servidor (Ollama). Na Anthropic, vazio usa a API pública.</summary>
+    /// <summary>
+    /// Endereço da API. No <c>OpenAICompativel</c>, aponta para OpenAI, Azure, DeepSeek, Qwen, Kimi, GLM, Groq e
+    /// outros com API no formato da OpenAI. No Ollama, o servidor local. Vazio, vale o padrão do tipo.
+    /// </summary>
     public string? Endpoint { get; set; }
 
-    /// <summary>Chave da Anthropic. Vazia, o SDK lê <c>ANTHROPIC_API_KEY</c> do ambiente. Nunca versionar.</summary>
+    /// <summary>Chave do provedor. Nunca versionar: use variável de ambiente ou cofre de segredos.</summary>
     public string? ApiKey { get; set; }
 
     public int MaxTokensSaida { get; set; } = 4096;
@@ -43,10 +59,26 @@ public sealed class ProvedorIaOptions
 
     public decimal PrecoSaidaPorMilhao { get; set; }
 
+    /// <summary>
+    /// Parâmetros próprios do provedor, repassados em <see cref="ChatOptions.AdditionalProperties"/>. Cada adaptador
+    /// decide o que aceita; o código das funcionalidades não depende deles.
+    /// </summary>
+    public Dictionary<string, string> ParametrosAdicionais { get; } = new(StringComparer.Ordinal);
+
     public decimal? EstimateCost(int? tokensEntrada, int? tokensSaida) =>
         tokensEntrada is null && tokensSaida is null
             ? null
             : Math.Round((((tokensEntrada ?? 0) * PrecoEntradaPorMilhao) + ((tokensSaida ?? 0) * PrecoSaidaPorMilhao)) / 1_000_000m, 6);
+}
+
+public sealed class FuncionalidadeIaOptions
+{
+    /// <summary>Nomes dos provedores, em ordem. Vazio, vale a lista global.</summary>
+    public List<string> Provedores { get; } = [];
+
+    public double? TimeoutSegundos { get; set; }
+
+    public int? TentativasPorProvedor { get; set; }
 }
 
 /// <summary>Traces das chamadas de IA (OpenTelemetry), exportados junto com os da API.</summary>
@@ -56,26 +88,31 @@ public static class IaTelemetry
 }
 
 /// <summary>Um provedor pronto para uso: o cliente e a configuração que o originou.</summary>
-internal sealed record ProvedorIa(string Nome, IChatClient Cliente, ProvedorIaOptions Opcoes);
+/// <param name="Transitoria">Classificação de erros do SDK do provedor; nulo usa a regra geral.</param>
+internal sealed record ProvedorIa(string Nome, IChatClient Cliente, ProvedorIaOptions Opcoes, Func<Exception, bool?>? Transitoria = null);
 
-/// <summary>Os clientes de IA configurados. Trocar de provedor não afeta Domain, Application nem os clientes.</summary>
+/// <summary>Provedores e limites de uma funcionalidade, na ordem em que o gateway tenta.</summary>
+internal sealed record CadeiaIa(IReadOnlyList<ProvedorIa> Provedores, TimeSpan Timeout, int TentativasPorProvedor, TimeSpan EsperaInicial);
+
 internal interface IProvedoresIa
 {
     /// <summary>Nulo quando a IA está desligada.</summary>
-    ProvedorIa? Principal { get; }
-
-    ProvedorIa? Reserva { get; }
+    CadeiaIa? Para(FuncionalidadeIa funcionalidade);
 }
 
 /// <summary>
-/// Cria os <see cref="IChatClient"/> do <c>Microsoft.Extensions.AI</c> a partir da configuração: Anthropic pelo
-/// SDK oficial e Ollama pelo OllamaSharp. Cada cliente ganha traces do OpenTelemetry (<see cref="IaTelemetry"/>).
+/// Monta os <see cref="IChatClient"/> pela configuração, com a fábrica do tipo de cada entrada, e valida as listas
+/// por funcionalidade na partida. Cada cliente ganha traces do OpenTelemetry.
 /// </summary>
 internal sealed class ProvedoresIa : IProvedoresIa, IDisposable
 {
+    private readonly Dictionary<string, ProvedorIa> _porNome = new(StringComparer.OrdinalIgnoreCase);
+    private readonly List<ProvedorIa> _ordem = [];
+    private readonly Dictionary<FuncionalidadeIa, CadeiaIa> _cadeias = [];
     private readonly List<IDisposable> _descartaveis = [];
+    private readonly CadeiaIa? _padrao;
 
-    public ProvedoresIa(IOptions<IaOptions> options, ILoggerFactory loggers)
+    public ProvedoresIa(IOptions<IaOptions> options, IEnumerable<IFabricaProvedorIa> fabricas, ILoggerFactory loggers)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -85,13 +122,58 @@ internal sealed class ProvedoresIa : IProvedoresIa, IDisposable
             return;
         }
 
-        Principal = Create(ia.Principal, loggers);
-        Reserva = ia.Reserva is null ? null : Create(ia.Reserva, loggers);
+        var porTipo = fabricas.ToDictionary(f => f.Tipo, StringComparer.OrdinalIgnoreCase);
+        foreach (var opcoes in ia.Provedores)
+        {
+            if (string.IsNullOrWhiteSpace(opcoes.Nome) || string.IsNullOrWhiteSpace(opcoes.Modelo))
+            {
+                throw new InvalidOperationException("Each AI provider needs a Nome and a Modelo.");
+            }
+
+            if (!porTipo.TryGetValue(opcoes.Tipo, out var fabrica))
+            {
+                throw new InvalidOperationException(
+                    $"Unknown AI provider type '{opcoes.Tipo}' for '{opcoes.Nome}'. Use one of: {string.Join(", ", porTipo.Keys.Order(StringComparer.Ordinal))}.");
+            }
+
+            var cliente = fabrica.Create(opcoes);
+            _descartaveis.Add(cliente);
+            var provedor = new ProvedorIa(
+                opcoes.Nome,
+                new ChatClientBuilder(cliente).UseOpenTelemetry(loggers, IaTelemetry.SourceName).Build(),
+                opcoes,
+                fabrica.IsTransient);
+            if (!_porNome.TryAdd(opcoes.Nome, provedor))
+            {
+                throw new InvalidOperationException($"The AI provider name '{opcoes.Nome}' is repeated.");
+            }
+
+            _ordem.Add(provedor);
+        }
+
+        if (_ordem.Count == 0)
+        {
+            throw new InvalidOperationException("AI is enabled but Ia:Provedores is empty.");
+        }
+
+        _padrao = Cadeia(_ordem, ia.TimeoutSegundos, ia.TentativasPorProvedor, ia);
+        foreach (var (chave, ajuste) in ia.Funcionalidades)
+        {
+            if (!Enum.TryParse<FuncionalidadeIa>(chave, ignoreCase: true, out var funcionalidade))
+            {
+                throw new InvalidOperationException($"Unknown AI feature '{chave}' in Ia:Funcionalidades.");
+            }
+
+            var provedores = ajuste.Provedores.Count == 0
+                ? _ordem
+                : ajuste.Provedores.Select(nome => _porNome.TryGetValue(nome, out var p)
+                    ? p
+                    : throw new InvalidOperationException($"Ia:Funcionalidades:{chave} uses the unknown provider '{nome}'.")).ToList();
+            _cadeias[funcionalidade] = Cadeia(provedores, ajuste.TimeoutSegundos ?? ia.TimeoutSegundos, ajuste.TentativasPorProvedor ?? ia.TentativasPorProvedor, ia);
+        }
     }
 
-    public ProvedorIa? Principal { get; }
-
-    public ProvedorIa? Reserva { get; }
+    public CadeiaIa? Para(FuncionalidadeIa funcionalidade) => _cadeias.GetValueOrDefault(funcionalidade) ?? _padrao;
 
     public void Dispose()
     {
@@ -101,25 +183,10 @@ internal sealed class ProvedoresIa : IProvedoresIa, IDisposable
         }
     }
 
-    private ProvedorIa Create(ProvedorIaOptions opcoes, ILoggerFactory loggers)
-    {
-        IChatClient cliente = opcoes.Provedor switch
-        {
-            ProvedorIaOptions.Anthropic => CreateAnthropic(opcoes),
-            ProvedorIaOptions.Ollama => new OllamaApiClient(new Uri(opcoes.Endpoint ?? "http://localhost:11434"), opcoes.Modelo),
-            _ => throw new InvalidOperationException($"Unknown AI provider '{opcoes.Provedor}'. Use {ProvedorIaOptions.Anthropic} or {ProvedorIaOptions.Ollama}."),
-        };
-        _descartaveis.Add(cliente);
-
-        var instrumentado = new ChatClientBuilder(cliente)
-            .UseOpenTelemetry(loggers, IaTelemetry.SourceName)
-            .Build();
-        return new ProvedorIa(opcoes.Provedor, instrumentado, opcoes);
-    }
-
-    private static IChatClient CreateAnthropic(ProvedorIaOptions opcoes)
-    {
-        var client = string.IsNullOrWhiteSpace(opcoes.ApiKey) ? new AnthropicClient() : new AnthropicClient { ApiKey = opcoes.ApiKey };
-        return client.AsIChatClient(opcoes.Modelo);
-    }
+    private static CadeiaIa Cadeia(IReadOnlyList<ProvedorIa> provedores, double timeoutSegundos, int tentativas, IaOptions ia) =>
+        new(
+            provedores,
+            TimeSpan.FromSeconds(Math.Max(0.1, timeoutSegundos)),
+            Math.Max(1, tentativas),
+            TimeSpan.FromMilliseconds(Math.Max(0, ia.EsperaInicialMs)));
 }
