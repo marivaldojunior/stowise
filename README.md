@@ -4,7 +4,10 @@
 [![web](https://github.com/marivaldojunior/stowise/actions/workflows/web.yml/badge.svg)](https://github.com/marivaldojunior/stowise/actions/workflows/web.yml)
 [![mobile](https://github.com/marivaldojunior/stowise/actions/workflows/mobile.yml/badge.svg)](https://github.com/marivaldojunior/stowise/actions/workflows/mobile.yml)
 
-Sistema de inventário e armazenagem em que **a IA sugere e uma pessoa sempre confirma**. O nome junta *stow* (armazenar) e *wise* (inteligente).
+> [!NOTE]
+> **Projeto experimental.** O Stowise é um laboratório de recursos de IA na API, no painel web e no app mobile. O código está em desenvolvimento ativo e não está pronto para produção. As APIs, o modelo de dados e as telas podem mudar sem aviso.
+
+O Stowise testa recursos de IA sobre um caso real: um sistema de inventário e armazenagem. A regra de todo o projeto é simples: **a IA sugere e uma pessoa sempre confirma**. O nome junta *stow* (armazenar) e *wise* (inteligente).
 
 | Parte | Pasta | Stack |
 | --- | --- | --- |
@@ -12,11 +15,22 @@ Sistema de inventário e armazenagem em que **a IA sugere e uma pessoa sempre co
 | Painel de gestão | [`web/`](web) | React + TypeScript (Vite), Vitest |
 | App de campo | [`mobile/`](mobile) | Flutter, plugin Kotlin para coletores |
 
-- **Importação inteligente** de CSV, TXT, Excel e XML de NF-e, com staging e revisão.
-- **Armazenagem inteligente** por motor de pontuação com regras configuráveis e explicáveis.
-- **Contagem assistida por câmera**, com nível de confiança e aprovação antes do ajuste.
+## Recursos de IA em teste
 
-Especificação, modelo de dados e plano: [`docs/SPEC.md`](docs/SPEC.md). Decisões de arquitetura: [`docs/adr/`](docs/adr).
+| Frente | Recursos |
+| --- | --- |
+| API | Camada de IA plugável, com JSON Schema em cada resposta, timeout, nova tentativa, provedor reserva, cota por usuário e registro de cada chamada. Mapeamento de colunas na importação, casamento de itens da NF-e com o catálogo, busca semântica com pgvector, consulta em linguagem natural e perguntas sobre documentos (RAG) |
+| Web | Revisão das sugestões da IA na importação, chat de consulta em linguagem natural, busca semântica no catálogo e painel de uso de IA (chamadas, custo e latência) |
+| Mobile | Contagem assistida por câmera, com nível de confiança, cadastro de produto por foto e busca semântica na consulta de saldo |
+
+Regras que valem para todos os recursos:
+
+- A chave do provedor de IA fica só na API. O painel web e o app nunca chamam o provedor.
+- Nenhum resultado de IA é gravado sem a confirmação de uma pessoa.
+- As decisões de armazenagem usam um motor de pontuação com regras explicáveis, sem LLM.
+- Sem IA, todos os fluxos continuam a funcionar de forma manual.
+
+Especificação, modelo de dados e plano (com o que já está pronto e o que está em aberto): [`docs/SPEC.md`](docs/SPEC.md). Decisões de arquitetura: [`docs/adr/`](docs/adr).
 
 ## Pré-requisitos
 
