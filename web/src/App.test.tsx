@@ -1,5 +1,5 @@
 import { screen } from '@testing-library/react'
-import { HttpError } from './api/http'
+import { HttpError } from './api/mutator'
 import { shouldRetry } from './app/queryClient'
 import { jsonResponse, renderRoute, stubFetch } from './test/renderRoute'
 

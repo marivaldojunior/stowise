@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { getJson } from '../../api/http'
+import { apiFetch } from '../../api/mutator'
 
-/** Resposta de `/health/ready`: situação geral e de cada dependência (banco). */
+/** Resposta de `/health/ready`: situação geral e de cada dependência (banco). Fica fora do OpenAPI da v1. */
 export interface StatusApi {
   status: 'Healthy' | 'Degraded' | 'Unhealthy'
   totalDurationMs: number
@@ -12,7 +12,7 @@ export interface StatusApi {
 export function useStatusApi() {
   return useQuery({
     queryKey: ['status-api'],
-    queryFn: ({ signal }) => getJson<StatusApi>('/health/ready', { signal }),
+    queryFn: ({ signal }) => apiFetch<StatusApi>('/health/ready', { signal }),
     refetchInterval: 60_000,
   })
 }

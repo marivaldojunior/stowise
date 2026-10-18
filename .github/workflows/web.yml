@@ -28,6 +28,16 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       - run: npm ci
+
+      # O cliente gerado (orval) tem de bater com o contrato versionado da API.
+      - name: Cliente da API igual ao contrato
+        run: |
+          npm run api:gerar
+          if [ -n "$(git status --porcelain -- src/api/gerado)" ]; then
+            git status --porcelain -- src/api/gerado
+            echo "::error::src/api/gerado não bate com api/openapi/v1.json. Rode 'npm run api:gerar' em web/ e faça o commit."
+            exit 1
+          fi
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test

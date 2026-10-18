@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query'
-import { HttpError } from '../api/http'
+import { HttpError } from '../api/mutator'
 
 const MAX_TENTATIVAS = 2
 
