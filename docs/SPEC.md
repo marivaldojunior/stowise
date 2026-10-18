@@ -296,7 +296,7 @@ Regras de ordem:
 
 - [x] Vite + TypeScript, React Router e TanStack Query
 - [x] Cliente da API gerado a partir do OpenAPI (orval)
-- [ ] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
+- [x] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
 - [ ] Login, renovação de token e rotas protegidas por perfil
 - [ ] Gestão de usuários e perfis (Admin)
 - [ ] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e

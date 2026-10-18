@@ -1,3 +1,5 @@
+import path from 'node:path'
+import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
 import { loadEnv } from 'vite'
 import { defineConfig } from 'vitest/config'
@@ -9,7 +11,10 @@ export default defineConfig(({ mode }) => {
   const api = loadEnv(mode, process.cwd(), '').STOWISE_API_URL ?? 'http://localhost:5073'
 
   return {
-    plugins: [react()],
+    plugins: [react(), tailwindcss()],
+    resolve: {
+      alias: { '@': path.resolve(import.meta.dirname, './src') },
+    },
     server: {
       proxy: {
         '/api': { target: api, changeOrigin: true },
