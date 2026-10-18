@@ -56,6 +56,24 @@ public static class ImportacoesEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
+        group.MapPost("/{id:guid}/efetivar", async (Guid id, EfetivarImportacao comando, IImportacaoService importacoes, CancellationToken ct) =>
+                (await importacoes.EfetivarAsync(id, comando, ct))
+                    .ToHttpResult(i => TypedResults.Accepted($"/api/v1/importacoes/{i.Id}", i)))
+            .WithName("EfetivarImportacao")
+            .WithSummary("Agenda a gravação no catálogo das linhas válidas (criar e atualizar produtos). Acompanhe pelo GET da importação ou pelo hub /hubs/importacoes.")
+            .Produces<ImportacaoDetalhe>(StatusCodes.Status202Accepted)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        group.MapGet("/{id:guid}/relatorio", async (Guid id, IImportacaoService importacoes, CancellationToken ct) =>
+                (await importacoes.GetRelatorioAsync(id, ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("ObterRelatorioImportacao")
+            .WithSummary("Resumo da importação: linhas por resultado, produtos criados e atualizados e erros por campo.")
+            .Produces<RelatorioImportacao>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
         group.MapGet("/{id:guid}/linhas", ListLinhasAsync)
             .WithName("ListarLinhasImportacao")
             .WithSummary("Linhas do staging na ordem do arquivo, com valores normalizados, erros e a ação prevista.")

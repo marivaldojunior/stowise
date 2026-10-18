@@ -21,6 +21,7 @@ namespace Stowise.Infrastructure.Importacoes;
 internal sealed partial class ImportacaoJobs(
     StowiseDbContext db,
     StagingProdutos staging,
+    EfetivacaoProdutos efetivacao,
     INotificadorImportacao notificador,
     TimeProvider time,
     ILogger<ImportacaoJobs> logger)
@@ -36,7 +37,7 @@ internal sealed partial class ImportacaoJobs(
         var importacao = await db.Importacoes.FirstOrDefaultAsync(i => i.Id == importacaoId, cancellationToken);
         if (importacao is not { Status: StatusImportacao.Validando })
         {
-            LogSkipped(importacaoId, importacao?.Status);
+            LogSkipped(nameof(StagingAsync), importacaoId, importacao?.Status);
             return;
         }
 
@@ -60,8 +61,33 @@ internal sealed partial class ImportacaoJobs(
         await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
     }
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Staging skipped for import {ImportacaoId}: status is {Status}")]
-    private partial void LogSkipped(Guid importacaoId, StatusImportacao? status);
+    [Queue(Filas.Importacao)]
+    [AutomaticRetry(Attempts = 3, DelaysInSeconds = [10, 60, 300], OnAttemptsExceeded = AttemptsExceededAction.Fail)]
+    [DisplayName("Efetivação da importação {0}")]
+    public async Task EfetivacaoAsync(Guid importacaoId, CancellationToken cancellationToken)
+    {
+        using var activity = JobsTelemetry.Source.StartActivity("importacao.efetivacao");
+        activity?.SetTag("stowise.importacao.id", importacaoId);
+
+        var importacao = await db.Importacoes.FirstOrDefaultAsync(i => i.Id == importacaoId, cancellationToken);
+        if (importacao is not { Status: StatusImportacao.Efetivando })
+        {
+            LogSkipped(nameof(EfetivacaoAsync), importacaoId, importacao?.Status);
+            return;
+        }
+
+        // Erros de uma linha (regra do cadastro) não chegam aqui: viram erro da linha. O que sobe é infraestrutura,
+        // e a nova tentativa continua das linhas ainda não efetivadas.
+        await efetivacao.RunAsync(
+            importacao,
+            (andamento, ct) => notificador.NotificarAsync(ProgressoImportacao.From(andamento), ct),
+            cancellationToken);
+        await db.SaveChangesAsync(cancellationToken);
+        await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
+    }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "{Job} skipped for import {ImportacaoId}: status is {Status}")]
+    private partial void LogSkipped(string job, Guid importacaoId, StatusImportacao? status);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "Staging failed for import {ImportacaoId} without retry")]
     private partial void LogBusinessFailure(Exception exception, Guid importacaoId);

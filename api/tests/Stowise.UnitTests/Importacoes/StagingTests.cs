@@ -39,10 +39,13 @@ public class StagingTests
         importacao.CompleteValidacao(10, 0, 0);
 
         importacao.StartEfetivacao();
+        Assert.Equal(0, importacao.LinhasProcessadas);
         Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento(Basico, Usuario, Agora));
-        importacao.Complete(Agora.AddMinutes(1));
+        importacao.ReportProgress(4);
+        importacao.Complete(criados: 6, atualizados: 3, validas: 9, comErro: 1, Agora.AddMinutes(1));
 
         Assert.Equal((StatusImportacao.Concluido, Agora.AddMinutes(1)), (importacao.Status, importacao.ConcluidoEm));
+        Assert.Equal((6, 3, 9, 1, 9), (importacao.ProdutosCriados, importacao.ProdutosAtualizados, importacao.LinhasValidas, importacao.LinhasComErro, importacao.LinhasProcessadas));
         Assert.Throws<DomainException>(() => importacao.Fail("tarde demais", Agora));
     }
 
@@ -77,6 +80,26 @@ public class StagingTests
         Assert.Equal((StatusLinha.PossivelDuplicata, AcaoLinha.Ignorar, outro, 1m), (duplicata.Status, duplicata.Acao, duplicata.ProdutoCorrespondenteId, duplicata.Similaridade));
         Assert.Equal((StatusLinha.Valida, AcaoLinha.Atualizar, existente), (atualizar.Status, atualizar.Acao, atualizar.ProdutoCorrespondenteId));
         Assert.Equal((StatusLinha.Valida, AcaoLinha.Criar, (Guid?)null), (criar.Status, criar.Acao, criar.ProdutoCorrespondenteId));
+    }
+
+    [Fact]
+    public void Committed_line_keeps_the_applied_action_and_a_failed_one_becomes_an_error()
+    {
+        var produto = Guid.NewGuid();
+        ImportacaoLinha Valida() =>
+            ImportacaoLinha.Create(Guid.NewGuid(), 1, ["A1"], new Dictionary<string, string?>(), [], null, null);
+
+        var efetivada = Valida();
+        efetivada.MarkEfetivada(AcaoLinha.Atualizar, produto, Agora);
+        var falhou = Valida();
+        falhou.MarkFalhaEfetivacao("GTIN já usado.");
+
+        Assert.Equal((AcaoLinha.Atualizar, produto, Agora), (efetivada.Acao, efetivada.ProdutoCorrespondenteId, efetivada.EfetivadaEm));
+        Assert.Throws<InvalidOperationException>(() => efetivada.MarkEfetivada(AcaoLinha.Criar, produto, Agora));
+        Assert.Equal((StatusLinha.Erro, AcaoLinha.Ignorar), (falhou.Status, falhou.Acao));
+        Assert.Equal(new ErroLinha("linha", "GTIN já usado."), Assert.Single(falhou.Erros));
+        Assert.Throws<InvalidOperationException>(() => falhou.MarkEfetivada(AcaoLinha.Criar, produto, Agora));
+        Assert.Throws<InvalidOperationException>(() => Valida().MarkEfetivada(AcaoLinha.Ignorar, produto, Agora));
     }
 
     [Fact]

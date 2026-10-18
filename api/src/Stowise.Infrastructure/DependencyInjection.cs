@@ -52,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IConsultaEstoqueService, ConsultaEstoqueService>();
         services.AddScoped<IImportacaoService, ImportacaoService>();
         services.AddScoped<StagingProdutos>();
+        services.AddScoped<EfetivacaoProdutos>();
         services.AddJobs();
         services.AddScoped<ITemplateImportacaoService, TemplateImportacaoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);

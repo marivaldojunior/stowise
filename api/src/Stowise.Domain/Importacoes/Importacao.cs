@@ -134,8 +134,12 @@ public sealed class Importacao : Entity
 
     public int LinhasPossivelDuplicata { get; private set; }
 
-    /// <summary>Linhas já tratadas na etapa em andamento (staging), para o progresso.</summary>
+    /// <summary>Linhas já tratadas na etapa em andamento (staging ou efetivação), para o progresso.</summary>
     public int LinhasProcessadas { get; private set; }
+
+    public int ProdutosCriados { get; private set; }
+
+    public int ProdutosAtualizados { get; private set; }
 
     public string? MotivoFalha { get; private set; }
 
@@ -241,10 +245,14 @@ public sealed class Importacao : Entity
         Status = StatusImportacao.Validando;
     }
 
-    /// <summary>Andamento do staging em background, para o painel mostrar o progresso.</summary>
+    /// <summary>Andamento do staging ou da efetivação em background, para o painel mostrar o progresso.</summary>
     public void ReportProgress(int processadas)
     {
-        EnsureStatus(StatusImportacao.Validando);
+        if (Status is not (StatusImportacao.Validando or StatusImportacao.Efetivando))
+        {
+            throw new InvalidOperationException($"The import is {Status}; progress is only reported while it is processing.");
+        }
+
         LinhasProcessadas = Math.Clamp(processadas, 0, TotalLinhas);
     }
 
@@ -275,12 +283,24 @@ public sealed class Importacao : Entity
             throw new DomainException("Não há linhas válidas para efetivar.");
         }
 
+        LinhasProcessadas = 0;
         Status = StatusImportacao.Efetivando;
     }
 
-    public void Complete(DateTimeOffset agora)
+    /// <summary>
+    /// Fim da efetivação. As contagens vêm das linhas gravadas: uma linha válida que falhou ao gravar no catálogo
+    /// (ex.: GTIN usado por outro produto no meio do caminho) passa a contar como erro.
+    /// </summary>
+    public void Complete(int criados, int atualizados, int validas, int comErro, DateTimeOffset agora)
     {
         EnsureStatus(StatusImportacao.Efetivando);
+        if (criados < 0 || atualizados < 0 || validas < 0 || comErro < 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(criados), "Counts cannot be negative.");
+        }
+
+        (ProdutosCriados, ProdutosAtualizados, LinhasValidas, LinhasComErro) = (criados, atualizados, validas, comErro);
+        LinhasProcessadas = criados + atualizados;
         Status = StatusImportacao.Concluido;
         ConcluidoEm = agora;
     }

@@ -110,6 +110,10 @@ internal sealed class HangfireFilaTrabalhos(IServiceProvider provider) : IFilaTr
     public void EnfileirarStaging(Guid importacaoId) =>
         provider.GetRequiredService<IBackgroundJobClient>()
             .Enqueue<ImportacaoJobs>(j => j.StagingAsync(importacaoId, CancellationToken.None));
+
+    public void EnfileirarEfetivacao(Guid importacaoId) =>
+        provider.GetRequiredService<IBackgroundJobClient>()
+            .Enqueue<ImportacaoJobs>(j => j.EfetivacaoAsync(importacaoId, CancellationToken.None));
 }
 
 /// <summary>Sem painel conectado (ex.: worker separado), o andamento fica só no banco.</summary>

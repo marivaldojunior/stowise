@@ -285,7 +285,7 @@ Regras de ordem:
 - [x] Staging, validações determinísticas (GTIN, NCM, unidades) e máquina de estados
 - [x] ADR de jobs em background (fila durável, retry e agendamento)
 - [x] Processamento em background (Hangfire): staging fora da requisição, com status e progresso consultáveis por endpoint e por SignalR e gravação em lote (COPY)
-- [ ] Efetivação em background: gravação no catálogo em lote (bulk insert), idempotente, e relatório final
+- [x] Efetivação em background: gravação no catálogo em lote (bulk insert), idempotente, e relatório final
 - [ ] Camada de IA plugável (Microsoft.Extensions.AI) com registro em ChamadaIa, conforme o ADR-0004
 - [ ] Resiliência da IA: timeout, retry com backoff e fallback de provedor; sem IA disponível, o fluxo segue manual
 - [ ] Saídas estruturadas: JSON Schema por funcionalidade, validação e rejeição de resposta inválida

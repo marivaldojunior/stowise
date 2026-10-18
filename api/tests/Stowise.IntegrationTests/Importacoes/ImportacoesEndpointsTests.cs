@@ -29,6 +29,8 @@ public class ImportacoesEndpointsTests(StowiseApiFactory factory) : IClassFixtur
     [InlineData("POST", Url)]
     [InlineData("PUT", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/mapeamento")]
     [InlineData("GET", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/linhas")]
+    [InlineData("POST", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/efetivar")]
+    [InlineData("GET", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/relatorio")]
     [InlineData("GET", "/api/v1/importacoes/templates")]
     [InlineData("DELETE", "/api/v1/importacoes/templates/0199f0a0-0000-7000-8000-000000000001")]
     public async Task Operador_cannot_import(string metodo, string url)
@@ -36,7 +38,8 @@ public class ImportacoesEndpointsTests(StowiseApiFactory factory) : IClassFixtur
         using var client = ClientWith(Perfis.Operador);
         using var request = new HttpRequestMessage(new HttpMethod(metodo), url)
         {
-            Content = metodo == "POST" ? Arquivo("a.csv", [0x41]) : metodo == "PUT" ? JsonContent.Create(new { }) : null,
+            // O upload é multipart; os outros POST e PUT recebem JSON (o roteamento recusa outro content type com 415).
+            Content = url == Url ? Arquivo("a.csv", [0x41]) : metodo is "POST" or "PUT" ? JsonContent.Create(new { }) : null,
         };
 
         var response = await client.SendAsync(request);

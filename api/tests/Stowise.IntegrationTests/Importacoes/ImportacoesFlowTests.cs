@@ -287,6 +287,51 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     }
 
     [DockerFact]
+    public async Task Commit_creates_and_updates_products_with_only_the_filled_fields()
+    {
+        var (importacao, arrozId) = await ReviewedCatalogImportAsync();
+
+        var concluida = await EfetivarAsync(importacao);
+
+        Assert.Equal((StatusImportacao.Concluido, 1, 1, 2, 1), (concluida.Status, concluida.ProdutosCriados, concluida.ProdutosAtualizados, concluida.LinhasValidas, concluida.LinhasComErro));
+        var arroz = await QueryAsync(db => db.Produtos.Include(p => p.Embalagens).SingleAsync(p => p.Id == arrozId));
+        Assert.Equal(("Arroz tipo 1 5kg", "UN", "10063021"), (arroz.Descricao, arroz.UnidadeBase, arroz.Ncm));
+        Assert.NotNull(arroz.CategoriaId);
+        Assert.Equal(("7891000100103", 5.1m), (arroz.EmbalagemBase.Gtin, arroz.EmbalagemBase.PesoKg));
+
+        var lentilha = await QueryAsync(db => db.Produtos.Include(p => p.Embalagens).SingleAsync(p => p.Sku == "LENT-1"));
+        Assert.Equal(("Lentilha 500g", "19041000", "7891000053508", 0.5m), (lentilha.Descricao, lentilha.Ncm, lentilha.EmbalagemBase.Gtin, lentilha.EmbalagemBase.PesoKg));
+        var linhas = (await _client.GetFromJsonAsync<PagedResult<ImportacaoLinhaDetalhe>>($"/api/v1/importacoes/{importacao.Id}/linhas", Json))!.Itens;
+        Assert.Equal((AcaoLinha.Criar, lentilha.Id), (linhas[1].Acao, linhas[1].ProdutoCorrespondenteId));
+        Assert.All(linhas.Take(2), l => Assert.NotNull(l.EfetivadaEm));
+        Assert.Null(linhas[2].EfetivadaEm);
+
+        var relatorio = (await _client.GetFromJsonAsync<RelatorioImportacao>($"/api/v1/importacoes/{importacao.Id}/relatorio", Json))!;
+        Assert.Equal((1, 1), (relatorio.ProdutosCriados, relatorio.ProdutosAtualizados));
+        Assert.Equal(new Dictionary<string, int> { ["gtin"] = 1 }, relatorio.ErrosPorCampo);
+
+        var deNovo = await _client.PostAsJsonAsync($"/api/v1/importacoes/{importacao.Id}/efetivar", new { versao = concluida.Versao });
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, deNovo.StatusCode);
+        Assert.Equal(2, await QueryAsync(db => db.Produtos.CountAsync()));
+    }
+
+    [DockerFact]
+    public async Task Gtin_taken_after_the_review_fails_only_its_line()
+    {
+        var (importacao, _) = await ReviewedCatalogImportAsync();
+        await PostOkAsync("/api/v1/produtos", new { sku = "OUTRO-9", descricao = "Outro", unidadeBase = "UN", classeArmazenagem = "Normal", embalagemBase = new { gtin = "7891000053508" } });
+
+        var concluida = await EfetivarAsync(importacao);
+
+        Assert.Equal((0, 1, 1, 2), (concluida.ProdutosCriados, concluida.ProdutosAtualizados, concluida.LinhasValidas, concluida.LinhasComErro));
+        var lentilha = (await _client.GetFromJsonAsync<PagedResult<ImportacaoLinhaDetalhe>>($"/api/v1/importacoes/{importacao.Id}/linhas?status=Erro", Json))!.Itens[0];
+        Assert.Equal(("linha", 2), (lentilha.Erros.Single().Campo, lentilha.NumeroLinha));
+        var relatorio = (await _client.GetFromJsonAsync<RelatorioImportacao>($"/api/v1/importacoes/{importacao.Id}/relatorio", Json))!;
+        Assert.Equal(new Dictionary<string, int> { ["gtin"] = 1, ["linha"] = 1 }, relatorio.ErrosPorCampo);
+        Assert.False(await QueryAsync(db => db.Produtos.AnyAsync(p => p.Sku == "LENT-1")));
+    }
+
+    [DockerFact]
     public async Task Unknown_import_is_not_found()
     {
         var response = await _client.GetAsync(new Uri($"/api/v1/importacoes/{Guid.NewGuid()}", UriKind.Relative));
@@ -299,6 +344,43 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
         var response = await UploadAsync(nome, Encoding.UTF8.GetBytes(texto));
         Assert.True(response.StatusCode == HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
         return (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!;
+    }
+
+    /// <summary>Catálogo com o ARROZ-5 e uma importação em revisão: atualiza o arroz, cria a lentilha e tem uma linha com erro.</summary>
+    private async Task<(ImportacaoDetalhe Importacao, Guid ArrozId)> ReviewedCatalogImportAsync()
+    {
+        await PostOkAsync("/api/v1/categorias", new { nome = "Grãos" });
+        var arroz = await PostOkAsync("/api/v1/produtos", new
+        {
+            sku = "ARROZ-5",
+            descricao = "Arroz 5kg",
+            unidadeBase = "UN",
+            classeArmazenagem = "Normal",
+            ncm = "10063021",
+            embalagemBase = new { gtin = "7891000100103" },
+        });
+
+        var importacao = await CreatedAsync("catalogo.csv", string.Join('\n', [
+            "SKU;Descrição;Unidade;GTIN;Categoria;NCM;Peso",
+            "ARROZ-5;Arroz tipo 1 5kg;KG;;Grãos;;5,1",
+            "LENT-1;Lentilha 500g;UN;7891000053508;;19041000;0,5",
+            "RUIM-1;Ruim;UN;7891000100104;;;",
+        ]));
+        object[] mapeamento =
+        [
+            new { campo = "sku", coluna = 0 }, new { campo = "descricao", coluna = 1 }, new { campo = "unidadeBase", coluna = 2 },
+            new { campo = "gtin", coluna = 3 }, new { campo = "categoria", coluna = 4 }, new { campo = "ncm", coluna = 5 }, new { campo = "pesoKg", coluna = 6 },
+        ];
+        var revisao = await ConfirmAsync(importacao.Id, new { colunas = mapeamento, versao = importacao.Versao });
+        Assert.Equal((StatusImportacao.AguardandoRevisao, 2, 1), (revisao.Status, revisao.LinhasValidas, revisao.LinhasComErro));
+        return (revisao, JsonDocument.Parse(arroz).RootElement.GetProperty("id").GetGuid());
+    }
+
+    private async Task<ImportacaoDetalhe> EfetivarAsync(ImportacaoDetalhe importacao)
+    {
+        var response = await _client.PostAsJsonAsync($"/api/v1/importacoes/{importacao.Id}/efetivar", new { versao = importacao.Versao });
+        Assert.True(response.StatusCode == HttpStatusCode.Accepted, await response.Content.ReadAsStringAsync());
+        return await WaitForStatusAsync(importacao.Id, s => s is StatusImportacao.Concluido or StatusImportacao.Falhou);
     }
 
     private async Task<string> PostOkAsync(string url, object body)

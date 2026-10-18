@@ -873,6 +873,14 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(31)")
                         .HasColumnName("planilha");
 
+                    b.Property<int>("ProdutosAtualizados")
+                        .HasColumnType("integer")
+                        .HasColumnName("produtos_atualizados");
+
+                    b.Property<int>("ProdutosCriados")
+                        .HasColumnType("integer")
+                        .HasColumnName("produtos_criados");
+
                     b.Property<string>("SeparadorDecimal")
                         .IsRequired()
                         .HasMaxLength(1)
@@ -961,6 +969,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("dados_normalizados");
+
+                    b.Property<DateTimeOffset?>("EfetivadaEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("efetivada_em");
 
                     b.Property<string>("Erros")
                         .IsRequired()

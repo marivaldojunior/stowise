@@ -47,13 +47,19 @@ public sealed class ImportacaoLinha : Entity
 
     public AcaoLinha Acao { get; private set; }
 
-    /// <summary>Produto com o mesmo SKU (atualização) ou com o mesmo GTIN (possível duplicata).</summary>
+    /// <summary>
+    /// Produto com o mesmo SKU (atualização) ou com o mesmo GTIN (possível duplicata). Depois da efetivação,
+    /// o produto criado ou atualizado pela linha.
+    /// </summary>
     public Guid? ProdutoCorrespondenteId { get; private set; }
 
     /// <summary>De 0 a 1. O casamento exato por GTIN vale 1; a busca semântica entra no Marco 4.</summary>
     public decimal? Similaridade { get; private set; }
 
     public IReadOnlyList<ErroLinha> Erros { get; private set; } = [];
+
+    /// <summary>Quando a linha foi gravada no catálogo. Nula enquanto não foi efetivada.</summary>
+    public DateTimeOffset? EfetivadaEm { get; private set; }
 
     /// <param name="produtoMesmoSku">Produto do catálogo com o SKU da linha.</param>
     /// <param name="produtoMesmoGtin">Produto do catálogo com o GTIN da linha, se for outro SKU.</param>
@@ -98,5 +104,32 @@ public sealed class ImportacaoLinha : Entity
         }
 
         return linha;
+    }
+
+    /// <summary>
+    /// Registra a gravação no catálogo. A ação é a que foi aplicada de fato: uma linha prevista como criação vira
+    /// atualização se o SKU passou a existir depois da validação.
+    /// </summary>
+    public void MarkEfetivada(AcaoLinha aplicada, Guid produtoId, DateTimeOffset agora)
+    {
+        if (Status != StatusLinha.Valida || EfetivadaEm is not null || aplicada == AcaoLinha.Ignorar)
+        {
+            throw new InvalidOperationException($"Line {NumeroLinha} cannot be committed ({Status}, {Acao}).");
+        }
+
+        (Acao, ProdutoCorrespondenteId, EfetivadaEm) = (aplicada, produtoId, agora);
+    }
+
+    /// <summary>A gravação no catálogo recusou a linha: ela vira erro, com o motivo, e não é gravada.</summary>
+    public void MarkFalhaEfetivacao(string mensagem)
+    {
+        if (Status != StatusLinha.Valida || EfetivadaEm is not null)
+        {
+            throw new InvalidOperationException($"Line {NumeroLinha} cannot fail ({Status}).");
+        }
+
+        Status = StatusLinha.Erro;
+        Acao = AcaoLinha.Ignorar;
+        Erros = [.. Erros, new ErroLinha("linha", mensagem)];
     }
 }

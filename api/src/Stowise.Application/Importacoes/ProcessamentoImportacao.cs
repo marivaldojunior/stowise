@@ -10,6 +10,9 @@ public interface IFilaTrabalhos
 {
     /// <summary>Valida as linhas de uma importação em <see cref="StatusImportacao.Validando"/>.</summary>
     void EnfileirarStaging(Guid importacaoId);
+
+    /// <summary>Grava no catálogo as linhas válidas de uma importação em <see cref="StatusImportacao.Efetivando"/>.</summary>
+    void EnfileirarEfetivacao(Guid importacaoId);
 }
 
 /// <summary>Avisa quem acompanha a importação (painel, por SignalR) sobre o andamento.</summary>

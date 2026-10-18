@@ -19,6 +19,15 @@ public interface IImportacaoService
     /// </summary>
     Task<Result<ImportacaoDetalhe>> ConfirmarMapeamentoAsync(Guid id, ConfirmarMapeamento comando, Guid usuarioId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Depois da revisão, agenda a gravação no catálogo das linhas válidas (criar e atualizar produtos).
+    /// Exige a <see cref="ImportacaoDetalhe.Versao"/> lida.
+    /// </summary>
+    Task<Result<ImportacaoDetalhe>> EfetivarAsync(Guid id, EfetivarImportacao comando, CancellationToken cancellationToken = default);
+
+    /// <summary>Resumo final: contagens por resultado e erros agrupados por campo.</summary>
+    Task<Result<RelatorioImportacao>> GetRelatorioAsync(Guid id, CancellationToken cancellationToken = default);
+
     Task<Result<ImportacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>Linhas do staging na ordem do arquivo, com filtro por status e ação.</summary>
@@ -37,6 +46,24 @@ public sealed record ConfirmarMapeamento(
     bool SalvarTemplate = false,
     string? NomeTemplate = null);
 
+public sealed record EfetivarImportacao(uint? Versao);
+
+/// <param name="ErrosPorCampo">Quantidade de erros por campo de destino (<c>linha</c> para erros da linha inteira).</param>
+public sealed record RelatorioImportacao(
+    Guid Id,
+    string NomeArquivo,
+    StatusImportacao Status,
+    int TotalLinhas,
+    int LinhasValidas,
+    int LinhasComErro,
+    int LinhasPossivelDuplicata,
+    int ProdutosCriados,
+    int ProdutosAtualizados,
+    IReadOnlyDictionary<string, int> ErrosPorCampo,
+    DateTimeOffset IniciadoEm,
+    DateTimeOffset? ConcluidoEm,
+    string? MotivoFalha);
+
 public sealed record LinhaFiltro(StatusLinha? Status, AcaoLinha? Acao, int? Pagina, int? TamanhoPagina);
 
 public sealed record ImportacaoLinhaDetalhe(
@@ -48,7 +75,8 @@ public sealed record ImportacaoLinhaDetalhe(
     AcaoLinha Acao,
     Guid? ProdutoCorrespondenteId,
     decimal? Similaridade,
-    IReadOnlyList<ErroLinha> Erros);
+    IReadOnlyList<ErroLinha> Erros,
+    DateTimeOffset? EfetivadaEm);
 
 public sealed record ImportacaoFiltro(TipoImportacao? Tipo, StatusImportacao? Status, int? Pagina, int? TamanhoPagina);
 
@@ -90,6 +118,8 @@ public sealed record ImportacaoDetalhe(
     int LinhasComErro,
     int LinhasPossivelDuplicata,
     int LinhasProcessadas,
+    int ProdutosCriados,
+    int ProdutosAtualizados,
     string? MotivoFalha,
     uint Versao);
 

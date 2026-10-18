@@ -1,6 +1,7 @@
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 using Stowise.Application.Common;
 using Stowise.Application.Importacoes;
 using Stowise.Domain.Importacoes;
@@ -157,6 +158,103 @@ internal sealed partial class ImportacaoService(
     [LoggerMessage(Level = LogLevel.Error, Message = "Could not enqueue the staging of import {ImportacaoId}")]
     private partial void LogEnqueueFailed(Exception exception, Guid importacaoId);
 
+    public async Task<Result<ImportacaoDetalhe>> EfetivarAsync(Guid id, EfetivarImportacao comando, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(comando);
+
+        if (comando.Versao is null)
+        {
+            return AppError.Validation("versao", "Informe a versão da importação lida antes da efetivação.");
+        }
+
+        var importacao = await db.Importacoes.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        if (importacao is null)
+        {
+            return NotFound();
+        }
+
+        if (importacao.Versao != comando.Versao)
+        {
+            return AppError.Conflict("A importação foi alterada por outra pessoa depois que você a abriu. Recarregue e tente de novo.");
+        }
+
+        db.Entry(importacao).Property(i => i.Versao).OriginalValue = comando.Versao.Value;
+        importacao.StartEfetivacao();
+        await db.SaveChangesAsync(cancellationToken);
+
+        try
+        {
+            fila.EnfileirarEfetivacao(importacao.Id);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            LogEnqueueFailed(e, importacao.Id);
+            importacao.Fail("Não foi possível agendar a gravação no catálogo. Envie o arquivo de novo.", time.GetUtcNow());
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
+        return ToDetalhe(importacao);
+    }
+
+    public async Task<Result<RelatorioImportacao>> GetRelatorioAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var importacao = await db.Importacoes.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        if (importacao is null)
+        {
+            return NotFound();
+        }
+
+        var erros = await ErrosPorCampoAsync(id, cancellationToken);
+
+        return new RelatorioImportacao(
+            importacao.Id,
+            importacao.NomeArquivo,
+            importacao.Status,
+            importacao.TotalLinhas,
+            importacao.LinhasValidas,
+            importacao.LinhasComErro,
+            importacao.LinhasPossivelDuplicata,
+            importacao.ProdutosCriados,
+            importacao.ProdutosAtualizados,
+            erros,
+            importacao.IniciadoEm,
+            importacao.ConcluidoEm,
+            importacao.MotivoFalha);
+    }
+
+    /// <summary>
+    /// Os erros ficam num array <c>jsonb</c> por linha; o agrupamento por campo é feito no banco. Leitura por
+    /// posição, com ADO.NET, para não depender do mapeamento de nomes de coluna de um tipo sem entidade.
+    /// </summary>
+    private async Task<SortedDictionary<string, int>> ErrosPorCampoAsync(Guid importacaoId, CancellationToken cancellationToken)
+    {
+        var erros = new SortedDictionary<string, int>(StringComparer.Ordinal);
+        await db.Database.OpenConnectionAsync(cancellationToken);
+        try
+        {
+            await using var comando = db.Database.GetDbConnection().CreateCommand();
+            comando.CommandText = """
+                SELECT e.erro ->> 'campo', count(*)::int
+                FROM importacao_linhas l, jsonb_array_elements(l.erros) AS e(erro)
+                WHERE l.importacao_id = @id
+                GROUP BY 1
+                """;
+            comando.Parameters.Add(new NpgsqlParameter("id", importacaoId));
+            await using var leitor = await comando.ExecuteReaderAsync(cancellationToken);
+            while (await leitor.ReadAsync(cancellationToken))
+            {
+                erros[leitor.IsDBNull(0) ? "linha" : leitor.GetString(0)] = leitor.GetInt32(1);
+            }
+        }
+        finally
+        {
+            await db.Database.CloseConnectionAsync();
+        }
+
+        return erros;
+    }
+
     public async Task<Result<ImportacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
         var importacao = await db.Importacoes.AsNoTracking().FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
@@ -192,7 +290,7 @@ internal sealed partial class ImportacaoService(
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ImportacaoLinhaDetalhe>(
-            [.. itens.Select(l => new ImportacaoLinhaDetalhe(l.Id, l.NumeroLinha, l.DadosBrutos, l.DadosNormalizados, l.Status, l.Acao, l.ProdutoCorrespondenteId, l.Similaridade, l.Erros))],
+            [.. itens.Select(l => new ImportacaoLinhaDetalhe(l.Id, l.NumeroLinha, l.DadosBrutos, l.DadosNormalizados, l.Status, l.Acao, l.ProdutoCorrespondenteId, l.Similaridade, l.Erros, l.EfetivadaEm))],
             pagina,
             tamanhoPagina,
             total);
@@ -249,8 +347,11 @@ internal sealed partial class ImportacaoService(
             i.LinhasComErro,
             i.LinhasPossivelDuplicata,
             i.LinhasProcessadas,
+            i.ProdutosCriados,
+            i.ProdutosAtualizados,
             i.MotivoFalha,
             i.Versao);
 
     private static AppError NotFound() => AppError.NotFound("Importação não encontrada.");
 }
+

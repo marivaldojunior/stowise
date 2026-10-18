@@ -4731,6 +4731,180 @@
         ]
       }
     },
+    "/api/v1/importacoes/{id}/efetivar": {
+      "post": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Agenda a gravação no catálogo das linhas válidas (criar e atualizar produtos). Acompanhe pelo GET da importação ou pelo hub /hubs/importacoes.",
+        "operationId": "EfetivarImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EfetivarImportacao"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/{id}/relatorio": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Resumo da importação: linhas por resultado, produtos criados e atualizados e erros por campo.",
+        "operationId": "ObterRelatorioImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RelatorioImportacao"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/importacoes/{id}/linhas": {
       "get": {
         "tags": [
@@ -5946,6 +6120,23 @@
           }
         }
       },
+      "EfetivarImportacao": {
+        "required": [
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "versao": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
       "EmbalagemDetalhe": {
         "required": [
           "id",
@@ -6591,6 +6782,8 @@
           "linhasComErro",
           "linhasPossivelDuplicata",
           "linhasProcessadas",
+          "produtosCriados",
+          "produtosAtualizados",
           "motivoFalha",
           "versao"
         ],
@@ -6723,6 +6916,22 @@
             ],
             "format": "int32"
           },
+          "produtosCriados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "produtosAtualizados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
           "motivoFalha": {
             "type": [
               "null",
@@ -6749,7 +6958,8 @@
           "acao",
           "produtoCorrespondenteId",
           "similaridade",
-          "erros"
+          "erros",
+          "efetivadaEm"
         ],
         "type": "object",
         "properties": {
@@ -6804,6 +7014,13 @@
             "items": {
               "$ref": "#/components/schemas/ErroLinha"
             }
+          },
+          "efetivadaEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -8106,6 +8323,112 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "RelatorioImportacao": {
+        "required": [
+          "id",
+          "nomeArquivo",
+          "status",
+          "totalLinhas",
+          "linhasValidas",
+          "linhasComErro",
+          "linhasPossivelDuplicata",
+          "produtosCriados",
+          "produtosAtualizados",
+          "errosPorCampo",
+          "iniciadoEm",
+          "concluidoEm",
+          "motivoFalha"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "nomeArquivo": {
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusImportacao"
+          },
+          "totalLinhas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasValidas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasComErro": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasPossivelDuplicata": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "produtosCriados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "produtosAtualizados": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "errosPorCampo": {
+            "type": "object",
+            "additionalProperties": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          "iniciadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "concluidoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "motivoFalha": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
