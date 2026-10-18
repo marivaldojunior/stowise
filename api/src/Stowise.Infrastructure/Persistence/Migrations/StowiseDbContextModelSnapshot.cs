@@ -840,6 +840,79 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("chamadas_ia", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Ia.CotaIa", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Funcionalidade")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("funcionalidade");
+
+                    b.Property<int?>("LimiteChamadasDia")
+                        .HasColumnType("integer")
+                        .HasColumnName("limite_chamadas_dia");
+
+                    b.Property<long?>("LimiteTokensMes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("limite_tokens_mes");
+
+                    b.Property<string>("Perfil")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("perfil");
+
+                    b.Property<Guid?>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_cotas_ia");
+
+                    b.HasIndex("Perfil", "Funcionalidade")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cotas_ia_perfil_funcionalidade")
+                        .HasFilter("perfil IS NOT NULL");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("Perfil", "Funcionalidade"), false);
+
+                    b.HasIndex("UsuarioId", "Funcionalidade")
+                        .IsUnique()
+                        .HasDatabaseName("ix_cotas_ia_usuario_id_funcionalidade")
+                        .HasFilter("usuario_id IS NOT NULL");
+
+                    NpgsqlIndexBuilderExtensions.AreNullsDistinct(b.HasIndex("UsuarioId", "Funcionalidade"), false);
+
+                    b.ToTable("cotas_ia", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_cotas_ia_perfil_ou_usuario", "(perfil IS NULL) <> (usuario_id IS NULL)");
+                        });
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-00000000c001"),
+                            LimiteChamadasDia = 200,
+                            LimiteTokensMes = 2000000L,
+                            Perfil = "Gestor"
+                        },
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-00000000c002"),
+                            LimiteChamadasDia = 50,
+                            LimiteTokensMes = 500000L,
+                            Perfil = "Operador"
+                        });
+                });
+
             modelBuilder.Entity("Stowise.Domain.Importacoes.ArquivoImportacao", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1625,6 +1698,15 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("fk_chamadas_ia_usuarios_usuario_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Ia.CotaIa", b =>
+                {
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasConstraintName("fk_cotas_ia_usuarios_usuario_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Importacoes.ArquivoImportacao", b =>

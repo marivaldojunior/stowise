@@ -85,7 +85,7 @@ public class GatewayResilienceTests
         await cancelado.CancelAsync();
         var principal = FakeChatClient.Sequence(FakeChatClient.Hang);
         var reserva = FakeChatClient.Responding("reserva");
-        var gateway = new GatewayIa(FakeProvedoresIa.With(principal, reserva), _registro, TimeProvider.System, NullLogger<GatewayIa>.Instance);
+        var gateway = new GatewayIa(FakeProvedoresIa.With(principal, reserva), _registro, FakeVerificadorCota.Livre, TimeProvider.System, NullLogger<GatewayIa>.Instance);
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(() => gateway.SendAsync(Pedido(), cancelado.Token));
 
@@ -138,7 +138,7 @@ public class GatewayResilienceTests
     }
 
     private Task<RespostaIa> SendAsync(FakeProvedoresIa provedores, ChatOptions? opcoes = null) =>
-        new GatewayIa(provedores, _registro, TimeProvider.System, NullLogger<GatewayIa>.Instance).SendAsync(Pedido(opcoes), CancellationToken.None);
+        new GatewayIa(provedores, _registro, FakeVerificadorCota.Livre, TimeProvider.System, NullLogger<GatewayIa>.Instance).SendAsync(Pedido(opcoes), CancellationToken.None);
 
     private static PedidoIa Pedido(ChatOptions? opcoes = null) =>
         new(FuncionalidadeIa.Mapeamento, "mapeamento-v1", [new ChatMessage(ChatRole.User, "cabeçalho")], null, opcoes);

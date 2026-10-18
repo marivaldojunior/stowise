@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -73,6 +74,7 @@ public sealed class IaFlowTests : IAsyncLifetime
         var falha = await new GatewayIa(
                 FakeProvedoresIa.With(FakeChatClient.Failing(new HttpRequestException("connection refused"))),
                 _factory.Services.GetRequiredService<IRegistroChamadasIa>(),
+                _factory.Services.GetRequiredService<IVerificadorCotaIa>(),
                 TimeProvider.System,
                 Microsoft.Extensions.Logging.Abstractions.NullLogger<GatewayIa>.Instance)
             .SendAsync(new PedidoIa(FuncionalidadeIa.Consulta, "consulta-v1", [new ChatMessage(ChatRole.User, "x")], null), CancellationToken.None);
@@ -93,6 +95,47 @@ public sealed class IaFlowTests : IAsyncLifetime
         Assert.StartsWith("HttpRequestException: connection refused", falhou.Erro, StringComparison.Ordinal);
         Assert.Equal(3, falhou.Tentativas);
         Assert.Null(falhou.CustoEstimado);
+    }
+
+    [DockerFact]
+    public async Task User_exception_blocks_the_feature_after_the_limit_and_the_admin_can_change_it()
+    {
+        var usuarioId = (await _client.GetFromJsonAsync<UsuarioAtual>("/api/v1/auth/me", Json))!.Id;
+        var gateway = _factory.Services.GetRequiredService<GatewayIa>();
+        PedidoIa Pedido(FuncionalidadeIa funcionalidade) => new(funcionalidade, "v1", [new ChatMessage(ChatRole.User, "x")], usuarioId);
+
+        var iniciais = (await _client.GetFromJsonAsync<List<CotaIaDetalhe>>("/api/v1/ia/cotas", Json))!;
+        Assert.Contains(iniciais, c => c is { Perfil: "Gestor", LimiteChamadasDia: 200, LimiteTokensMes: 2_000_000 });
+        Assert.Contains(iniciais, c => c is { Perfil: "Operador", LimiteChamadasDia: 50, LimiteTokensMes: 500_000 });
+
+        var criada = await _client.PostAsJsonAsync("/api/v1/ia/cotas", new { usuarioId, funcionalidade = "Mapeamento", limiteChamadasDia = 1 });
+        Assert.Equal(HttpStatusCode.Created, criada.StatusCode);
+        var cota = (await criada.Content.ReadFromJsonAsync<CotaIaDetalhe>(Json))!;
+        var repetida = await _client.PostAsJsonAsync("/api/v1/ia/cotas", new { usuarioId, funcionalidade = "Mapeamento", limiteChamadasDia = 3 });
+        Assert.Equal(HttpStatusCode.Conflict, repetida.StatusCode);
+
+        Assert.True((await gateway.SendAsync(Pedido(FuncionalidadeIa.Mapeamento), CancellationToken.None)).Sucesso);
+        var bloqueada = await gateway.SendAsync(Pedido(FuncionalidadeIa.Mapeamento), CancellationToken.None);
+        Assert.True(bloqueada.CotaExcedida);
+        Assert.Contains("(exceção do usuário): 1 de 1 chamadas hoje", bloqueada.MotivoCota, StringComparison.Ordinal);
+
+        // A exceção vale só para o mapeamento; o Admin não tem cota de perfil, então a consulta segue livre.
+        Assert.True((await gateway.SendAsync(Pedido(FuncionalidadeIa.Consulta), CancellationToken.None)).Sucesso);
+
+        var uso = (await _client.GetFromJsonAsync<UsoCotaIa>("/api/v1/ia/cota?funcionalidade=Mapeamento", Json))!;
+        Assert.Equal((1, 1, true, "exceção do usuário"), (uso.ChamadasHoje, uso.LimiteChamadasDia, uso.Excedida, uso.Origem));
+        Assert.Equal(1500, uso.TokensMes);
+
+        var desatualizada = await _client.PutAsJsonAsync($"/api/v1/ia/cotas/{cota.Id}", new { limiteChamadasDia = 5, versao = cota.Versao + 1 });
+        Assert.Equal(HttpStatusCode.Conflict, desatualizada.StatusCode);
+        var alterada = await _client.PutAsJsonAsync($"/api/v1/ia/cotas/{cota.Id}", new { limiteChamadasDia = 5, versao = cota.Versao });
+        Assert.Equal(HttpStatusCode.OK, alterada.StatusCode);
+        Assert.True((await gateway.SendAsync(Pedido(FuncionalidadeIa.Mapeamento), CancellationToken.None)).Sucesso);
+
+        Assert.Equal(HttpStatusCode.NoContent, (await _client.DeleteAsync(new Uri($"/api/v1/ia/cotas/{cota.Id}", UriKind.Relative))).StatusCode);
+        var semCota = (await _client.GetFromJsonAsync<UsoCotaIa>("/api/v1/ia/cota?funcionalidade=Mapeamento", Json))!;
+        // Sem cota não há escopo de funcionalidade: o consumo conta tudo (2 mapeamentos e 1 consulta).
+        Assert.Equal(((int?)null, false, (string?)null, 3), (semCota.LimiteChamadasDia, semCota.Excedida, semCota.Origem, semCota.ChamadasHoje));
     }
 
     private sealed record UsuarioAtual(Guid Id);

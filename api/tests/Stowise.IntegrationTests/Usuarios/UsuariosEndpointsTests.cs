@@ -65,6 +65,7 @@ public class UsuariosEndpointsTests(StowiseApiFactory factory) : IClassFixture<S
     [InlineData(ErrorType.NotFound, StatusCodes.Status404NotFound)]
     [InlineData(ErrorType.Conflict, StatusCodes.Status409Conflict)]
     [InlineData(ErrorType.BusinessRule, StatusCodes.Status422UnprocessableEntity)]
+    [InlineData(ErrorType.TooManyRequests, StatusCodes.Status429TooManyRequests)]
     public void Errors_map_to_problem_status_codes(ErrorType type, int expectedStatus)
     {
         var result = new AppError(type, "Mensagem").ToProblem();

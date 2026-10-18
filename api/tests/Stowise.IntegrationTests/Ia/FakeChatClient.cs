@@ -97,3 +97,17 @@ internal sealed class RegistroEmMemoria : IRegistroChamadasIa
         return Task.CompletedTask;
     }
 }
+
+/// <summary>Cota fixa para os testes do gateway, sem banco.</summary>
+internal sealed class FakeVerificadorCota(Stowise.Application.Ia.UsoCotaIa? uso = null) : IVerificadorCotaIa
+{
+    public static readonly FakeVerificadorCota Livre = new();
+
+    public List<(Guid UsuarioId, FuncionalidadeIa Funcionalidade)> Consultas { get; } = [];
+
+    public Task<Stowise.Application.Ia.UsoCotaIa> CheckAsync(Guid usuarioId, FuncionalidadeIa funcionalidade, CancellationToken cancellationToken)
+    {
+        Consultas.Add((usuarioId, funcionalidade));
+        return Task.FromResult(uso ?? new Stowise.Application.Ia.UsoCotaIa(funcionalidade, 0, null, 0, null, null, false));
+    }
+}

@@ -13,6 +13,9 @@ public enum ErrorType
 
     /// <summary>Dados válidos, mas a operação viola uma regra de negócio (HTTP 422).</summary>
     BusinessRule,
+
+    /// <summary>Limite de uso atingido, como a cota de IA (HTTP 429). O cliente trata como caso normal, não como erro.</summary>
+    TooManyRequests,
 }
 
 /// <summary>Falha esperada de um caso de uso. A mensagem é exibida ao usuário.</summary>
@@ -29,6 +32,8 @@ public sealed record AppError(ErrorType Type, string Message, IReadOnlyDictionar
     public static AppError Conflict(string message) => new(ErrorType.Conflict, message);
 
     public static AppError BusinessRule(string message) => new(ErrorType.BusinessRule, message);
+
+    public static AppError TooManyRequests(string message) => new(ErrorType.TooManyRequests, message);
 }
 
 public class Result

@@ -18,6 +18,7 @@ public static class ErrorResults
             ErrorType.NotFound => Problem(error, StatusCodes.Status404NotFound),
             ErrorType.Conflict => Problem(error, StatusCodes.Status409Conflict),
             ErrorType.BusinessRule => Problem(error, StatusCodes.Status422UnprocessableEntity),
+            ErrorType.TooManyRequests => Problem(error, StatusCodes.Status429TooManyRequests),
             _ => throw new ArgumentOutOfRangeException(nameof(error), error.Type, "Unknown error type."),
         };
     }

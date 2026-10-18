@@ -122,7 +122,7 @@ public class SaidaEstruturadaTests
     }
 
     private Task<RespostaIa<Sugestao>> SendAsync(FakeProvedoresIa provedores) =>
-        new GatewayIa(provedores, _registro, TimeProvider.System, NullLogger<GatewayIa>.Instance)
+        new GatewayIa(provedores, _registro, FakeVerificadorCota.Livre, TimeProvider.System, NullLogger<GatewayIa>.Instance)
             .SendAsync(new PedidoIa(FuncionalidadeIa.Mapeamento, "ignorada", [new ChatMessage(ChatRole.User, "cabeçalho")], null), Contrato, CancellationToken.None);
 
     public sealed record Sugestao(string Campo, int Coluna, double Confianca);

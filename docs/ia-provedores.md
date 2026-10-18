@@ -73,6 +73,22 @@ Dois modelos do mesmo provedor são duas entradas com nomes diferentes.
 | Gemini | `{ "Nome": "gemini", "Tipo": "Gemini", "Modelo": "<modelo>" }` |
 | Modelo aberto local | `{ "Nome": "qwen-local", "Tipo": "Ollama", "Modelo": "qwen3" }` |
 
+## Cotas
+
+A tabela `CotaIa` limita o uso por perfil, com exceção opcional por usuário (ADR-0004, item 5). O Admin altera as cotas em `/api/v1/ia/cotas`, e cada usuário consulta o próprio consumo em `GET /api/v1/ia/cota?funcionalidade=<Funcionalidade>`.
+
+| Perfil | Chamadas por dia | Tokens por mês |
+| --- | --- | --- |
+| Admin | sem limite (sem linha) | sem limite |
+| Gestor | 200 | 2.000.000 |
+| Operador | 50 | 500.000 |
+
+1. A exceção do usuário vence a cota do perfil. Em cada nível, a cota de uma funcionalidade vence a cota geral.
+2. Com vários perfis, vale o limite mais folgado. Limite vazio quer dizer sem limite.
+3. O consumo vem de `ChamadaIa`: as chamadas do dia e os tokens de entrada e saída do mês, no fuso `Ia:FusoHorarioCota` (padrão `America/Sao_Paulo`).
+4. Acima do limite, a API não chama o provedor, não grava `ChamadaIa` e responde HTTP 429 com o motivo. O fluxo segue sem IA.
+5. A verificação e a chamada não são atômicas: pedidos simultâneos podem passar um pouco do limite.
+
 ## Parâmetros próprios do provedor
 
 `ParametrosAdicionais` repassa pares chave-valor em `ChatOptions.AdditionalProperties`. Cada adaptador decide o que aceita, então confira antes no SDK do provedor. As funcionalidades não dependem desses parâmetros.

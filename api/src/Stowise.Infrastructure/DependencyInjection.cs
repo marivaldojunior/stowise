@@ -67,6 +67,8 @@ public static class DependencyInjection
         services.AddSingleton<IRegistroChamadasIa, RegistroChamadasIaEf>();
         services.AddSingleton<GatewayIa>();
         services.AddScoped<IConsultaIaService, ConsultaIaService>();
+        services.AddScoped<ICotaIaService, CotaIaService>();
+        services.AddSingleton<IVerificadorCotaIa, VerificadorCotaIa>();
         services.AddScoped<ITemplateImportacaoService, TemplateImportacaoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 

@@ -96,7 +96,7 @@ public class IaLayerTests(StowiseApiFactory factory) : IClassFixture<StowiseApiF
     public async Task Without_a_provider_the_gateway_answers_unavailable_and_records_nothing()
     {
         var registro = new RegistroEmMemoria();
-        var gateway = new GatewayIa(FakeProvedoresIa.Desligada, registro, TimeProvider.System, NullLogger<GatewayIa>.Instance);
+        var gateway = new GatewayIa(FakeProvedoresIa.Desligada, registro, FakeVerificadorCota.Livre, TimeProvider.System, NullLogger<GatewayIa>.Instance);
 
         var resposta = await gateway.SendAsync(new PedidoIa(FuncionalidadeIa.Mapeamento, "v1", [new ChatMessage(ChatRole.User, "oi")], null), CancellationToken.None);
 

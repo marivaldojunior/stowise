@@ -44,6 +44,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<ChamadaIa> ChamadasIa => Set<ChamadaIa>();
 
+    public DbSet<CotaIa> CotasIa => Set<CotaIa>();
+
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)

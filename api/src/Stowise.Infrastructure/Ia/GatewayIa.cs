@@ -17,17 +17,25 @@ internal sealed record PedidoIa(
     Guid? UsuarioId,
     ChatOptions? Opcoes = null);
 
-/// <summary>Resultado de uma chamada. Sem sucesso, a funcionalidade devolve "sem sugestão" e o fluxo segue manual.</summary>
-internal sealed record RespostaIa(bool Sucesso, ChatResponse? Resposta, Guid? ChamadaId)
+/// <summary>
+/// Resultado de uma chamada. Sem sucesso, a funcionalidade devolve "sem sugestão" e o fluxo segue manual. Com a cota
+/// excedida, a funcionalidade responde HTTP 429 com <see cref="MotivoCota"/> (ADR-0004, item 5).
+/// </summary>
+internal sealed record RespostaIa(bool Sucesso, ChatResponse? Resposta, Guid? ChamadaId, string? MotivoCota = null)
 {
     public static readonly RespostaIa Indisponivel = new(false, null, null);
 
     public string? Texto => Resposta?.Text;
+
+    public bool CotaExcedida => MotivoCota is not null;
 }
 
 /// <summary>Resultado de uma chamada com saída estruturada: o valor já validado pelo schema da funcionalidade.</summary>
-internal sealed record RespostaIa<T>(bool Sucesso, T? Valor, Guid? ChamadaId)
-    where T : class;
+internal sealed record RespostaIa<T>(bool Sucesso, T? Valor, Guid? ChamadaId, string? MotivoCota = null)
+    where T : class
+{
+    public bool CotaExcedida => MotivoCota is not null;
+}
 
 /// <summary>
 /// Porta única para os provedores de IA (ADR-0004). Para cada pedido, percorre a cadeia de provedores da
@@ -35,7 +43,12 @@ internal sealed record RespostaIa<T>(bool Sucesso, T? Valor, Guid? ChamadaId)
 /// mesmo provedor com espera exponencial e jitter; outra falha (chave inválida, modelo inexistente, resposta fora do
 /// schema) passa direto para o próximo provedor. O pedido inteiro vira um único <see cref="ChamadaIa"/>.
 /// </summary>
-internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChamadasIa registro, TimeProvider time, ILogger<GatewayIa> logger)
+internal sealed partial class GatewayIa(
+    IProvedoresIa provedores,
+    IRegistroChamadasIa registro,
+    IVerificadorCotaIa cotas,
+    TimeProvider time,
+    ILogger<GatewayIa> logger)
 {
     private static readonly TimeSpan EsperaMaxima = TimeSpan.FromSeconds(10);
 
@@ -65,7 +78,7 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
             },
             cancellationToken);
 
-        return new RespostaIa<T>(resposta.Sucesso, resposta.Sucesso ? valor : null, resposta.ChamadaId);
+        return new RespostaIa<T>(resposta.Sucesso, resposta.Sucesso ? valor : null, resposta.ChamadaId, resposta.MotivoCota);
     }
 
     /// <summary>Espera antes da próxima tentativa: dobra a cada vez, entre 50% e 100% do valor (jitter), até 10 s.</summary>
@@ -167,6 +180,14 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
             return RespostaIa.Indisponivel;
         }
 
+        // Cota antes do provedor: acima do limite, nenhuma chamada sai e nada é registrado (não é uma chamada).
+        // A verificação e a chamada não são atômicas: pedidos simultâneos podem passar um pouco do limite.
+        if (pedido.UsuarioId is { } usuarioId && await cotas.CheckAsync(usuarioId, pedido.Funcionalidade, cancellationToken) is { Excedida: true } uso)
+        {
+            LogQuotaExceeded(pedido.Funcionalidade, usuarioId);
+            return new RespostaIa(false, null, null, DescribeQuota(uso));
+        }
+
         var inicio = time.GetTimestamp();
         var tentativas = 0;
         int? tokensEntrada = null, tokensSaida = null;
@@ -239,6 +260,17 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
         return new RespostaIa(false, null, falha.Id);
     }
 
+    /// <summary>Mensagem para o usuário, no corpo do HTTP 429.</summary>
+    internal static string DescribeQuota(Stowise.Application.Ia.UsoCotaIa uso)
+    {
+        ArgumentNullException.ThrowIfNull(uso);
+
+        var motivo = uso.LimiteChamadasDia is { } chamadas && uso.ChamadasHoje >= chamadas
+            ? $"{uso.ChamadasHoje} de {chamadas} chamadas hoje"
+            : $"{uso.TokensMes} de {uso.LimiteTokensMes} tokens neste mês";
+        return $"Cota de IA atingida ({uso.Origem}): {motivo}. Continue sem a sugestão da IA ou fale com o administrador.";
+    }
+
     private static int? ToInt(long? valor) => valor is null ? null : (int)Math.Min(valor.Value, int.MaxValue);
 
     private int Elapsed(long inicio) => (int)time.GetElapsedTime(inicio).TotalMilliseconds;
@@ -260,6 +292,9 @@ internal sealed partial class GatewayIa(IProvedoresIa provedores, IRegistroChama
         await registro.SaveAsync(chamada);
         return chamada;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "AI quota exceeded for {Funcionalidade} by user {UsuarioId}")]
+    private partial void LogQuotaExceeded(FuncionalidadeIa funcionalidade, Guid usuarioId);
 
     [LoggerMessage(Level = LogLevel.Warning, Message = "AI attempt {Tentativa} for {Funcionalidade} failed on {Provedor} ({Tipo})")]
     private partial void LogAttemptFailed(Exception? exception, FuncionalidadeIa funcionalidade, string provedor, int tentativa, string tipo);

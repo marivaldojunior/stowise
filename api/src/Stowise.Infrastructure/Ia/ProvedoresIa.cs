@@ -25,6 +25,9 @@ public sealed class IaOptions
     /// <summary>Espera antes da segunda tentativa; dobra a cada nova tentativa, com variação aleatória (jitter).</summary>
     public int EsperaInicialMs { get; set; } = 500;
 
+    /// <summary>Fuso (IANA) que define o dia e o mês das cotas de IA.</summary>
+    public string FusoHorarioCota { get; set; } = "America/Sao_Paulo";
+
     /// <summary>Provedores em ordem de preferência: o primeiro é o principal, os seguintes são o fallback.</summary>
     public List<ProvedorIaOptions> Provedores { get; } = [];
 
