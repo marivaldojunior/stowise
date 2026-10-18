@@ -1,7 +1,7 @@
 import { screen } from '@testing-library/react'
 import { HttpError } from './api/mutator'
 import { shouldRetry } from './app/queryClient'
-import { jsonResponse, renderRoute, stubFetch } from './test/renderRoute'
+import { comSessao, jsonResponse, renderRoute, stubFetch } from './test/renderRoute'
 
 afterEach(() => {
   vi.unstubAllGlobals()
@@ -9,18 +9,18 @@ afterEach(() => {
 
 describe('painel', () => {
   it('mostra a página inicial com a API e o banco disponíveis', async () => {
-    const fetchMock = stubFetch(() => jsonResponse({ status: 'Healthy', totalDurationMs: 3.2, checks: [] }))
+    const fetchMock = stubFetch(comSessao(() => jsonResponse({ status: 'Healthy', totalDurationMs: 3.2, checks: [] })))
 
     renderRoute('/')
 
-    expect(screen.getByRole('heading', { name: 'Stowise' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Stowise' })).toBeInTheDocument()
     expect(await screen.findByText('API e banco disponíveis.')).toBeInTheDocument()
     expect(fetchMock).toHaveBeenCalledWith('/health/ready', expect.anything())
     expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
   })
 
   it('avisa quando o banco está fora do ar', async () => {
-    stubFetch(() => jsonResponse({ status: 'Unhealthy', totalDurationMs: 5, checks: [] }, 503))
+    stubFetch(comSessao(() => jsonResponse({ status: 'Unhealthy', totalDurationMs: 5, checks: [] }, 503)))
 
     renderRoute('/')
 
@@ -28,19 +28,19 @@ describe('painel', () => {
   })
 
   it('avisa quando a API não responde', async () => {
-    vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))))
+    stubFetch(comSessao(() => Promise.reject(new TypeError('Failed to fetch'))))
 
     renderRoute('/')
 
     expect(await screen.findByText(/A API não respondeu/)).toBeInTheDocument()
   })
 
-  it('mostra a página não encontrada para um endereço desconhecido', () => {
-    stubFetch(() => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] }))
+  it('mostra a página não encontrada para um endereço desconhecido', async () => {
+    stubFetch(comSessao(() => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] })))
 
     renderRoute('/endereco-que-nao-existe')
 
-    expect(screen.getByRole('heading', { name: 'Página não encontrada' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Página não encontrada' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Voltar para o início' })).toHaveAttribute('href', '/')
   })
 })

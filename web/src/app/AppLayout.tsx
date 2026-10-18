@@ -4,7 +4,9 @@ import { isRouteErrorResponse, NavLink, Outlet, useRouteError } from 'react-rout
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { useAuth } from '@/features/auth/contexto'
 import { cn } from '@/lib/utils'
+import { MenuUsuario } from './MenuUsuario'
 import { navegacao } from './navegacao'
 import { SeletorTema } from './SeletorTema'
 
@@ -12,11 +14,17 @@ function Marca() {
   return <span className="text-base font-semibold tracking-tight">Stowise</span>
 }
 
-/** Links do menu principal. Na tela pequena, fechar o menu depois do clique (onNavegar). */
+/**
+ * Links do menu principal, só os que os perfis do usuário podem usar. Na tela pequena, fechar o menu depois do
+ * clique (onNavegar).
+ */
 function MenuPrincipal({ onNavegar }: { onNavegar?: () => void }) {
+  const { temPerfil } = useAuth()
+  const itens = navegacao.filter(({ perfis }) => !perfis || temPerfil(...perfis))
+
   return (
     <nav aria-label="Principal" className="flex flex-col gap-1">
-      {navegacao.map(({ rotulo, icone: Icone, para }) =>
+      {itens.map(({ rotulo, icone: Icone, para }) =>
         para ? (
           <NavLink
             key={rotulo}
@@ -51,7 +59,7 @@ function MenuPrincipal({ onNavegar }: { onNavegar?: () => void }) {
   )
 }
 
-/** Layout base: barra lateral no desktop, menu em painel lateral no celular e seletor de tema no topo. */
+/** Layout base: barra lateral no desktop, menu em painel lateral no celular, tema e usuário no topo. */
 export function AppLayout() {
   const [menuAberto, setMenuAberto] = useState(false)
 
@@ -83,8 +91,9 @@ export function AppLayout() {
           <span className="md:hidden">
             <Marca />
           </span>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-1">
             <SeletorTema />
+            <MenuUsuario />
           </div>
         </header>
 

@@ -1,9 +1,9 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { jsonResponse, renderRoute, stubFetch } from '../test/renderRoute'
+import { comSessao, jsonResponse, renderRoute, stubFetch } from '../test/renderRoute'
 
 beforeEach(() => {
-  stubFetch(() => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] }))
+  stubFetch(comSessao(() => jsonResponse({ status: 'Healthy', totalDurationMs: 1, checks: [] }), ['Admin']))
 })
 
 afterEach(() => {
@@ -13,10 +13,10 @@ afterEach(() => {
 })
 
 describe('layout base', () => {
-  it('mostra as seções futuras desabilitadas, com "em breve"', () => {
+  it('mostra as seções futuras desabilitadas, com "em breve"', async () => {
     renderRoute('/')
 
-    const menu = screen.getByRole('navigation', { name: 'Principal' })
+    const menu = await screen.findByRole('navigation', { name: 'Principal' })
     expect(within(menu).getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
     const catalogo = within(menu).getByText('Catálogo').closest('[aria-disabled]')
     expect(catalogo).toHaveAttribute('aria-disabled', 'true')
@@ -27,7 +27,7 @@ describe('layout base', () => {
     const user = userEvent.setup()
     renderRoute('/')
 
-    await user.click(screen.getByRole('button', { name: 'Mudar o tema' }))
+    await user.click(await screen.findByRole('button', { name: 'Mudar o tema' }))
     await user.click(await screen.findByRole('menuitemradio', { name: 'Escuro' }))
 
     await waitFor(() => expect(document.documentElement).toHaveClass('dark'))
@@ -38,7 +38,7 @@ describe('layout base', () => {
     const user = userEvent.setup()
     renderRoute('/')
 
-    await user.click(screen.getByRole('button', { name: 'Abrir o menu' }))
+    await user.click(await screen.findByRole('button', { name: 'Abrir o menu' }))
     const painel = await screen.findByRole('dialog')
     await user.click(within(painel).getByRole('link', { name: 'Início' }))
 

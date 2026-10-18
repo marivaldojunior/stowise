@@ -1,4 +1,5 @@
 import '@testing-library/jest-dom/vitest'
+import { limparSessao } from '@/features/auth/sessao'
 
 // O jsdom não implementa estas APIs do navegador. O tema do painel usa matchMedia (tema do sistema) e os componentes
 // do Radix usam ResizeObserver, captura de ponteiro e scrollIntoView.
@@ -46,3 +47,8 @@ globalThis.ResizeObserver ??= class {
 Element.prototype.hasPointerCapture ??= () => false
 Element.prototype.releasePointerCapture ??= () => {}
 Element.prototype.scrollIntoView ??= () => {}
+
+// A sessão fica num módulo (memória do navegador). Cada teste começa sem sessão.
+afterEach(() => {
+  limparSessao()
+})

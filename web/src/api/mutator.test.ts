@@ -54,6 +54,15 @@ describe('apiFetch', () => {
     await expect(apiFetch('/api/v1/categorias')).rejects.toMatchObject({ status: 0 })
   })
 
+  it.each([502, 504])('trata o %i do proxy, sem ProblemDetails, como API fora do ar', async (status) => {
+    stubFetch(() => new Response('Bad Gateway', { status }))
+
+    await expect(apiFetch('/api/v1/categorias')).rejects.toMatchObject({
+      status,
+      message: 'A API não respondeu. Confira se ela está rodando.',
+    })
+  })
+
   it('repassa o cancelamento sem transformar em erro de rede', async () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.reject(new DOMException('aborted', 'AbortError'))))
 
