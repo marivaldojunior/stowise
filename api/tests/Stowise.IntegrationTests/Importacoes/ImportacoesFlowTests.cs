@@ -165,7 +165,10 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     [DockerFact]
     public async Task Mapping_is_checked_against_the_file_columns()
     {
-        var semCabecalho = await CreatedAsync("sem-cabecalho.csv", "A1;Arroz 5kg;UN\nB2;Feijão 1kg;UN\n");
+        // O código numérico na primeira linha mostra que ela é dado, não cabeçalho: o arquivo fica sem fingerprint.
+        var semCabecalho = await CreatedAsync("sem-cabecalho.csv", "1001;Arroz 5kg;UN\n1002;Feijão 1kg;UN\n");
+        Assert.False(semCabecalho.Layout.TemCabecalho);
+        Assert.Null(semCabecalho.Fingerprint);
         object[] mapeamento = [new { campo = "sku", coluna = 0 }, new { campo = "descricao", coluna = 1 }, new { campo = "unidadeBase", coluna = 3 }];
 
         var foraDoArquivo = await _client.PutAsJsonAsync($"/api/v1/importacoes/{semCabecalho.Id}/mapeamento", new { colunas = mapeamento, versao = semCabecalho.Versao });
