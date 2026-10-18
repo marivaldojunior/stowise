@@ -2,6 +2,7 @@ import type { RouteObject } from 'react-router'
 import { PERFIS_GESTAO, Perfis } from '../features/auth/contexto'
 import { ExigePerfil, RotaProtegida } from '../features/auth/RotaProtegida'
 import { CatalogoPage } from '../pages/CatalogoPage'
+import { EnderecosPage } from '../pages/EnderecosPage'
 import { InicioPage } from '../pages/InicioPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NaoEncontradaPage } from '../pages/NaoEncontradaPage'
@@ -32,6 +33,7 @@ export const routes: RouteObject[] = [
         ),
       },
       { path: 'catalogo/:id', element: <ProdutoPage /> },
+      { path: 'enderecos', element: <EnderecosPage /> },
       {
         path: 'usuarios',
         element: (

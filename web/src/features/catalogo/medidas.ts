@@ -1,5 +1,6 @@
 import type { EmbalagemDetalhe, EmbalagemMedidas } from '@/api/gerado/modelos'
 import type { Falha } from '@/api/falha'
+import { lerNumero } from '@/lib/numeros'
 
 /** Medidas de uma embalagem como texto dos campos (vazio = não informado). */
 export interface MedidasTexto {
@@ -26,12 +27,6 @@ export function medidasDe(embalagem: EmbalagemDetalhe): MedidasTexto {
     larguraCm: texto(embalagem.larguraCm),
     comprimentoCm: texto(embalagem.comprimentoCm),
   }
-}
-
-/** Número digitado com vírgula ou ponto decimal. Vazio vira null; texto que não é número vira NaN. */
-export function lerNumero(valor: string): number | null {
-  const limpo = valor.trim().replace(',', '.')
-  return limpo === '' ? null : Number(limpo)
 }
 
 /**

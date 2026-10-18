@@ -19,8 +19,9 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CamposMedidas } from './CamposMedidas'
-import { ehFalha, lerNumero, MEDIDAS_VAZIAS, type MedidasTexto, medidasDe, medidasParaApi } from './medidas'
+import { ehFalha, MEDIDAS_VAZIAS, type MedidasTexto, medidasDe, medidasParaApi } from './medidas'
 import { ROTULO_EMBALAGEM } from './rotulos'
+import { lerNumero } from '@/lib/numeros'
 
 interface Props {
   produto: ProdutoDetalhe

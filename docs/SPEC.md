@@ -301,7 +301,7 @@ Regras de ordem:
 - [x] Gestão de usuários e perfis (Admin)
 - [x] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
 - [x] Catálogo: lista com filtros, formulário de produto e embalagens
-- [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
+- [x] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
 - [ ] Saldos e extrato de movimentações
 - [ ] Upload de arquivo e revisão do mapeamento sugerido
 - [ ] Prévia com erros linha a linha e progresso em tempo real

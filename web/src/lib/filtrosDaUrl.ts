@@ -27,17 +27,20 @@ export function useFiltrosDaUrl() {
     return Number(params.get('pagina') ?? '1') || 1
   }
 
-  function mudar(nome: string, valor: string | undefined) {
+  /** Muda vários filtros numa só navegação (duas chamadas seguidas perderiam a primeira mudança). */
+  function mudarVarios(valores: Record<string, string | undefined>) {
     setParams(
       (atuais) => {
         const novos = new URLSearchParams(atuais)
-        if (valor === undefined || valor === '' || valor === TODOS) {
-          novos.delete(nome)
-        } else {
-          novos.set(nome, valor)
+        for (const [nome, valor] of Object.entries(valores)) {
+          if (valor === undefined || valor === '' || valor === TODOS) {
+            novos.delete(nome)
+          } else {
+            novos.set(nome, valor)
+          }
         }
 
-        if (nome !== 'pagina') {
+        if (!('pagina' in valores)) {
           novos.delete('pagina')
         }
 
@@ -47,7 +50,11 @@ export function useFiltrosDaUrl() {
     )
   }
 
-  return { texto, booleano, pagina, mudar }
+  function mudar(nome: string, valor: string | undefined) {
+    mudarVarios({ [nome]: valor })
+  }
+
+  return { texto, booleano, pagina, mudar, mudarVarios }
 }
 
 /** Texto da busca na tela, aplicado ao filtro da URL depois da espera. */
