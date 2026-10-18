@@ -36,7 +36,7 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
 
     public ImportacoesFlowTests(PostgresFixture postgres)
     {
-        _factory = StowiseApiFactory.WithDatabase(postgres, AdminEmail, AdminPassword);
+        _factory = StowiseApiFactory.WithDatabase(postgres, AdminEmail, AdminPassword, jobs: true);
         _client = _factory.CreateClient(new WebApplicationFactoryClientOptions { HandleCookies = false });
     }
 

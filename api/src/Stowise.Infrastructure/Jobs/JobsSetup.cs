@@ -94,6 +94,9 @@ internal static class JobsSetup
                 server.WorkerCount = Math.Max(1, options.Workers);
                 server.Queues = Filas.Todas;
                 server.SchedulePollingInterval = TimeSpan.FromSeconds(options.PollIntervalSeconds);
+
+                // Abaixo do limite de parada do host (30 s): um job interrompido volta para a fila e roda de novo.
+                server.ShutdownTimeout = TimeSpan.FromSeconds(10);
             });
         }
 

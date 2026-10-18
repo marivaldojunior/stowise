@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Npgsql;
 
 namespace Stowise.IntegrationTests.Infrastructure;
 
@@ -34,16 +35,33 @@ public class StowiseApiFactory : WebApplicationFactory<Program>
     }
 
     /// <summary>API ligada a um banco novo do contêiner, com migrations e um Admin criado na inicialização.</summary>
-    public static StowiseApiFactory WithDatabase(PostgresFixture postgres, string adminEmail, string adminPassword) => new()
+    /// <param name="jobs">
+    /// Sobe o servidor do Hangfire. Só para os testes que esperam um job: cada servidor mantém várias conexões
+    /// abertas, e o PostgreSQL do contêiner tem limite de conexões.
+    /// </param>
+    public static StowiseApiFactory WithDatabase(PostgresFixture postgres, string adminEmail, string adminPassword, bool jobs = false) => new()
     {
         ConnectionString = postgres.CreateDatabaseConnectionString(),
         Settings =
         {
             ["Database:MigrateOnStartup"] = "true",
-            ["Jobs:Enabled"] = "true",
+            ["Jobs:Enabled"] = jobs ? "true" : "false",
+            ["Jobs:Workers"] = "1",
             ["Jobs:PollIntervalSeconds"] = "0.5",
             ["AdminBootstrap:Email"] = adminEmail,
             ["AdminBootstrap:Password"] = adminPassword,
         },
     };
+
+    /// <summary>
+    /// Fecha as conexões ociosas do banco deste teste. Cada teste usa um banco novo, então o pool de cada um
+    /// ficaria aberto até o fim da execução e esgotaria o limite de conexões do PostgreSQL.
+    /// </summary>
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        using var conexao = new NpgsqlConnection(ConnectionString);
+        NpgsqlConnection.ClearPool(conexao);
+        GC.SuppressFinalize(this);
+    }
 }
