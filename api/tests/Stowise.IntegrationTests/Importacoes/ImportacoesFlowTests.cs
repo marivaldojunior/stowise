@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -124,11 +125,84 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     }
 
     [DockerFact]
+    public async Task Confirmed_mapping_becomes_a_template_that_maps_the_next_file_with_the_same_header()
+    {
+        var primeira = await CreatedAsync("fornecedor-a.csv", "SKU;Descrição;Unidade;GTIN\nA1;Arroz 5kg;UN;7891000100103\n");
+        Assert.Null(primeira.Mapeamento);
+        Assert.NotNull(primeira.Fingerprint);
+
+        object[] mapeamento = [new { campo = "sku", coluna = 0 }, new { campo = "descricao", coluna = 1 }, new { campo = "unidadeBase", coluna = 2 }, new { campo = "gtin", coluna = 3 }];
+        var confirmada = await ConfirmAsync(primeira.Id, new { colunas = mapeamento, salvarTemplate = true, nomeTemplate = "Fornecedor A", versao = primeira.Versao });
+        Assert.NotNull(confirmada.TemplateId);
+        Assert.NotNull(confirmada.MapeamentoConfirmadoPor);
+
+        var segunda = await CreatedAsync("fornecedor-a-outubro.csv", "sku;descricao;UNIDADE;gtin\nB2;Feijão 1kg;UN;7891000053508\n");
+        Assert.Equal(confirmada.TemplateId, segunda.TemplateId);
+        Assert.Equal(confirmada.Mapeamento, segunda.Mapeamento);
+        Assert.Null(segunda.MapeamentoConfirmadoPor);
+
+        var desatualizada = await _client.PutAsJsonAsync($"/api/v1/importacoes/{segunda.Id}/mapeamento", new { colunas = mapeamento, versao = segunda.Versao + 1 });
+        Assert.Equal(HttpStatusCode.Conflict, desatualizada.StatusCode);
+
+        var segundaConfirmada = await ConfirmAsync(segunda.Id, new { colunas = mapeamento, salvarTemplate = false, versao = segunda.Versao });
+        await ConfirmAsync(segunda.Id, new { colunas = mapeamento, salvarTemplate = false, versao = segundaConfirmada.Versao });
+
+        var template = (await _client.GetFromJsonAsync<TemplateDetalhe>($"/api/v1/importacoes/templates/{confirmada.TemplateId}", Json))!;
+        Assert.Equal(("Fornecedor A", 2), (template.Nome, template.VezesUsado));
+
+        var renomeado = await _client.PutAsJsonAsync($"/api/v1/importacoes/templates/{template.Id}", new { nome = "Fornecedor A (CSV)", versao = template.Versao });
+        Assert.Equal(HttpStatusCode.OK, renomeado.StatusCode);
+        var lista = (await _client.GetFromJsonAsync<PagedResult<TemplateDetalhe>>("/api/v1/importacoes/templates?tipo=Produtos", Json))!;
+        Assert.Equal("Fornecedor A (CSV)", Assert.Single(lista.Itens).Nome);
+
+        var excluido = await _client.DeleteAsync(new Uri($"/api/v1/importacoes/templates/{template.Id}", UriKind.Relative));
+        Assert.Equal(HttpStatusCode.NoContent, excluido.StatusCode);
+        var depois = (await _client.GetFromJsonAsync<ImportacaoDetalhe>($"/api/v1/importacoes/{segunda.Id}", Json))!;
+        Assert.Null(depois.TemplateId);
+        Assert.Equal(confirmada.Mapeamento, depois.Mapeamento);
+    }
+
+    [DockerFact]
+    public async Task Mapping_is_checked_against_the_file_columns()
+    {
+        var semCabecalho = await CreatedAsync("sem-cabecalho.csv", "A1;Arroz 5kg;UN\nB2;Feijão 1kg;UN\n");
+        object[] mapeamento = [new { campo = "sku", coluna = 0 }, new { campo = "descricao", coluna = 1 }, new { campo = "unidadeBase", coluna = 3 }];
+
+        var foraDoArquivo = await _client.PutAsJsonAsync($"/api/v1/importacoes/{semCabecalho.Id}/mapeamento", new { colunas = mapeamento, versao = semCabecalho.Versao });
+        var semTemplate = await _client.PutAsJsonAsync($"/api/v1/importacoes/{semCabecalho.Id}/mapeamento", new
+        {
+            colunas = mapeamento.Take(2).Append(new { campo = "unidadeBase", coluna = 2 }),
+            salvarTemplate = true,
+            versao = semCabecalho.Versao,
+        });
+
+        Assert.Equal(HttpStatusCode.BadRequest, foraDoArquivo.StatusCode);
+        Assert.Equal(["colunas[2].coluna"], (await foraDoArquivo.Content.ReadFromJsonAsync<HttpValidationProblemDetails>())!.Errors.Keys);
+        Assert.Equal(HttpStatusCode.BadRequest, semTemplate.StatusCode);
+        Assert.Equal(["salvarTemplate"], (await semTemplate.Content.ReadFromJsonAsync<HttpValidationProblemDetails>())!.Errors.Keys);
+        Assert.Equal(0, await QueryAsync(db => db.TemplatesImportacao.CountAsync()));
+    }
+
+    [DockerFact]
     public async Task Unknown_import_is_not_found()
     {
         var response = await _client.GetAsync(new Uri($"/api/v1/importacoes/{Guid.NewGuid()}", UriKind.Relative));
 
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    private async Task<ImportacaoDetalhe> CreatedAsync(string nome, string texto)
+    {
+        var response = await UploadAsync(nome, Encoding.UTF8.GetBytes(texto));
+        Assert.True(response.StatusCode == HttpStatusCode.Created, await response.Content.ReadAsStringAsync());
+        return (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!;
+    }
+
+    private async Task<ImportacaoDetalhe> ConfirmAsync(Guid id, object body)
+    {
+        var response = await _client.PutAsJsonAsync($"/api/v1/importacoes/{id}/mapeamento", body);
+        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        return (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!;
     }
 
     private Task<HttpResponseMessage> UploadAsync(string nome, byte[] conteudo) =>

@@ -37,6 +37,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<ArquivoImportacao> ArquivosImportacao => Set<ArquivoImportacao>();
 
+    public DbSet<TemplateImportacao> TemplatesImportacao => Set<TemplateImportacao>();
+
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 
     protected override void OnModelCreating(ModelBuilder builder)

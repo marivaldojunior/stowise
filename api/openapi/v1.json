@@ -4574,6 +4574,468 @@
           }
         ]
       }
+    },
+    "/api/v1/importacoes/produtos/campos": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Campos de destino da importação de produtos, para montar o mapeamento.",
+        "operationId": "ListarCamposImportacaoProdutos",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CampoImportacao"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/{id}/mapeamento": {
+      "put": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Confirma qual coluna do arquivo preenche cada campo. Com salvarTemplate, o próximo arquivo igual já chega mapeado.",
+        "operationId": "ConfirmarMapeamentoImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmarMapeamento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/templates": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "operationId": "ListarTemplatesImportacao",
+        "parameters": [
+          {
+            "name": "tipo",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TipoImportacao"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfTemplateDetalhe"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/templates/{id}": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "operationId": "ObterTemplateImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Importação"
+        ],
+        "operationId": "RenomearTemplateImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RenomearTemplate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Exclui o template. As importações que o usaram mantêm o mapeamento confirmado.",
+        "operationId": "ExcluirTemplateImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4860,6 +5322,25 @@
           }
         }
       },
+      "CampoImportacao": {
+        "required": [
+          "nome",
+          "descricao",
+          "obrigatorio"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "obrigatorio": {
+            "type": "boolean"
+          }
+        }
+      },
       "CategoriaDetalhe": {
         "required": [
           "id",
@@ -4931,6 +5412,43 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "ConfirmarMapeamento": {
+        "required": [
+          "colunas",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "colunas": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MapeamentoColuna"
+            }
+          },
+          "versao": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
+          },
+          "salvarTemplate": {
+            "type": "boolean",
+            "default": false
+          },
+          "nomeTemplate": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5936,7 +6454,13 @@
           "totalLinhas",
           "usuarioId",
           "iniciadoEm",
-          "concluidoEm"
+          "concluidoEm",
+          "fingerprint",
+          "templateId",
+          "mapeamento",
+          "mapeamentoConfirmadoPor",
+          "mapeamentoConfirmadoEm",
+          "versao"
         ],
         "type": "object",
         "properties": {
@@ -5998,6 +6522,50 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "fingerprint": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "templateId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "mapeamento": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/MapeamentoColuna"
+            }
+          },
+          "mapeamentoConfirmadoPor": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "mapeamentoConfirmadoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "versao": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
           }
         }
       },
@@ -6154,6 +6722,26 @@
               "string"
             ],
             "format": "date"
+          }
+        }
+      },
+      "MapeamentoColuna": {
+        "required": [
+          "campo",
+          "coluna"
+        ],
+        "type": "object",
+        "properties": {
+          "campo": {
+            "type": "string"
+          },
+          "coluna": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -6570,6 +7158,55 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/SaldoNaData"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfTemplateDetalhe": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TemplateDetalhe"
             }
           },
           "pagina": {
@@ -7181,6 +7818,30 @@
           }
         }
       },
+      "RenomearTemplate": {
+        "required": [
+          "nome",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "nome": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "versao": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
       "ReservaDetalhe": {
         "required": [
           "id",
@@ -7601,6 +8262,96 @@
           "Cancelada",
           "Consumida"
         ]
+      },
+      "TemplateDetalhe": {
+        "required": [
+          "id",
+          "tipo",
+          "nome",
+          "fingerprint",
+          "formato",
+          "encoding",
+          "delimitador",
+          "separadorDecimal",
+          "mapeamento",
+          "sugeridoPorIa",
+          "confirmadoPor",
+          "confirmadoEm",
+          "vezesUsado",
+          "ultimoUsoEm",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoImportacao"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "fingerprint": {
+            "type": "string"
+          },
+          "formato": {
+            "$ref": "#/components/schemas/FormatoArquivo"
+          },
+          "encoding": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "delimitador": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "separadorDecimal": {
+            "type": "string"
+          },
+          "mapeamento": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MapeamentoColuna"
+            }
+          },
+          "sugeridoPorIa": {
+            "type": "boolean"
+          },
+          "confirmadoPor": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirmadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "vezesUsado": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ultimoUsoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versao": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
+          }
+        }
       },
       "TipoEmbalagem": {
         "enum": [

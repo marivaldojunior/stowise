@@ -41,6 +41,8 @@ public class ModelTests
     [InlineData(typeof(Saldo))]
     [InlineData(typeof(Endereco))]
     [InlineData(typeof(Produto))]
+    [InlineData(typeof(Importacao))]
+    [InlineData(typeof(TemplateImportacao))]
     public void Concurrency_version_is_the_xmin_system_column(Type entityType)
     {
         using var db = CreateContext();

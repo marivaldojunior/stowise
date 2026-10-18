@@ -110,6 +110,22 @@ public sealed class Importacao : Entity
 
     public DateTimeOffset? ConcluidoEm { get; private set; }
 
+    /// <summary>Estrutura do arquivo (<see cref="FingerprintLayout"/>). Nula em arquivo delimitado sem cabeçalho.</summary>
+    public string? Fingerprint { get; private set; }
+
+    /// <summary>Template reconhecido pelo fingerprint, que deu a sugestão de mapeamento.</summary>
+    public Guid? TemplateId { get; private set; }
+
+    /// <summary>Sugestão (template ou IA) enquanto <see cref="MapeamentoConfirmadoPor"/> é nulo; depois, o mapeamento confirmado.</summary>
+    public IReadOnlyList<MapeamentoColuna>? Mapeamento { get; private set; }
+
+    public Guid? MapeamentoConfirmadoPor { get; private set; }
+
+    public DateTimeOffset? MapeamentoConfirmadoEm { get; private set; }
+
+    /// <summary>Versão para concorrência otimista (<c>xmin</c>): duas confirmações ao mesmo tempo não podem valer.</summary>
+    public uint Versao { get; private set; }
+
     public static Importacao Create(
         TipoImportacao tipo,
         string nomeArquivo,
@@ -162,10 +178,56 @@ public sealed class Importacao : Entity
             Status = StatusImportacao.Recebido,
             UsuarioId = usuarioId,
             IniciadoEm = agora,
+            Fingerprint = FingerprintLayout.Calculate(layout),
         };
     }
 
     public LayoutArquivo Layout => new(Formato, Encoding, Delimitador, SeparadorDecimal, TemCabecalho, Colunas, Planilha);
+
+    /// <summary>
+    /// Usa o template do mesmo fingerprint: o mapeamento dele vira a sugestão e, no mesmo formato de texto, o
+    /// separador decimal confirmado substitui o detectado (a detecção pode ter caído no padrão por falta de votos).
+    /// </summary>
+    public void ApplyTemplate(TemplateImportacao template)
+    {
+        EnsureMapeamentoAberto();
+        LinkTemplate(template);
+        Mapeamento = template.Mapeamento.Where(m => m.Coluna < Colunas.Count).ToList();
+        if (template.Formato == Formato && Formato != FormatoArquivo.Excel)
+        {
+            SeparadorDecimal = template.SeparadorDecimal;
+        }
+    }
+
+    /// <summary>Liga a importação ao template que guardou o mapeamento confirmado.</summary>
+    public void LinkTemplate(TemplateImportacao template)
+    {
+        ArgumentNullException.ThrowIfNull(template);
+
+        if (template.Tipo != Tipo || template.Fingerprint != Fingerprint)
+        {
+            throw new InvalidOperationException("The template does not match the import structure.");
+        }
+
+        TemplateId = template.Id;
+    }
+
+    /// <summary>A pessoa confirma o mapeamento (sugerido ou feito à mão). Pode confirmar de novo até a validação começar.</summary>
+    public void ConfirmMapeamento(IReadOnlyList<MapeamentoColuna> mapeamento, Guid usuarioId, DateTimeOffset agora)
+    {
+        EnsureMapeamentoAberto();
+        Mapeamento = CamposImportacao.Validate(Tipo, mapeamento, Colunas.Count);
+        MapeamentoConfirmadoPor = usuarioId;
+        MapeamentoConfirmadoEm = agora;
+    }
+
+    private void EnsureMapeamentoAberto()
+    {
+        if (Status is not (StatusImportacao.Recebido or StatusImportacao.Mapeando or StatusImportacao.AguardandoConfirmacao))
+        {
+            throw new DomainException($"O mapeamento não pode mais mudar: a importação está em {Status}.");
+        }
+    }
 }
 
 /// <summary>Conteúdo original do arquivo, separado da importação para não ser carregado nas consultas.</summary>

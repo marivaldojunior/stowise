@@ -280,7 +280,7 @@ Regras de ordem:
 
 - [x] Upload com detecção de encoding, delimitador, separador decimal e layout posicional
 - [x] Leitura de Excel (`.xlsx`), com a mesma detecção de cabeçalho e colunas do texto
-- [ ] Fingerprint do cabeçalho e templates de importação
+- [x] Fingerprint do cabeçalho e templates de importação
 - [ ] Staging, validações determinísticas (GTIN, NCM, unidades) e máquina de estados
 - [ ] ADR de jobs em background (fila durável, retry e agendamento)
 - [ ] Processamento em background com status e progresso consultáveis por endpoint e por SignalR, bulk insert e relatório final

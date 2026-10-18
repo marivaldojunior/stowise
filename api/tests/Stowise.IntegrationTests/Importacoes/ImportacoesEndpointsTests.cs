@@ -4,6 +4,7 @@ using System.Net.Http.Json;
 using Microsoft.AspNetCore.Http;
 using Stowise.Application.Auth;
 using Stowise.Application.Importacoes;
+using Stowise.Domain.Importacoes;
 using Stowise.IntegrationTests.Infrastructure;
 
 namespace Stowise.IntegrationTests.Importacoes;
@@ -24,17 +25,33 @@ public class ImportacoesEndpointsTests(StowiseApiFactory factory) : IClassFixtur
     }
 
     [Theory]
-    [InlineData("/api/v1/importacoes")]
-    [InlineData(Url)]
-    public async Task Operador_cannot_import(string url)
+    [InlineData("GET", "/api/v1/importacoes")]
+    [InlineData("POST", Url)]
+    [InlineData("PUT", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/mapeamento")]
+    [InlineData("GET", "/api/v1/importacoes/templates")]
+    [InlineData("DELETE", "/api/v1/importacoes/templates/0199f0a0-0000-7000-8000-000000000001")]
+    public async Task Operador_cannot_import(string metodo, string url)
     {
         using var client = ClientWith(Perfis.Operador);
+        using var request = new HttpRequestMessage(new HttpMethod(metodo), url)
+        {
+            Content = metodo == "POST" ? Arquivo("a.csv", [0x41]) : metodo == "PUT" ? JsonContent.Create(new { }) : null,
+        };
 
-        var response = url == Url
-            ? await client.PostAsync(new Uri(url, UriKind.Relative), Arquivo("a.csv", [0x41]))
-            : await client.GetAsync(new Uri(url, UriKind.Relative));
+        var response = await client.SendAsync(request);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Product_fields_list_the_required_ones()
+    {
+        using var client = ClientWith(Perfis.Gestor);
+
+        var campos = await client.GetFromJsonAsync<List<CampoImportacao>>("/api/v1/importacoes/produtos/campos");
+
+        Assert.Equal(["sku", "descricao", "unidadeBase"], campos!.Where(c => c.Obrigatorio).Select(c => c.Nome));
+        Assert.Contains(campos!, c => c.Nome == "gtin" && !c.Obrigatorio);
     }
 
     [Fact]

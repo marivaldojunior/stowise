@@ -12,6 +12,13 @@ public interface IImportacaoService
     /// </summary>
     Task<Result<ImportacaoDetalhe>> ReceberAsync(ReceberArquivo comando, Guid usuarioId, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Confirma o mapeamento de colunas. Com <see cref="ConfirmarMapeamento.SalvarTemplate"/>, cria ou atualiza o
+    /// template do fingerprint; sem ele, só conta o uso do template sugerido, se o mapeamento for o mesmo.
+    /// Exige a <see cref="ImportacaoDetalhe.Versao"/> lida.
+    /// </summary>
+    Task<Result<ImportacaoDetalhe>> ConfirmarMapeamentoAsync(Guid id, ConfirmarMapeamento comando, Guid usuarioId, CancellationToken cancellationToken = default);
+
     Task<Result<ImportacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
     /// <summary>Importações mais recentes primeiro.</summary>
@@ -19,6 +26,13 @@ public interface IImportacaoService
 }
 
 public sealed record ReceberArquivo(TipoImportacao Tipo, string? NomeArquivo, byte[]? Conteudo);
+
+/// <param name="NomeTemplate">Nome do template novo; sem ele, vale o nome do arquivo sem a extensão.</param>
+public sealed record ConfirmarMapeamento(
+    IReadOnlyList<MapeamentoColuna>? Colunas,
+    uint? Versao,
+    bool SalvarTemplate = false,
+    string? NomeTemplate = null);
 
 public sealed record ImportacaoFiltro(TipoImportacao? Tipo, StatusImportacao? Status, int? Pagina, int? TamanhoPagina);
 
@@ -33,6 +47,7 @@ public sealed record ImportacaoResumo(
     DateTimeOffset IniciadoEm,
     DateTimeOffset? ConcluidoEm);
 
+/// <param name="Mapeamento">Sugestão enquanto <paramref name="MapeamentoConfirmadoPor"/> é nulo; depois, o confirmado.</param>
 /// <param name="Amostra">Primeiras linhas de dados, sem o cabeçalho, como foram lidas do arquivo.</param>
 public sealed record ImportacaoDetalhe(
     Guid Id,
@@ -46,4 +61,45 @@ public sealed record ImportacaoDetalhe(
     int TotalLinhas,
     Guid UsuarioId,
     DateTimeOffset IniciadoEm,
-    DateTimeOffset? ConcluidoEm);
+    DateTimeOffset? ConcluidoEm,
+    string? Fingerprint,
+    Guid? TemplateId,
+    IReadOnlyList<MapeamentoColuna>? Mapeamento,
+    Guid? MapeamentoConfirmadoPor,
+    DateTimeOffset? MapeamentoConfirmadoEm,
+    uint Versao);
+
+/// <summary>Templates aprendidos nas confirmações de mapeamento. Não há criação direta: o template nasce de uma importação.</summary>
+public interface ITemplateImportacaoService
+{
+    Task<PagedResult<TemplateDetalhe>> ListAsync(TemplateFiltro filtro, CancellationToken cancellationToken = default);
+
+    Task<Result<TemplateDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
+
+    /// <summary>Exige a <see cref="TemplateDetalhe.Versao"/> lida.</summary>
+    Task<Result<TemplateDetalhe>> RenameAsync(Guid id, RenomearTemplate comando, CancellationToken cancellationToken = default);
+
+    /// <summary>As importações que usaram o template continuam com o mapeamento confirmado.</summary>
+    Task<Result> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+}
+
+public sealed record TemplateFiltro(TipoImportacao? Tipo, int? Pagina, int? TamanhoPagina);
+
+public sealed record RenomearTemplate(string? Nome, uint? Versao);
+
+public sealed record TemplateDetalhe(
+    Guid Id,
+    TipoImportacao Tipo,
+    string Nome,
+    string Fingerprint,
+    FormatoArquivo Formato,
+    string? Encoding,
+    string? Delimitador,
+    string SeparadorDecimal,
+    IReadOnlyList<MapeamentoColuna> Mapeamento,
+    bool SugeridoPorIa,
+    Guid ConfirmadoPor,
+    DateTimeOffset ConfirmadoEm,
+    int VezesUsado,
+    DateTimeOffset UltimoUsoEm,
+    uint Versao);

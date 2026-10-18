@@ -40,7 +40,53 @@ public static class ImportacoesEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
+        group.MapGet("/produtos/campos", () => TypedResults.Ok(CamposImportacao.Produtos))
+            .WithName("ListarCamposImportacaoProdutos")
+            .WithSummary("Campos de destino da importação de produtos, para montar o mapeamento.")
+            .Produces<IReadOnlyList<CampoImportacao>>();
+
+        group.MapPut("/{id:guid}/mapeamento", async (Guid id, ConfirmarMapeamento comando, IImportacaoService importacoes, ClaimsPrincipal user, CancellationToken ct) =>
+                (await importacoes.ConfirmarMapeamentoAsync(id, comando, user.GetUsuarioId(), ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("ConfirmarMapeamentoImportacao")
+            .WithSummary("Confirma qual coluna do arquivo preenche cada campo. Com salvarTemplate, o próximo arquivo igual já chega mapeado.")
+            .Produces<ImportacaoDetalhe>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        MapTemplates(group.MapGroup("/templates"));
         return app;
+    }
+
+    private static void MapTemplates(RouteGroupBuilder templates)
+    {
+        templates.MapGet("/", async (ITemplateImportacaoService servico, TipoImportacao? tipo, int? pagina, int? tamanhoPagina, CancellationToken ct) =>
+                TypedResults.Ok(await servico.ListAsync(new TemplateFiltro(tipo, pagina, tamanhoPagina), ct)))
+            .WithName("ListarTemplatesImportacao")
+            .Produces<PagedResult<TemplateDetalhe>>();
+
+        templates.MapGet("/{id:guid}", async (Guid id, ITemplateImportacaoService servico, CancellationToken ct) =>
+                (await servico.GetAsync(id, ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("ObterTemplateImportacao")
+            .Produces<TemplateDetalhe>()
+            .ProducesProblem(StatusCodes.Status404NotFound);
+
+        templates.MapPut("/{id:guid}", async (Guid id, RenomearTemplate comando, ITemplateImportacaoService servico, CancellationToken ct) =>
+                (await servico.RenameAsync(id, comando, ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("RenomearTemplateImportacao")
+            .Produces<TemplateDetalhe>()
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
+        templates.MapDelete("/{id:guid}", async (Guid id, ITemplateImportacaoService servico, CancellationToken ct) =>
+                (await servico.DeleteAsync(id, ct)).ToNoContent())
+            .WithName("ExcluirTemplateImportacao")
+            .WithSummary("Exclui o template. As importações que o usaram mantêm o mapeamento confirmado.")
+            .Produces(StatusCodes.Status204NoContent)
+            .ProducesProblem(StatusCodes.Status404NotFound);
     }
 
     private static async Task<IResult> ImportarProdutosAsync(

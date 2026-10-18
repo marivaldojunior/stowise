@@ -806,6 +806,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("encoding");
 
+                    b.Property<string>("Fingerprint")
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("fingerprint")
+                        .IsFixedLength();
+
                     b.Property<string>("Formato")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -822,6 +828,18 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("IniciadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("iniciado_em");
+
+                    b.Property<string>("Mapeamento")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("mapeamento");
+
+                    b.Property<DateTimeOffset?>("MapeamentoConfirmadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("mapeamento_confirmado_em");
+
+                    b.Property<Guid?>("MapeamentoConfirmadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("mapeamento_confirmado_por");
 
                     b.Property<string>("NomeArquivo")
                         .IsRequired()
@@ -854,6 +872,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("boolean")
                         .HasColumnName("tem_cabecalho");
 
+                    b.Property<Guid?>("TemplateId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("template_id");
+
                     b.Property<string>("Tipo")
                         .IsRequired()
                         .HasMaxLength(30)
@@ -868,11 +890,23 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("usuario_id");
 
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id")
                         .HasName("pk_importacoes");
 
                     b.HasIndex("IniciadoEm")
                         .HasDatabaseName("ix_importacoes_iniciado_em");
+
+                    b.HasIndex("MapeamentoConfirmadoPor")
+                        .HasDatabaseName("ix_importacoes_mapeamento_confirmado_por");
+
+                    b.HasIndex("TemplateId")
+                        .HasDatabaseName("ix_importacoes_template_id");
 
                     b.HasIndex("UsuarioId")
                         .HasDatabaseName("ix_importacoes_usuario_id");
@@ -883,6 +917,97 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasFilter("status <> 'Falhou'");
 
                     b.ToTable("importacoes", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.TemplateImportacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("ConfirmadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmado_em");
+
+                    b.Property<Guid>("ConfirmadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("confirmado_por");
+
+                    b.Property<string>("Delimitador")
+                        .HasMaxLength(1)
+                        .HasColumnType("character varying(1)")
+                        .HasColumnName("delimitador");
+
+                    b.Property<string>("Encoding")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("encoding");
+
+                    b.Property<string>("Fingerprint")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("fingerprint")
+                        .IsFixedLength();
+
+                    b.Property<string>("Formato")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("formato");
+
+                    b.Property<string>("Mapeamento")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("mapeamento");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("nome");
+
+                    b.Property<string>("SeparadorDecimal")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("character varying(1)")
+                        .HasColumnName("separador_decimal");
+
+                    b.Property<bool>("SugeridoPorIa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("sugerido_por_ia");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tipo");
+
+                    b.Property<DateTimeOffset>("UltimoUsoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ultimo_uso_em");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<int>("VezesUsado")
+                        .HasColumnType("integer")
+                        .HasColumnName("vezes_usado");
+
+                    b.HasKey("Id")
+                        .HasName("pk_importacao_templates");
+
+                    b.HasIndex("ConfirmadoPor")
+                        .HasDatabaseName("ix_importacao_templates_confirmado_por");
+
+                    b.HasIndex("Tipo", "Fingerprint")
+                        .IsUnique()
+                        .HasDatabaseName("ix_importacao_templates_tipo_fingerprint");
+
+                    b.ToTable("importacao_templates", (string)null);
                 });
 
             modelBuilder.Entity("Stowise.Infrastructure.Identity.Perfil", b =>
@@ -1319,10 +1444,32 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                 {
                     b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
                         .WithMany()
+                        .HasForeignKey("MapeamentoConfirmadoPor")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_importacoes_usuarios_mapeamento_confirmado_por");
+
+                    b.HasOne("Stowise.Domain.Importacoes.TemplateImportacao", null)
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_importacoes_templates_importacao_template_id");
+
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
                         .HasForeignKey("UsuarioId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_importacoes_usuarios_usuario_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.TemplateImportacao", b =>
+                {
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("ConfirmadoPor")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_importacao_templates_usuarios_confirmado_por");
                 });
 
             modelBuilder.Entity("Stowise.Infrastructure.Identity.RefreshToken", b =>
