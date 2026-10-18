@@ -4332,6 +4332,248 @@
           }
         ]
       }
+    },
+    "/api/v1/importacoes": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "operationId": "ListarImportacoes",
+        "parameters": [
+          {
+            "name": "tipo",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/TipoImportacao"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StatusImportacao"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfImportacaoResumo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/{id}": {
+      "get": {
+        "tags": [
+          "Importação"
+        ],
+        "operationId": "ObterImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacaoDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/importacoes/produtos": {
+      "post": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Envia um arquivo de produtos (CSV ou TXT, delimitado ou posicional). Detecta o layout e guarda o original.",
+        "operationId": "ImportarProdutos",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "arquivo": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -4653,6 +4895,44 @@
           "Inflamavel",
           "Fragil"
         ]
+      },
+      "ColunaArquivo": {
+        "required": [
+          "indice",
+          "nome"
+        ],
+        "type": "object",
+        "properties": {
+          "indice": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nome": {
+            "type": "string"
+          },
+          "inicio": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanho": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       },
       "ConsumirReserva": {
         "required": [
@@ -5379,6 +5659,14 @@
           }
         }
       },
+      "FormatoArquivo": {
+        "enum": [
+          "Delimitado",
+          "Posicional",
+          "Excel",
+          "NFeXml"
+        ]
+      },
       "GeracaoEnderecosResultado": {
         "required": [
           "total",
@@ -5631,6 +5919,180 @@
           }
         }
       },
+      "IFormFile": {
+        "type": "string",
+        "format": "binary"
+      },
+      "ImportacaoDetalhe": {
+        "required": [
+          "id",
+          "tipo",
+          "status",
+          "nomeArquivo",
+          "hashArquivo",
+          "tamanhoBytes",
+          "layout",
+          "amostra",
+          "totalLinhas",
+          "usuarioId",
+          "iniciadoEm",
+          "concluidoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoImportacao"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusImportacao"
+          },
+          "nomeArquivo": {
+            "type": "string"
+          },
+          "hashArquivo": {
+            "type": "string"
+          },
+          "tamanhoBytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/LayoutArquivo"
+          },
+          "amostra": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "totalLinhas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "usuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "iniciadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "concluidoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "ImportacaoResumo": {
+        "required": [
+          "id",
+          "tipo",
+          "formato",
+          "status",
+          "nomeArquivo",
+          "totalLinhas",
+          "usuarioId",
+          "iniciadoEm",
+          "concluidoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoImportacao"
+          },
+          "formato": {
+            "$ref": "#/components/schemas/FormatoArquivo"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusImportacao"
+          },
+          "nomeArquivo": {
+            "type": "string"
+          },
+          "totalLinhas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "usuarioId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "iniciadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "concluidoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "LayoutArquivo": {
+        "required": [
+          "formato",
+          "encoding",
+          "delimitador",
+          "separadorDecimal",
+          "temCabecalho",
+          "colunas"
+        ],
+        "type": "object",
+        "properties": {
+          "formato": {
+            "$ref": "#/components/schemas/FormatoArquivo"
+          },
+          "encoding": {
+            "type": "string"
+          },
+          "delimitador": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "separadorDecimal": {
+            "type": "string"
+          },
+          "temCabecalho": {
+            "type": "boolean"
+          },
+          "colunas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ColunaArquivo"
+            }
+          }
+        }
+      },
       "LoginRequest": {
         "required": [
           "email",
@@ -5854,6 +6316,55 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ExtratoItem"
+            }
+          },
+          "pagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfImportacaoResumo": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportacaoResumo"
             }
           },
           "pagina": {
@@ -7063,6 +7574,18 @@
           "Bloqueado"
         ]
       },
+      "StatusImportacao": {
+        "enum": [
+          "Recebido",
+          "Mapeando",
+          "AguardandoConfirmacao",
+          "Validando",
+          "AguardandoRevisao",
+          "Efetivando",
+          "Concluido",
+          "Falhou"
+        ]
+      },
       "StatusReserva": {
         "enum": [
           "Ativa",
@@ -7075,6 +7598,13 @@
           "Unidade",
           "Caixa",
           "Palete"
+        ]
+      },
+      "TipoImportacao": {
+        "enum": [
+          "Produtos",
+          "NotaFiscal",
+          "BensPatrimoniais"
         ]
       },
       "TipoMovimentacao": {
@@ -7206,6 +7736,9 @@
     },
     {
       "name": "Estrutura física"
+    },
+    {
+      "name": "Importação"
     }
   ]
 }

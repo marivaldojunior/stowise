@@ -4,6 +4,7 @@ using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
 using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
+using Stowise.Domain.Importacoes;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence.Configurations;
 
@@ -31,6 +32,10 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
     public DbSet<Saldo> Saldos => Set<Saldo>();
 
     public DbSet<Reserva> Reservas => Set<Reserva>();
+
+    public DbSet<Importacao> Importacoes => Set<Importacao>();
+
+    public DbSet<ArquivoImportacao> ArquivosImportacao => Set<ArquivoImportacao>();
 
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
 

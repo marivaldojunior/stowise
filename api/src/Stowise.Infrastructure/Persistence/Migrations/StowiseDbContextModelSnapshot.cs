@@ -751,6 +751,136 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("zonas", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Importacoes.ArquivoImportacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("Conteudo")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("conteudo");
+
+                    b.Property<Guid>("ImportacaoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("importacao_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_importacao_arquivos");
+
+                    b.HasIndex("ImportacaoId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_importacao_arquivos_importacao_id");
+
+                    b.ToTable("importacao_arquivos", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.Importacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Amostra")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("amostra");
+
+                    b.Property<string>("Colunas")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("colunas");
+
+                    b.Property<DateTimeOffset?>("ConcluidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("concluido_em");
+
+                    b.Property<string>("Delimitador")
+                        .HasMaxLength(1)
+                        .HasColumnType("character varying(1)")
+                        .HasColumnName("delimitador");
+
+                    b.Property<string>("Encoding")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("encoding");
+
+                    b.Property<string>("Formato")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("formato");
+
+                    b.Property<string>("HashArquivo")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character(64)")
+                        .HasColumnName("hash_arquivo")
+                        .IsFixedLength();
+
+                    b.Property<DateTimeOffset>("IniciadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("iniciado_em");
+
+                    b.Property<string>("NomeArquivo")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("nome_arquivo");
+
+                    b.Property<string>("SeparadorDecimal")
+                        .IsRequired()
+                        .HasMaxLength(1)
+                        .HasColumnType("character varying(1)")
+                        .HasColumnName("separador_decimal");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<long>("TamanhoBytes")
+                        .HasColumnType("bigint")
+                        .HasColumnName("tamanho_bytes");
+
+                    b.Property<bool>("TemCabecalho")
+                        .HasColumnType("boolean")
+                        .HasColumnName("tem_cabecalho");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("tipo");
+
+                    b.Property<int>("TotalLinhas")
+                        .HasColumnType("integer")
+                        .HasColumnName("total_linhas");
+
+                    b.Property<Guid>("UsuarioId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("usuario_id");
+
+                    b.HasKey("Id")
+                        .HasName("pk_importacoes");
+
+                    b.HasIndex("IniciadoEm")
+                        .HasDatabaseName("ix_importacoes_iniciado_em");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("ix_importacoes_usuario_id");
+
+                    b.HasIndex("Tipo", "HashArquivo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_importacoes_tipo_hash_arquivo")
+                        .HasFilter("status <> 'Falhou'");
+
+                    b.ToTable("importacoes", (string)null);
+                });
+
             modelBuilder.Entity("Stowise.Infrastructure.Identity.Perfil", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1169,6 +1299,26 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_zonas_armazens_armazem_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.ArquivoImportacao", b =>
+                {
+                    b.HasOne("Stowise.Domain.Importacoes.Importacao", null)
+                        .WithOne()
+                        .HasForeignKey("Stowise.Domain.Importacoes.ArquivoImportacao", "ImportacaoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_importacao_arquivos_importacoes_importacao_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Importacoes.Importacao", b =>
+                {
+                    b.HasOne("Stowise.Infrastructure.Identity.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_importacoes_usuarios_usuario_id");
                 });
 
             modelBuilder.Entity("Stowise.Infrastructure.Identity.RefreshToken", b =>

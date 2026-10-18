@@ -278,7 +278,8 @@ Regras de ordem:
 
 **1.4 API — Importação de produtos com IA**
 
-- [ ] Upload com detecção de encoding, delimitador, separador decimal e layout posicional
+- [x] Upload com detecção de encoding, delimitador, separador decimal e layout posicional
+- [ ] Leitura de Excel (`.xlsx`), com a mesma detecção de cabeçalho e colunas do texto
 - [ ] Fingerprint do cabeçalho e templates de importação
 - [ ] Staging, validações determinísticas (GTIN, NCM, unidades) e máquina de estados
 - [ ] ADR de jobs em background (fila durável, retry e agendamento)

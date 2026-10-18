@@ -4,6 +4,7 @@ using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
 using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
+using Stowise.Domain.Importacoes;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.IntegrationTests.Persistence;
@@ -61,6 +62,34 @@ public class ModelTests
 
         Assert.True(index.IsUnique);
         Assert.Equal("ix_movimentacoes_idempotency_key", index.GetDatabaseName());
+    }
+
+    [Fact]
+    public void Import_layout_is_jsonb_and_the_same_file_is_unique_unless_the_import_failed()
+    {
+        using var db = CreateContext();
+        var importacao = db.Model.FindEntityType(typeof(Importacao))!;
+
+        Assert.Equal("jsonb", importacao.FindProperty(nameof(Importacao.Colunas))!.GetColumnType());
+        Assert.Equal("jsonb", importacao.FindProperty(nameof(Importacao.Amostra))!.GetColumnType());
+        var index = importacao.GetIndexes().Single(i => i.GetDatabaseName() == "ix_importacoes_tipo_hash_arquivo");
+        Assert.True(index.IsUnique);
+        Assert.Equal("status <> 'Falhou'", index.GetFilter());
+    }
+
+    [Fact]
+    public void Import_columns_survive_the_json_conversion()
+    {
+        using var db = CreateContext();
+        var colunas = db.Model.FindEntityType(typeof(Importacao))!.FindProperty(nameof(Importacao.Colunas))!;
+        var converter = colunas.GetValueConverter()!;
+        IReadOnlyList<ColunaArquivo> original = [new ColunaArquivo(0, "SKU", 0, 8), new ColunaArquivo(1, "Descrição")];
+
+        var json = (string)converter.ConvertToProvider(original)!;
+        var lido = (IReadOnlyList<ColunaArquivo>)converter.ConvertFromProvider(json)!;
+
+        Assert.Equal(original, lido);
+        Assert.True(colunas.GetValueComparer().Equals(original, lido));
     }
 
     [Fact]

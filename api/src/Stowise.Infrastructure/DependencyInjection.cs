@@ -8,11 +8,13 @@ using Stowise.Application.Auth;
 using Stowise.Application.Catalogo;
 using Stowise.Application.Estoque;
 using Stowise.Application.Estrutura;
+using Stowise.Application.Importacoes;
 using Stowise.Application.Usuarios;
 using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Estoque;
 using Stowise.Infrastructure.Estrutura;
 using Stowise.Infrastructure.Identity;
+using Stowise.Infrastructure.Importacoes;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure;
@@ -44,6 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IMovimentacaoService, MovimentacaoService>();
         services.AddScoped<IReservaService, ReservaService>();
         services.AddScoped<IConsultaEstoqueService, ConsultaEstoqueService>();
+        services.AddScoped<IImportacaoService, ImportacaoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 
         services.AddIdentityAndJwt();
