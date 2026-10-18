@@ -38,7 +38,8 @@ $env:STOWISE_UPDATE_CONTRACT='true'; dotnet test --filter OpenApiContract; Remov
 # Migrations (em api/; rode dotnet tool restore uma vez)
 dotnet ef migrations add <Nome> -p src/Stowise.Infrastructure -s src/Stowise.Infrastructure -o Persistence/Migrations
 
-# Web (em web/)
+# Web (em web/): o Vite repassa /api, /health e /hubs para a API (padrão http://localhost:5073;
+# com docker compose, STOWISE_API_URL=http://localhost:8080 npm run dev)
 npm run lint && npm run typecheck && npm test && npm run build
 
 # Mobile (em mobile/)
