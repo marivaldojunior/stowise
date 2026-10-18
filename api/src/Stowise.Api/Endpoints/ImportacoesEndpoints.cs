@@ -46,10 +46,11 @@ public static class ImportacoesEndpoints
             .Produces<IReadOnlyList<CampoImportacao>>();
 
         group.MapPut("/{id:guid}/mapeamento", async (Guid id, ConfirmarMapeamento comando, IImportacaoService importacoes, ClaimsPrincipal user, CancellationToken ct) =>
-                (await importacoes.ConfirmarMapeamentoAsync(id, comando, user.GetUsuarioId(), ct)).ToHttpResult(TypedResults.Ok))
+                (await importacoes.ConfirmarMapeamentoAsync(id, comando, user.GetUsuarioId(), ct))
+                    .ToHttpResult(i => TypedResults.Accepted($"/api/v1/importacoes/{i.Id}", i)))
             .WithName("ConfirmarMapeamentoImportacao")
-            .WithSummary("Confirma qual coluna preenche cada campo e valida as linhas (staging). Com salvarTemplate, o próximo arquivo igual já chega mapeado.")
-            .Produces<ImportacaoDetalhe>()
+            .WithSummary("Confirma qual coluna preenche cada campo e agenda a validação das linhas (staging) em background. Acompanhe pelo GET da importação ou pelo hub /hubs/importacoes. Com salvarTemplate, o próximo arquivo igual já chega mapeado.")
+            .Produces<ImportacaoDetalhe>(StatusCodes.Status202Accepted)
             .ProducesValidationProblem()
             .ProducesProblem(StatusCodes.Status404NotFound)
             .ProducesProblem(StatusCodes.Status409Conflict)

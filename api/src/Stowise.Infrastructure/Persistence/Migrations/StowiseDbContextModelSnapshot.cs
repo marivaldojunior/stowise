@@ -837,6 +837,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("linhas_possivel_duplicata");
 
+                    b.Property<int>("LinhasProcessadas")
+                        .HasColumnType("integer")
+                        .HasColumnName("linhas_processadas");
+
                     b.Property<int>("LinhasValidas")
                         .HasColumnType("integer")
                         .HasColumnName("linhas_validas");

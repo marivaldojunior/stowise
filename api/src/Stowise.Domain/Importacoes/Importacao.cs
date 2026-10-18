@@ -134,6 +134,9 @@ public sealed class Importacao : Entity
 
     public int LinhasPossivelDuplicata { get; private set; }
 
+    /// <summary>Linhas já tratadas na etapa em andamento (staging), para o progresso.</summary>
+    public int LinhasProcessadas { get; private set; }
+
     public string? MotivoFalha { get; private set; }
 
     public static Importacao Create(
@@ -234,8 +237,15 @@ public sealed class Importacao : Entity
         Mapeamento = CamposImportacao.Validate(Tipo, mapeamento, Colunas.Count);
         MapeamentoConfirmadoPor = usuarioId;
         MapeamentoConfirmadoEm = agora;
-        (LinhasValidas, LinhasComErro, LinhasPossivelDuplicata) = (0, 0, 0);
+        (LinhasValidas, LinhasComErro, LinhasPossivelDuplicata, LinhasProcessadas) = (0, 0, 0, 0);
         Status = StatusImportacao.Validando;
+    }
+
+    /// <summary>Andamento do staging em background, para o painel mostrar o progresso.</summary>
+    public void ReportProgress(int processadas)
+    {
+        EnsureStatus(StatusImportacao.Validando);
+        LinhasProcessadas = Math.Clamp(processadas, 0, TotalLinhas);
     }
 
     /// <summary>O staging terminou: as contagens vêm das linhas gravadas e a importação vai para a revisão.</summary>
@@ -248,6 +258,7 @@ public sealed class Importacao : Entity
         }
 
         (LinhasValidas, LinhasComErro, LinhasPossivelDuplicata) = (validas, comErro, possivelDuplicata);
+        LinhasProcessadas = validas + comErro + possivelDuplicata;
         Status = StatusImportacao.AguardandoRevisao;
     }
 

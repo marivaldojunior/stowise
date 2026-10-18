@@ -15,6 +15,7 @@ using Stowise.Infrastructure.Estoque;
 using Stowise.Infrastructure.Estrutura;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Importacoes;
+using Stowise.Infrastructure.Jobs;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure;
@@ -25,6 +26,9 @@ public static class DependencyInjection
 
     /// <summary>Tag dos health checks de dependências, usados em <c>/health/ready</c>.</summary>
     public const string ReadyTag = "ready";
+
+    /// <summary>Prefixo dos hubs SignalR, que aceitam o token na query string.</summary>
+    public const string HubsPath = "/hubs";
 
     public static IServiceCollection AddInfrastructure(this IServiceCollection services)
     {
@@ -48,6 +52,7 @@ public static class DependencyInjection
         services.AddScoped<IConsultaEstoqueService, ConsultaEstoqueService>();
         services.AddScoped<IImportacaoService, ImportacaoService>();
         services.AddScoped<StagingProdutos>();
+        services.AddJobs();
         services.AddScoped<ITemplateImportacaoService, TemplateImportacaoService>();
         services.AddHealthChecks().AddDbContextCheck<StowiseDbContext>("database", tags: [ReadyTag]);
 
@@ -55,6 +60,10 @@ public static class DependencyInjection
 
         return services;
     }
+
+    /// <summary>Servidor de jobs no processo (ADR-0007), ligado por <c>Jobs:Enabled</c>.</summary>
+    public static IServiceCollection AddJobsServer(this IServiceCollection services, IConfiguration configuration) =>
+        JobsSetup.AddJobsServer(services, configuration);
 
     public static async Task InitializeDatabaseAsync(this IServiceProvider services, CancellationToken cancellationToken = default)
     {
@@ -93,6 +102,20 @@ public static class DependencyInjection
             .Configure<IOptions<JwtOptions>>((bearer, jwt) =>
             {
                 bearer.MapInboundClaims = false;
+
+                // SignalR por WebSocket não envia o cabeçalho Authorization: o token vem em access_token, só nos hubs.
+                bearer.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        if (context.Request.Path.StartsWithSegments(HubsPath) && context.Request.Query["access_token"] is [{ Length: > 0 } token])
+                        {
+                            context.Token = token;
+                        }
+
+                        return Task.CompletedTask;
+                    },
+                };
                 bearer.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidIssuer = jwt.Value.Issuer,

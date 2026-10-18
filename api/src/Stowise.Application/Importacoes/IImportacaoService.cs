@@ -65,6 +65,7 @@ public sealed record ImportacaoResumo(
     DateTimeOffset IniciadoEm,
     DateTimeOffset? ConcluidoEm);
 
+/// <param name="LinhasProcessadas">Andamento do staging em background (de 0 a <paramref name="TotalLinhas"/>).</param>
 /// <param name="Mapeamento">Sugestão enquanto <paramref name="MapeamentoConfirmadoPor"/> é nulo; depois, o confirmado.</param>
 /// <param name="Amostra">Primeiras linhas de dados, sem o cabeçalho, como foram lidas do arquivo.</param>
 public sealed record ImportacaoDetalhe(
@@ -88,6 +89,7 @@ public sealed record ImportacaoDetalhe(
     int LinhasValidas,
     int LinhasComErro,
     int LinhasPossivelDuplicata,
+    int LinhasProcessadas,
     string? MotivoFalha,
     uint Versao);
 

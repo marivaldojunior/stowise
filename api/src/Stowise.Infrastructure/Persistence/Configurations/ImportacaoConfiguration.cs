@@ -106,7 +106,8 @@ internal static class JsonColumn
             .HasColumnType("jsonb");
     }
 
-    private static string Serialize<T>(T? value) => JsonSerializer.Serialize(value, Options);
+    /// <summary>O mesmo JSON das colunas, para quem grava sem o EF (COPY em lote).</summary>
+    public static string Serialize<T>(T? value) => JsonSerializer.Serialize(value, Options);
 
     private static T Deserialize<T>(string json) =>
         JsonSerializer.Deserialize<T>(json, Options) ?? throw new InvalidOperationException("Null JSON column value.");

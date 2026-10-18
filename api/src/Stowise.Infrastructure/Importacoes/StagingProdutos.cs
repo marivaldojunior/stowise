@@ -1,22 +1,32 @@
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
+using NpgsqlTypes;
 using Stowise.Application.Importacoes;
 using Stowise.Domain.Importacoes;
 using Stowise.Infrastructure.Persistence;
+using Stowise.Infrastructure.Persistence.Configurations;
 
 namespace Stowise.Infrastructure.Importacoes;
 
 /// <summary>
 /// Monta o staging de uma importação de produtos: lê o arquivo guardado com o layout e o mapeamento confirmados,
-/// normaliza cada linha e cruza com o catálogo (SKU e GTIN existentes, categoria por nome). Substitui as linhas
-/// de uma validação anterior. Quem chama grava tudo numa transação.
+/// normaliza cada linha e cruza com o catálogo (SKU e GTIN existentes, categoria por nome). Roda no job de
+/// background: apaga as linhas de uma execução anterior e grava as novas em lotes com COPY, salvando o progresso
+/// a cada lote. Uma repetição do job recomeça do zero, então o resultado não depende de quantas vezes rodou.
+/// Quem chama salva o resultado final (<see cref="Importacao.CompleteValidacao"/>).
 /// </summary>
 internal sealed class StagingProdutos(StowiseDbContext db)
 {
     /// <summary>Tamanho dos lotes de SKU e GTIN nas consultas ao catálogo (limite prático de parâmetros do IN).</summary>
     private const int LoteConsulta = 1000;
 
-    public async Task BuildAsync(Importacao importacao, CancellationToken cancellationToken)
+    /// <summary>Linhas por COPY; também é o passo do progresso.</summary>
+    public const int LoteGravacao = 5000;
+
+    /// <param name="aoAvancar">Chamado depois de cada lote gravado, com o progresso já salvo.</param>
+    public async Task BuildAsync(Importacao importacao, Func<Importacao, CancellationToken, Task> aoAvancar, CancellationToken cancellationToken)
     {
+        ArgumentNullException.ThrowIfNull(aoAvancar);
         ArgumentNullException.ThrowIfNull(importacao);
 
         var conteudo = await db.ArquivosImportacao.AsNoTracking()
@@ -47,6 +57,7 @@ internal sealed class StagingProdutos(StowiseDbContext db)
 
         await db.ImportacaoLinhas.Where(l => l.ImportacaoId == importacao.Id).ExecuteDeleteAsync(cancellationToken);
 
+        var lote = new List<ImportacaoLinha>(LoteGravacao);
         var primeiraLinhaDoSku = new Dictionary<string, int>(StringComparer.Ordinal);
         var primeiraLinhaDoGtin = new Dictionary<string, int>(StringComparer.Ordinal);
         int validas = 0, comErro = 0, duplicatas = 0;
@@ -87,7 +98,7 @@ internal sealed class StagingProdutos(StowiseDbContext db)
                 erros,
                 skus.TryGetValue(sku, out var mesmoSku) ? mesmoSku : null,
                 gtin is not null && gtins.TryGetValue(gtin, out var mesmoGtin) ? mesmoGtin : null);
-            db.ImportacaoLinhas.Add(nova);
+            lote.Add(nova);
 
             switch (nova.Status)
             {
@@ -101,9 +112,84 @@ internal sealed class StagingProdutos(StowiseDbContext db)
                     comErro++;
                     break;
             }
+
+            if (lote.Count == LoteGravacao && numero < normalizadas.Count)
+            {
+                await CopyAsync(lote, cancellationToken);
+                importacao.ReportProgress(numero);
+                await db.SaveChangesAsync(cancellationToken);
+                await aoAvancar(importacao, cancellationToken);
+            }
         }
 
+        await CopyAsync(lote, cancellationToken);
         importacao.CompleteValidacao(validas, comErro, duplicatas);
+    }
+
+    /// <summary>
+    /// Grava o lote com COPY binário (muito mais rápido que INSERT para milhares de linhas). Os nomes de tabela e
+    /// colunas vêm do modelo do EF, e o JSON é o mesmo das colunas <c>jsonb</c> mapeadas.
+    /// </summary>
+    private async Task CopyAsync(List<ImportacaoLinha> lote, CancellationToken cancellationToken)
+    {
+        if (lote.Count == 0)
+        {
+            return;
+        }
+
+        var entidade = db.Model.FindEntityType(typeof(ImportacaoLinha))!;
+        string Coluna(string propriedade) => entidade.FindProperty(propriedade)!.GetColumnName();
+        string[] colunas =
+        [
+            Coluna(nameof(ImportacaoLinha.Id)), Coluna(nameof(ImportacaoLinha.ImportacaoId)), Coluna(nameof(ImportacaoLinha.NumeroLinha)),
+            Coluna(nameof(ImportacaoLinha.DadosBrutos)), Coluna(nameof(ImportacaoLinha.DadosNormalizados)), Coluna(nameof(ImportacaoLinha.Status)),
+            Coluna(nameof(ImportacaoLinha.Acao)), Coluna(nameof(ImportacaoLinha.ProdutoCorrespondenteId)), Coluna(nameof(ImportacaoLinha.Similaridade)),
+            Coluna(nameof(ImportacaoLinha.Erros)),
+        ];
+
+        await db.Database.OpenConnectionAsync(cancellationToken);
+        try
+        {
+            var conexao = (NpgsqlConnection)db.Database.GetDbConnection();
+            await using var copy = await conexao.BeginBinaryImportAsync(
+                $"COPY {entidade.GetTableName()} ({string.Join(", ", colunas)}) FROM STDIN (FORMAT BINARY)",
+                cancellationToken);
+            foreach (var linha in lote)
+            {
+                await copy.StartRowAsync(cancellationToken);
+                await copy.WriteAsync(linha.Id, NpgsqlDbType.Uuid, cancellationToken);
+                await copy.WriteAsync(linha.ImportacaoId, NpgsqlDbType.Uuid, cancellationToken);
+                await copy.WriteAsync(linha.NumeroLinha, NpgsqlDbType.Integer, cancellationToken);
+                await copy.WriteAsync(JsonColumn.Serialize(linha.DadosBrutos), NpgsqlDbType.Jsonb, cancellationToken);
+                await copy.WriteAsync(JsonColumn.Serialize(linha.DadosNormalizados), NpgsqlDbType.Jsonb, cancellationToken);
+                await copy.WriteAsync(linha.Status.ToString(), NpgsqlDbType.Varchar, cancellationToken);
+                await copy.WriteAsync(linha.Acao.ToString(), NpgsqlDbType.Varchar, cancellationToken);
+                await WriteNullableAsync(copy, linha.ProdutoCorrespondenteId, NpgsqlDbType.Uuid, cancellationToken);
+                await WriteNullableAsync(copy, linha.Similaridade, NpgsqlDbType.Numeric, cancellationToken);
+                await copy.WriteAsync(JsonColumn.Serialize(linha.Erros), NpgsqlDbType.Jsonb, cancellationToken);
+            }
+
+            await copy.CompleteAsync(cancellationToken);
+        }
+        finally
+        {
+            await db.Database.CloseConnectionAsync();
+        }
+
+        lote.Clear();
+    }
+
+    private static async Task WriteNullableAsync<T>(NpgsqlBinaryImporter copy, T? valor, NpgsqlDbType tipo, CancellationToken cancellationToken)
+        where T : struct
+    {
+        if (valor is { } presente)
+        {
+            await copy.WriteAsync(presente, tipo, cancellationToken);
+        }
+        else
+        {
+            await copy.WriteNullAsync(cancellationToken);
+        }
     }
 
     private static string? Erro(List<ErroLinha> erros, string campo, string mensagem)

@@ -4629,7 +4629,7 @@
         "tags": [
           "Importação"
         ],
-        "summary": "Confirma qual coluna preenche cada campo e valida as linhas (staging). Com salvarTemplate, o próximo arquivo igual já chega mapeado.",
+        "summary": "Confirma qual coluna preenche cada campo e agenda a validação das linhas (staging) em background. Acompanhe pelo GET da importação ou pelo hub /hubs/importacoes. Com salvarTemplate, o próximo arquivo igual já chega mapeado.",
         "operationId": "ConfirmarMapeamentoImportacao",
         "parameters": [
           {
@@ -4673,8 +4673,8 @@
               }
             }
           },
-          "200": {
-            "description": "OK",
+          "202": {
+            "description": "Accepted",
             "content": {
               "application/json": {
                 "schema": {
@@ -6590,6 +6590,7 @@
           "linhasValidas",
           "linhasComErro",
           "linhasPossivelDuplicata",
+          "linhasProcessadas",
           "motivoFalha",
           "versao"
         ],
@@ -6707,6 +6708,14 @@
             "format": "int32"
           },
           "linhasPossivelDuplicata": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "linhasProcessadas": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",

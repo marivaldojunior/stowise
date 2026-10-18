@@ -23,9 +23,15 @@ public class StagingTests
     {
         var importacao = NovaImportacao();
 
+        Assert.Throws<InvalidOperationException>(() => importacao.ReportProgress(1));
         importacao.ConfirmMapeamento(Basico, Usuario, Agora);
         Assert.Equal(StatusImportacao.Validando, importacao.Status);
+        importacao.ReportProgress(5);
+        Assert.Equal(5, importacao.LinhasProcessadas);
+        importacao.ReportProgress(99);
+        Assert.Equal(importacao.TotalLinhas, importacao.LinhasProcessadas);
         importacao.CompleteValidacao(validas: 8, comErro: 1, possivelDuplicata: 1);
+        Assert.Equal(10, importacao.LinhasProcessadas);
         Assert.Equal((StatusImportacao.AguardandoRevisao, 8, 1, 1), (importacao.Status, importacao.LinhasValidas, importacao.LinhasComErro, importacao.LinhasPossivelDuplicata));
 
         importacao.ConfirmMapeamento(Basico, Usuario, Agora);

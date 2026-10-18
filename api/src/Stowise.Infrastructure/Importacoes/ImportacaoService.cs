@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Stowise.Application.Common;
 using Stowise.Application.Importacoes;
 using Stowise.Domain.Importacoes;
@@ -7,7 +8,12 @@ using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Importacoes;
 
-internal sealed class ImportacaoService(StowiseDbContext db, StagingProdutos staging, TimeProvider time) : IImportacaoService
+internal sealed partial class ImportacaoService(
+    StowiseDbContext db,
+    IFilaTrabalhos fila,
+    INotificadorImportacao notificador,
+    TimeProvider time,
+    ILogger<ImportacaoService> logger) : IImportacaoService
 {
     public async Task<Result<ImportacaoDetalhe>> ReceberAsync(ReceberArquivo comando, Guid usuarioId, CancellationToken cancellationToken = default)
     {
@@ -129,13 +135,27 @@ internal sealed class ImportacaoService(StowiseDbContext db, StagingProdutos sta
             importacao.LinkTemplate(template);
         }
 
-        // Síncrono por enquanto: o processamento em background (próxima etapa do plano) vai assumir o staging.
-        await using var transacao = await db.Database.BeginTransactionAsync(cancellationToken);
-        await staging.BuildAsync(importacao, cancellationToken);
         await db.SaveChangesAsync(cancellationToken);
-        await transacao.CommitAsync(cancellationToken);
+
+        // ADR-0007: o staging roda em background. Sem fila, a importação falha com o motivo em vez de ficar
+        // parada em Validando.
+        try
+        {
+            fila.EnfileirarStaging(importacao.Id);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            LogEnqueueFailed(e, importacao.Id);
+            importacao.Fail("Não foi possível agendar a validação das linhas. Confirme o mapeamento de novo.", time.GetUtcNow());
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
         return ToDetalhe(importacao);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Could not enqueue the staging of import {ImportacaoId}")]
+    private partial void LogEnqueueFailed(Exception exception, Guid importacaoId);
 
     public async Task<Result<ImportacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default)
     {
@@ -228,6 +248,7 @@ internal sealed class ImportacaoService(StowiseDbContext db, StagingProdutos sta
             i.LinhasValidas,
             i.LinhasComErro,
             i.LinhasPossivelDuplicata,
+            i.LinhasProcessadas,
             i.MotivoFalha,
             i.Versao);
 

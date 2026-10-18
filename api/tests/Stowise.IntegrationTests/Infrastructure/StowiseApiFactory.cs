@@ -24,6 +24,9 @@ public class StowiseApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Jwt:SigningKey", TestSigningKey);
         builder.UseSetting("Serilog:MinimumLevel:Default", "Warning");
 
+        // Sem banco, o servidor de jobs não sobe (ele conecta no PostgreSQL na partida).
+        builder.UseSetting("Jobs:Enabled", "false");
+
         foreach (var (key, value) in Settings)
         {
             builder.UseSetting(key, value);
@@ -37,6 +40,8 @@ public class StowiseApiFactory : WebApplicationFactory<Program>
         Settings =
         {
             ["Database:MigrateOnStartup"] = "true",
+            ["Jobs:Enabled"] = "true",
+            ["Jobs:PollIntervalSeconds"] = "0.5",
             ["AdminBootstrap:Email"] = adminEmail,
             ["AdminBootstrap:Password"] = adminPassword,
         },

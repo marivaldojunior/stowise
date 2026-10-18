@@ -5,13 +5,17 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Connections;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Stowise.Api.Endpoints;
 using Stowise.Application.Common;
 using Stowise.Application.Importacoes;
 using Stowise.Domain.Importacoes;
+using Stowise.Infrastructure.Importacoes;
 using Stowise.Infrastructure.Persistence;
 using Stowise.IntegrationTests.Infrastructure;
 
@@ -28,6 +32,7 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
 
     private readonly StowiseApiFactory _factory;
     private readonly HttpClient _client;
+    private string _token = null!;
 
     public ImportacoesFlowTests(PostgresFixture postgres)
     {
@@ -43,8 +48,8 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
         }
 
         var login = await _client.PostAsJsonAsync("/api/v1/auth/login", new { email = AdminEmail, senha = AdminPassword });
-        var token = (await login.Content.ReadFromJsonAsync<AuthResponse>())!.AccessToken;
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        _token = (await login.Content.ReadFromJsonAsync<AuthResponse>())!.AccessToken;
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
     }
 
     public Task DisposeAsync()
@@ -233,6 +238,55 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     }
 
     [DockerFact]
+    public async Task Staging_runs_in_batches_and_reports_progress_through_signalr()
+    {
+        Assert.Contains(_factory.Services.GetServices<IHostedService>(), s => s.GetType().Name.Contains("BackgroundJobServer", StringComparison.Ordinal));
+        var total = StagingProdutos.LoteGravacao + 2;
+        var texto = "SKU;Descrição;Unidade\n" + string.Join('\n', Enumerable.Range(1, total).Select(i => $"P{i:00000};Produto {i};UN"));
+        var importacao = await CreatedAsync("grande.csv", texto);
+
+        var eventos = new List<ProgressoImportacao>();
+        var revisao = new TaskCompletionSource<ProgressoImportacao>(TaskCreationOptions.RunContinuationsAsynchronously);
+        await using var hub = new HubConnectionBuilder()
+            .WithUrl(new Uri(_factory.Server.BaseAddress, "hubs/importacoes"), o =>
+            {
+                o.HttpMessageHandlerFactory = _ => _factory.Server.CreateHandler();
+                o.Transports = HttpTransportType.LongPolling;
+                o.AccessTokenProvider = () => Task.FromResult<string?>(_token);
+            })
+            .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()))
+            .Build();
+        hub.On<ProgressoImportacao>("progresso", p =>
+        {
+            lock (eventos)
+            {
+                eventos.Add(p);
+            }
+
+            if (p.Status == StatusImportacao.AguardandoRevisao)
+            {
+                revisao.TrySetResult(p);
+            }
+        });
+        await hub.StartAsync();
+        await hub.InvokeAsync("Acompanhar", importacao.Id);
+
+        object[] mapeamento = [new { campo = "sku", coluna = 0 }, new { campo = "descricao", coluna = 1 }, new { campo = "unidadeBase", coluna = 2 }];
+        var final = await ConfirmAsync(importacao.Id, new { colunas = mapeamento, versao = importacao.Versao });
+        var ultimo = await revisao.Task.WaitAsync(TimeSpan.FromSeconds(30));
+
+        Assert.Equal((total, total, total), (final.LinhasValidas, final.LinhasProcessadas, ultimo.LinhasProcessadas));
+        Assert.Equal(total, await QueryAsync(db => db.ImportacaoLinhas.CountAsync(l => l.ImportacaoId == importacao.Id)));
+        lock (eventos)
+        {
+            Assert.Contains(eventos, p => p.Status == StatusImportacao.Validando && p.LinhasProcessadas == StagingProdutos.LoteGravacao);
+        }
+
+        var ultimaLinha = (await _client.GetFromJsonAsync<PagedResult<ImportacaoLinhaDetalhe>>($"/api/v1/importacoes/{importacao.Id}/linhas?pagina=51&tamanhoPagina=100", Json))!;
+        Assert.Equal($"P{total:00000}", ultimaLinha.Itens[^1].DadosNormalizados["sku"]);
+    }
+
+    [DockerFact]
     public async Task Unknown_import_is_not_found()
     {
         var response = await _client.GetAsync(new Uri($"/api/v1/importacoes/{Guid.NewGuid()}", UriKind.Relative));
@@ -255,11 +309,29 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
         return texto;
     }
 
+    /// <summary>Confirma (202) e espera o job de staging terminar.</summary>
     private async Task<ImportacaoDetalhe> ConfirmAsync(Guid id, object body)
     {
         var response = await _client.PutAsJsonAsync($"/api/v1/importacoes/{id}/mapeamento", body);
-        Assert.True(response.StatusCode == HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
-        return (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!;
+        Assert.True(response.StatusCode == HttpStatusCode.Accepted, await response.Content.ReadAsStringAsync());
+        Assert.Equal(StatusImportacao.Validando, (await response.Content.ReadFromJsonAsync<ImportacaoDetalhe>(Json))!.Status);
+        return await WaitForStatusAsync(id, s => s != StatusImportacao.Validando);
+    }
+
+    private async Task<ImportacaoDetalhe> WaitForStatusAsync(Guid id, Func<StatusImportacao, bool> condicao)
+    {
+        var limite = DateTime.UtcNow.AddSeconds(60);
+        while (true)
+        {
+            var atual = (await _client.GetFromJsonAsync<ImportacaoDetalhe>($"/api/v1/importacoes/{id}", Json))!;
+            if (condicao(atual.Status))
+            {
+                return atual;
+            }
+
+            Assert.True(DateTime.UtcNow < limite, $"A importação {id} ficou em {atual.Status}.");
+            await Task.Delay(200);
+        }
     }
 
     private Task<HttpResponseMessage> UploadAsync(string nome, byte[] conteudo) =>
