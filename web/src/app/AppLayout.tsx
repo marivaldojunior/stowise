@@ -29,7 +29,7 @@ function MenuPrincipal({ onNavegar }: { onNavegar?: () => void }) {
           <NavLink
             key={rotulo}
             to={para}
-            end
+            end={para === '/'}
             onClick={onNavegar}
             className={({ isActive }) =>
               cn(

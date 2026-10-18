@@ -64,3 +64,28 @@ test('login com senha errada mostra o motivo', async ({ page }) => {
 
   await expect(page.getByRole('alert')).toContainText('E-mail ou senha incorretos')
 })
+
+test('Gestão cadastra um produto com caixa e o encontra no catálogo', async ({ page }) => {
+  const sku = `E2E-${Date.now()}`
+
+  await page.goto('/catalogo/novo')
+  await entrar(page, ADMIN.email, ADMIN.senha)
+  await expect(page.getByRole('heading', { name: 'Novo produto' })).toBeVisible()
+
+  await page.getByLabel('SKU').fill(sku)
+  await page.getByLabel('Descrição').fill('Produto de teste e2e')
+  await page.getByLabel('Peso (kg)').fill('1,5')
+  await page.getByRole('button', { name: 'Criar produto' }).click()
+  await expect(page.getByRole('heading', { name: 'Produto de teste e2e' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Nova embalagem' }).click()
+  const dialogo = page.getByRole('dialog', { name: 'Nova embalagem' })
+  await dialogo.getByLabel('Quantidade de UN').fill('12')
+  await dialogo.getByRole('button', { name: 'Salvar' }).click()
+  await expect(dialogo).toBeHidden()
+  await expect(page.getByRole('row').filter({ hasText: 'Caixa' })).toContainText('12 UN')
+
+  await page.getByRole('link', { name: 'Catálogo' }).first().click()
+  await page.getByRole('searchbox', { name: 'Buscar por SKU ou descrição' }).fill(sku)
+  await expect(page.getByRole('row').filter({ hasText: sku })).toContainText('Produto de teste e2e')
+})

@@ -1,7 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { Ellipsis, Plus } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { falhaDe } from '@/api/falha'
 import {
@@ -12,6 +11,8 @@ import {
   useReativarUsuario,
 } from '@/api/gerado/stowise'
 import type { ListarUsuariosParams, UsuarioDetalhe } from '@/api/gerado/modelos'
+import { FiltroSituacao } from '@/components/FiltroSituacao'
+import { Paginacao } from '@/components/Paginacao'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -28,49 +29,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useAuth } from '@/features/auth/contexto'
 import { FormularioUsuario } from '@/features/usuarios/FormularioUsuario'
 import { RedefinirSenha } from '@/features/usuarios/RedefinirSenha'
+import { TODOS, useBusca, useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
 
 const TAMANHO_PAGINA = 20
-const TODOS = 'todos'
-/** Espera depois da última tecla na busca, para não chamar a API a cada letra. */
-const ESPERA_BUSCA_MS = 300
 
 type Dialogo = { tipo: 'novo' } | { tipo: 'editar' | 'senha'; usuario: UsuarioDetalhe } | null
-
-/** Filtros na URL: a lista volta igual ao recarregar ou ao compartilhar o endereço. */
-function useFiltros() {
-  const [params, setParams] = useSearchParams()
-  const ativo = params.get('ativo')
-  const filtros: ListarUsuariosParams = {
-    busca: params.get('busca') ?? undefined,
-    perfil: params.get('perfil') ?? undefined,
-    ativo: ativo === null ? undefined : ativo === 'true',
-    pagina: Number(params.get('pagina') ?? '1') || 1,
-    tamanhoPagina: TAMANHO_PAGINA,
-  }
-
-  function mudar(nome: 'busca' | 'perfil' | 'ativo' | 'pagina', valor: string | undefined) {
-    setParams(
-      (atuais) => {
-        const novos = new URLSearchParams(atuais)
-        if (valor === undefined || valor === '' || valor === TODOS) {
-          novos.delete(nome)
-        } else {
-          novos.set(nome, valor)
-        }
-
-        // Filtro novo volta para a primeira página.
-        if (nome !== 'pagina') {
-          novos.delete('pagina')
-        }
-
-        return novos
-      },
-      { replace: true },
-    )
-  }
-
-  return { filtros, mudar }
-}
 
 function Situacao({ usuario }: { usuario: UsuarioDetalhe }) {
   if (!usuario.ativo) {
@@ -125,23 +88,18 @@ function AcoesUsuario({ usuario, onDialogo }: { usuario: UsuarioDetalhe; onDialo
 }
 
 export function UsuariosPage() {
-  const { filtros, mudar } = useFiltros()
-  const [busca, setBusca] = useState(filtros.busca ?? '')
+  const url = useFiltrosDaUrl()
+  const filtros: ListarUsuariosParams = {
+    busca: url.texto('busca'),
+    perfil: url.texto('perfil'),
+    ativo: url.booleano('ativo'),
+    pagina: url.pagina(),
+    tamanhoPagina: TAMANHO_PAGINA,
+  }
+  const [busca, setBusca] = useBusca(filtros.busca, (valor) => url.mudar('busca', valor))
   const [dialogo, setDialogo] = useState<Dialogo>(null)
   const perfis = useListarPerfis()
   const lista = useListarUsuarios(filtros, { query: { placeholderData: (anterior) => anterior } })
-
-  useEffect(() => {
-    if (busca === (filtros.busca ?? '')) {
-      return
-    }
-
-    const timer = window.setTimeout(() => mudar('busca', busca.trim()), ESPERA_BUSCA_MS)
-    return () => window.clearTimeout(timer)
-  })
-
-  const pagina = lista.data?.pagina ?? filtros.pagina ?? 1
-  const totalPaginas = lista.data ? Math.max(Math.ceil(lista.data.total / lista.data.tamanhoPagina), 1) : 1
 
   return (
     <section className="flex flex-col gap-6">
@@ -164,7 +122,7 @@ export function UsuariosPage() {
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
         />
-        <Select value={filtros.perfil ?? TODOS} onValueChange={(valor) => mudar('perfil', valor)}>
+        <Select value={filtros.perfil ?? TODOS} onValueChange={(valor) => url.mudar('perfil', valor)}>
           <SelectTrigger aria-label="Filtrar por perfil" className="w-40">
             <SelectValue />
           </SelectTrigger>
@@ -177,19 +135,7 @@ export function UsuariosPage() {
             ))}
           </SelectContent>
         </Select>
-        <Select
-          value={filtros.ativo === undefined ? TODOS : String(filtros.ativo)}
-          onValueChange={(valor) => mudar('ativo', valor)}
-        >
-          <SelectTrigger aria-label="Filtrar por situação" className="w-40">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={TODOS}>Todas as situações</SelectItem>
-            <SelectItem value="true">Ativos</SelectItem>
-            <SelectItem value="false">Inativos</SelectItem>
-          </SelectContent>
-        </Select>
+        <FiltroSituacao valor={filtros.ativo} onMudar={(valor) => url.mudar('ativo', valor)} />
       </div>
 
       {lista.isError ? (
@@ -251,24 +197,7 @@ export function UsuariosPage() {
         </div>
       )}
 
-      <nav aria-label="Paginação" className="flex items-center justify-between gap-2 text-sm">
-        <span className="text-muted-foreground">
-          {lista.data ? `${lista.data.total} usuário(s) · página ${pagina} de ${totalPaginas}` : ''}
-        </span>
-        <span className="flex gap-2">
-          <Button variant="outline" size="sm" disabled={pagina <= 1} onClick={() => mudar('pagina', String(pagina - 1))}>
-            Anterior
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pagina >= totalPaginas}
-            onClick={() => mudar('pagina', String(pagina + 1))}
-          >
-            Próxima
-          </Button>
-        </span>
-      </nav>
+      <Paginacao lista={lista.data} rotulo="usuário(s)" onPagina={(p) => url.mudar('pagina', String(p))} />
 
       {dialogo?.tipo === 'novo' && <FormularioUsuario onFechar={() => setDialogo(null)} />}
       {dialogo?.tipo === 'editar' && <FormularioUsuario usuario={dialogo.usuario} onFechar={() => setDialogo(null)} />}

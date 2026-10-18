@@ -18,9 +18,9 @@ describe('layout base', () => {
 
     const menu = await screen.findByRole('navigation', { name: 'Principal' })
     expect(within(menu).getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
-    const catalogo = within(menu).getByText('Catálogo').closest('[aria-disabled]')
-    expect(catalogo).toHaveAttribute('aria-disabled', 'true')
-    expect(within(menu).getAllByText('em breve')).toHaveLength(5)
+    const enderecos = within(menu).getByText('Endereços').closest('[aria-disabled]')
+    expect(enderecos).toHaveAttribute('aria-disabled', 'true')
+    expect(within(menu).getAllByText('em breve')).toHaveLength(4)
   })
 
   it('troca o tema e guarda a escolha no navegador', async () => {

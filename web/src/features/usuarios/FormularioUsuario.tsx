@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { Campo } from './Campo'
+import { Campo } from '@/components/Campo'
 
 interface Props {
   onFechar: () => void

@@ -13,7 +13,7 @@ export interface ItemNavegacao {
 /** Seções do painel, na ordem do plano (SPEC, bloco 1.5). */
 export const navegacao: ItemNavegacao[] = [
   { rotulo: 'Início', icone: House, para: '/' },
-  { rotulo: 'Catálogo', icone: Package },
+  { rotulo: 'Catálogo', icone: Package, para: '/catalogo' },
   { rotulo: 'Endereços', icone: Warehouse },
   { rotulo: 'Estoque', icone: Boxes },
   { rotulo: 'Importações', icone: FileUp, perfis: PERFIS_GESTAO },

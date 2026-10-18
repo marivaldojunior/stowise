@@ -12,7 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Campo } from './Campo'
+import { Campo } from '@/components/Campo'
 
 /** O Admin define uma senha nova para o usuário. A API encerra as sessões abertas dele. */
 export function RedefinirSenha({ usuario, onFechar }: { usuario: UsuarioDetalhe; onFechar: () => void }) {

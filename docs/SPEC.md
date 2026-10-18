@@ -300,7 +300,7 @@ Regras de ordem:
 - [x] Login, renovação de token e rotas protegidas por perfil
 - [x] Gestão de usuários e perfis (Admin)
 - [x] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
-- [ ] Catálogo: lista com filtros, formulário de produto e embalagens
+- [x] Catálogo: lista com filtros, formulário de produto e embalagens
 - [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
 - [ ] Saldos e extrato de movimentações
 - [ ] Upload de arquivo e revisão do mapeamento sugerido

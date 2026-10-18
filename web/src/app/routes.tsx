@@ -1,9 +1,11 @@
 import type { RouteObject } from 'react-router'
-import { Perfis } from '../features/auth/contexto'
+import { PERFIS_GESTAO, Perfis } from '../features/auth/contexto'
 import { ExigePerfil, RotaProtegida } from '../features/auth/RotaProtegida'
+import { CatalogoPage } from '../pages/CatalogoPage'
 import { InicioPage } from '../pages/InicioPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NaoEncontradaPage } from '../pages/NaoEncontradaPage'
+import { NovoProdutoPage, ProdutoPage } from '../pages/ProdutoPage'
 import { UsuariosPage } from '../pages/UsuariosPage'
 import { AppLayout, ErroDaRota } from './AppLayout'
 
@@ -20,6 +22,16 @@ export const routes: RouteObject[] = [
     errorElement: <ErroDaRota />,
     children: [
       { index: true, element: <InicioPage /> },
+      { path: 'catalogo', element: <CatalogoPage /> },
+      {
+        path: 'catalogo/novo',
+        element: (
+          <ExigePerfil perfis={PERFIS_GESTAO}>
+            <NovoProdutoPage />
+          </ExigePerfil>
+        ),
+      },
+      { path: 'catalogo/:id', element: <ProdutoPage /> },
       {
         path: 'usuarios',
         element: (
