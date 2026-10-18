@@ -298,7 +298,7 @@ Regras de ordem:
 - [x] Cliente da API gerado a partir do OpenAPI (orval)
 - [x] Biblioteca de componentes (shadcn/ui ou MUI), tema e layout base
 - [x] Login, renovação de token e rotas protegidas por perfil
-- [ ] Gestão de usuários e perfis (Admin)
+- [x] Gestão de usuários e perfis (Admin)
 - [ ] Testes: Vitest + Testing Library, MSW para mocks e Playwright para e2e
 - [ ] Catálogo: lista com filtros, formulário de produto e embalagens
 - [ ] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)

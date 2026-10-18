@@ -18,5 +18,5 @@ export const navegacao: ItemNavegacao[] = [
   { rotulo: 'Estoque', icone: Boxes },
   { rotulo: 'Importações', icone: FileUp, perfis: PERFIS_GESTAO },
   { rotulo: 'Uso de IA', icone: Sparkles, perfis: [Perfis.Admin] },
-  { rotulo: 'Usuários', icone: Users, perfis: [Perfis.Admin] },
+  { rotulo: 'Usuários', icone: Users, para: '/usuarios', perfis: [Perfis.Admin] },
 ]

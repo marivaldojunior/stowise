@@ -1,32 +1,11 @@
 import { type FormEvent, useState } from 'react'
 import { type Location, Navigate, useLocation, useNavigate } from 'react-router'
-import { HttpError } from '@/api/mutator'
+import { erroDoCampo, type Falha, falhaDe } from '@/api/falha'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/features/auth/contexto'
-
-interface Falha {
-  mensagem: string
-  campos: Record<string, string[]>
-}
-
-function falhaDe(erro: unknown): Falha {
-  if (erro instanceof HttpError) {
-    const campos = erro.problem?.errors ?? {}
-    // Sem resposta (status 0), o detail traz o erro técnico do navegador; a mensagem do erro já explica o problema.
-    const mensagem =
-      Object.keys(campos).length > 0
-        ? 'Confira os campos destacados.'
-        : erro.status === 0
-          ? erro.message
-          : (erro.problem?.detail ?? erro.message)
-    return { mensagem, campos }
-  }
-
-  return { mensagem: 'Erro inesperado ao entrar.', campos: {} }
-}
 
 /** Página pedida antes do login (RotaProtegida). Sem ela, o painel abre no início. */
 function destino(location: Location): string {
@@ -55,13 +34,13 @@ export function LoginPage() {
       await entrar(email.trim(), senha)
       void navigate(destino(location), { replace: true })
     } catch (erro) {
-      setFalha(falhaDe(erro))
+      setFalha(falhaDe(erro, 'Erro inesperado ao entrar.'))
       setEnviando(false)
     }
   }
 
-  const erroEmail = falha?.campos.email?.[0]
-  const erroSenha = falha?.campos.senha?.[0]
+  const erroEmail = erroDoCampo(falha, 'email')
+  const erroSenha = erroDoCampo(falha, 'senha')
 
   return (
     <main className="flex min-h-svh items-center justify-center p-4">

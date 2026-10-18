@@ -20,7 +20,7 @@ describe('layout base', () => {
     expect(within(menu).getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')
     const catalogo = within(menu).getByText('Catálogo').closest('[aria-disabled]')
     expect(catalogo).toHaveAttribute('aria-disabled', 'true')
-    expect(within(menu).getAllByText('em breve')).toHaveLength(6)
+    expect(within(menu).getAllByText('em breve')).toHaveLength(5)
   })
 
   it('troca o tema e guarda a escolha no navegador', async () => {
