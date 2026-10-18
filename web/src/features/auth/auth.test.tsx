@@ -186,7 +186,7 @@ describe('sair', () => {
     usarSessao()
     server.use(http.post('/api/v1/auth/logout', () => new HttpResponse(null, { status: 204 })))
     const requisicoes = gravarRequisicoes()
-    const { router } = renderRoute('/')
+    const { router } = renderRoute('/usuarios')
     const user = userEvent.setup()
 
     await user.click(await screen.findByRole('button', { name: 'Menu do usuário' }))
@@ -196,6 +196,8 @@ describe('sair', () => {
     await user.click(within(menu).getByRole('menuitem', { name: 'Sair' }))
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/login'))
+    // Depois de sair, o próximo login abre o início, e não a página do usuário anterior.
+    await waitFor(() => expect(router.state.location.state).toBeNull())
     expect(requisicoesPara(requisicoes, '/api/v1/auth/logout')[0].corpo).toEqual({ refreshToken: null, useCookie: true })
     expect(getSessao()).toBeNull()
   })

@@ -1,4 +1,5 @@
 import { LogOut, UserRound } from 'lucide-react'
+import { useNavigate } from 'react-router'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,6 +15,7 @@ import { useAuth } from '@/features/auth/contexto'
 /** Nome, e-mail e perfis do usuário, com a saída do painel. */
 export function MenuUsuario() {
   const { usuario, sair } = useAuth()
+  const navigate = useNavigate()
   if (!usuario) {
     return null
   }
@@ -38,7 +40,8 @@ export function MenuUsuario() {
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => void sair()}>
+        {/* Sem guardar a página atual: quem entrar depois (talvez outro usuário) começa no início. */}
+        <DropdownMenuItem onSelect={() => void sair().then(() => navigate('/login', { replace: true }))}>
           <LogOut /> Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
