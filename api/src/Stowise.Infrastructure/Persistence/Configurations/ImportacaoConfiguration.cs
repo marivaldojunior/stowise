@@ -27,6 +27,9 @@ internal sealed class ImportacaoConfiguration : IEntityTypeConfiguration<Importa
         builder.Property(i => i.Fingerprint).HasMaxLength(FingerprintLayout.Length).IsFixedLength();
         builder.Property(i => i.Versao).IsRowVersion().HasColumnName("xmin");
         builder.Property(i => i.MotivoFalha).HasMaxLength(Importacao.MotivoFalhaMaxLength);
+        builder.Property(i => i.MotivoSemSugestao).HasMaxLength(Importacao.MotivoFalhaMaxLength);
+        builder.Property(i => i.Regras).HasJsonConversion();
+        builder.Property(i => i.SugestaoIa).HasJsonConversion();
         builder.Ignore(i => i.Layout);
 
         // O mesmo arquivo não entra duas vezes, a não ser que a importação anterior tenha falhado.
@@ -71,6 +74,7 @@ internal sealed class TemplateImportacaoConfiguration : IEntityTypeConfiguration
         builder.Property(t => t.Delimitador).HasMaxLength(1);
         builder.Property(t => t.SeparadorDecimal).HasMaxLength(1);
         builder.Property(t => t.Mapeamento).HasJsonConversion();
+        builder.Property(t => t.Regras).HasJsonConversion();
         builder.Property(t => t.Versao).IsRowVersion().HasColumnName("xmin");
 
         builder.HasIndex(t => new { t.Tipo, t.Fingerprint }).IsUnique().HasDatabaseName(FingerprintUnicoIndex);

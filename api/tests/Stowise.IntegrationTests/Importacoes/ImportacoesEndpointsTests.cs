@@ -31,6 +31,7 @@ public class ImportacoesEndpointsTests(StowiseApiFactory factory) : IClassFixtur
     [InlineData("GET", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/linhas")]
     [InlineData("POST", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/efetivar")]
     [InlineData("GET", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/relatorio")]
+    [InlineData("POST", "/api/v1/importacoes/0199f0a0-0000-7000-8000-000000000001/sugestao")]
     [InlineData("GET", "/api/v1/importacoes/templates")]
     [InlineData("DELETE", "/api/v1/importacoes/templates/0199f0a0-0000-7000-8000-000000000001")]
     public async Task Operador_cannot_import(string metodo, string url)

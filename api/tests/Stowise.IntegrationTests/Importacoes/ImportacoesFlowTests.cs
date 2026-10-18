@@ -332,6 +332,18 @@ public sealed class ImportacoesFlowTests : IAsyncLifetime
     }
 
     [DockerFact]
+    public async Task Without_ai_the_import_stays_manual_and_a_suggestion_request_is_refused()
+    {
+        var importacao = await CreatedAsync("manual.csv", "SKU;Descrição;Unidade\nA1;Arroz 5kg;UN\n");
+        Assert.Equal(StatusImportacao.Recebido, importacao.Status);
+
+        var pedido = await _client.PostAsJsonAsync($"/api/v1/importacoes/{importacao.Id}/sugestao", new { versao = importacao.Versao });
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, pedido.StatusCode);
+        Assert.Contains("A IA está desligada", await pedido.Content.ReadAsStringAsync(), StringComparison.Ordinal);
+    }
+
+    [DockerFact]
     public async Task Unknown_import_is_not_found()
     {
         var response = await _client.GetAsync(new Uri($"/api/v1/importacoes/{Guid.NewGuid()}", UriKind.Relative));

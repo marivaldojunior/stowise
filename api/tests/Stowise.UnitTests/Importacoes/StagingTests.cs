@@ -24,7 +24,7 @@ public class StagingTests
         var importacao = NovaImportacao();
 
         Assert.Throws<InvalidOperationException>(() => importacao.ReportProgress(1));
-        importacao.ConfirmMapeamento(Basico, Usuario, Agora);
+        importacao.ConfirmMapeamento(Basico, null, Usuario, Agora);
         Assert.Equal(StatusImportacao.Validando, importacao.Status);
         importacao.ReportProgress(5);
         Assert.Equal(5, importacao.LinhasProcessadas);
@@ -34,13 +34,13 @@ public class StagingTests
         Assert.Equal(10, importacao.LinhasProcessadas);
         Assert.Equal((StatusImportacao.AguardandoRevisao, 8, 1, 1), (importacao.Status, importacao.LinhasValidas, importacao.LinhasComErro, importacao.LinhasPossivelDuplicata));
 
-        importacao.ConfirmMapeamento(Basico, Usuario, Agora);
+        importacao.ConfirmMapeamento(Basico, null, Usuario, Agora);
         Assert.Equal((StatusImportacao.Validando, 0), (importacao.Status, importacao.LinhasValidas));
         importacao.CompleteValidacao(10, 0, 0);
 
         importacao.StartEfetivacao();
         Assert.Equal(0, importacao.LinhasProcessadas);
-        Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento(Basico, Usuario, Agora));
+        Assert.Throws<DomainException>(() => importacao.ConfirmMapeamento(Basico, null, Usuario, Agora));
         importacao.ReportProgress(4);
         importacao.Complete(criados: 6, atualizados: 3, validas: 9, comErro: 1, Agora.AddMinutes(1));
 
@@ -56,7 +56,7 @@ public class StagingTests
         Assert.Throws<InvalidOperationException>(() => importacao.CompleteValidacao(1, 0, 0));
         Assert.Throws<DomainException>(importacao.StartEfetivacao);
 
-        importacao.ConfirmMapeamento(Basico, Usuario, Agora);
+        importacao.ConfirmMapeamento(Basico, null, Usuario, Agora);
         importacao.CompleteValidacao(0, 3, 0);
         Assert.Throws<DomainException>(importacao.StartEfetivacao);
 

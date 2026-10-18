@@ -290,7 +290,7 @@ Regras de ordem:
 - [x] Resiliência da IA: timeout, retry com backoff e fallback de provedor; sem IA disponível, o fluxo segue manual (provedores em lista ordenada, com fábricas por tipo: Anthropic, OpenAI compatível, Gemini e Ollama)
 - [x] Saídas estruturadas: JSON Schema por funcionalidade, validação e rejeição de resposta inválida
 - [x] Cota de IA por perfil e por usuário (CotaIa), com HTTP 429 acima do limite
-- [ ] Sugestão de mapeamento de colunas e de regras de normalização (data, decimal, unidade) por IA, a partir do cabeçalho + amostra; a aplicação das regras é determinística
+- [x] Sugestão de mapeamento de colunas e de regras de normalização (data, decimal, unidade) por IA, a partir do cabeçalho + amostra; a aplicação das regras é determinística (regras de data ficam para quando houver campo de data na importação)
 
 **1.5 Web — Fundação, cadastros, estoque e importação**
 

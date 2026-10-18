@@ -13,6 +13,10 @@ public interface IFilaTrabalhos
 
     /// <summary>Grava no catálogo as linhas válidas de uma importação em <see cref="StatusImportacao.Efetivando"/>.</summary>
     void EnfileirarEfetivacao(Guid importacaoId);
+
+    /// <summary>Sugestão de mapeamento pela IA para uma importação em <see cref="StatusImportacao.Mapeando"/>.</summary>
+    /// <param name="usuarioId">Quem pediu: conta na cota e no registro da chamada.</param>
+    void EnfileirarSugestaoMapeamento(Guid importacaoId, Guid usuarioId);
 }
 
 /// <summary>Avisa quem acompanha a importação (painel, por SignalR) sobre o andamento.</summary>

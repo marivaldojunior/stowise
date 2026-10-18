@@ -40,7 +40,7 @@ internal sealed class StagingProdutos(StowiseDbContext db)
 
         var mapeamento = importacao.Mapeamento ?? throw new InvalidOperationException("The mapping must be confirmed before staging.");
         var normalizadas = registros
-            .Select(r => (Brutos: r, Linha: NormalizadorProdutos.Normalize(r, mapeamento, layout.SeparadorDecimal)))
+            .Select(r => (Brutos: r, Linha: NormalizadorProdutos.Normalize(r, mapeamento, layout.SeparadorDecimal, importacao.Regras)))
             .ToList();
 
         var skus = await ExistingAsync(

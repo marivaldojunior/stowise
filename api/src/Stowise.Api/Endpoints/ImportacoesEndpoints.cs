@@ -56,6 +56,18 @@ public static class ImportacoesEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
+        group.MapPost("/{id:guid}/sugestao", async (Guid id, SugerirMapeamento comando, IImportacaoService importacoes, ClaimsPrincipal user, CancellationToken ct) =>
+                (await importacoes.SugerirMapeamentoAsync(id, comando, user.GetUsuarioId(), ct))
+                    .ToHttpResult(i => TypedResults.Accepted($"/api/v1/importacoes/{i.Id}", i)))
+            .WithName("SugerirMapeamentoImportacao")
+            .WithSummary("Pede à IA a sugestão de mapeamento e de regras de normalização (a partir do cabeçalho e da amostra). A sugestão é só uma proposta: confirme em PUT /mapeamento. Sem IA ou com cota atingida, o mapeamento segue manual.")
+            .Produces<ImportacaoDetalhe>(StatusCodes.Status202Accepted)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity)
+            .ProducesProblem(StatusCodes.Status429TooManyRequests);
+
         group.MapPost("/{id:guid}/efetivar", async (Guid id, EfetivarImportacao comando, IImportacaoService importacoes, CancellationToken ct) =>
                 (await importacoes.EfetivarAsync(id, comando, ct))
                     .ToHttpResult(i => TypedResults.Accepted($"/api/v1/importacoes/{i.Id}", i)))

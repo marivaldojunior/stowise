@@ -89,6 +89,16 @@ A tabela `CotaIa` limita o uso por perfil, com exceção opcional por usuário (
 4. Acima do limite, a API não chama o provedor, não grava `ChamadaIa` e responde HTTP 429 com o motivo. O fluxo segue sem IA.
 5. A verificação e a chamada não são atômicas: pedidos simultâneos podem passar um pouco do limite.
 
+## Sugestão de mapeamento (primeira funcionalidade com IA)
+
+1. Um arquivo sem template entra em `Mapeando` sozinho, se a IA estiver ligada e a cota permitir. `POST /api/v1/importacoes/{id}/sugestao` pede uma sugestão nova.
+2. A IA recebe só o cabeçalho, a amostra de até 10 linhas e os campos de destino. Nunca recebe o arquivo inteiro.
+3. A resposta segue o contrato `mapeamento-v1`: colunas com confiança e regras de normalização (separador decimal, de-para de unidades, textos de sim e não).
+4. A sugestão é limpa antes de virar proposta: campo desconhecido, coluna inexistente e regra inválida saem.
+5. A importação fica em `AguardandoConfirmacao`. Nada é gravado até uma pessoa confirmar em `PUT /mapeamento`.
+6. Sem sugestão (IA fora, cota, resposta inválida), a importação volta e `MotivoSemSugestao` diz o motivo. O mapeamento segue manual.
+7. Na validação das linhas, o código aplica as regras confirmadas, sem IA.
+
 ## Parâmetros próprios do provedor
 
 `ParametrosAdicionais` repassa pares chave-valor em `ChatOptions.AdditionalProperties`. Cada adaptador decide o que aceita, então confira antes no SDK do provedor. As funcionalidades não dependem desses parâmetros.

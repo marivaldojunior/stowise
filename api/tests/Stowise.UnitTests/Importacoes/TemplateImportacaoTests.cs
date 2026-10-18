@@ -47,7 +47,7 @@ public class TemplateImportacaoTests
     {
         var importacao = NovaImportacao();
 
-        importacao.ConfirmMapeamento(Mapeamento, Usuario, Agora);
+        importacao.ConfirmMapeamento(Mapeamento, null, Usuario, Agora);
 
         Assert.Equal([new("sku", 0), new("descricao", 1), new MapeamentoColuna("unidadeBase", 2)], importacao.Mapeamento);
         Assert.Equal((Usuario, Agora), (importacao.MapeamentoConfirmadoPor, importacao.MapeamentoConfirmadoEm));
@@ -64,7 +64,7 @@ public class TemplateImportacaoTests
         Assert.All(invalidos, m =>
         {
             var nova = NovaImportacao();
-            Assert.Throws<DomainException>(() => nova.ConfirmMapeamento(m, Usuario, Agora));
+            Assert.Throws<DomainException>(() => nova.ConfirmMapeamento(m, null, Usuario, Agora));
             Assert.Equal(StatusImportacao.Recebido, nova.Status);
         });
     }
@@ -75,7 +75,7 @@ public class TemplateImportacaoTests
         var importacao = NovaImportacao();
         Assert.Throws<DomainException>(() => TemplateImportacao.Create(importacao, "Fornecedor A", false, Usuario, Agora));
 
-        importacao.ConfirmMapeamento(Mapeamento, Usuario, Agora);
+        importacao.ConfirmMapeamento(Mapeamento, null, Usuario, Agora);
         var template = TemplateImportacao.Create(importacao, " Fornecedor A ", false, Usuario, Agora);
 
         Assert.Equal(("Fornecedor A", 1, importacao.Fingerprint), (template.Nome, template.VezesUsado, template.Fingerprint));
@@ -83,7 +83,7 @@ public class TemplateImportacaoTests
         Assert.Equal((FormatoArquivo.Delimitado, ";", ","), (template.Formato, template.Delimitador, template.SeparadorDecimal));
 
         var semCabecalho = NovaImportacao(Layout(false, "Coluna 1", "Coluna 2", "Coluna 3"));
-        semCabecalho.ConfirmMapeamento(Mapeamento, Usuario, Agora);
+        semCabecalho.ConfirmMapeamento(Mapeamento, null, Usuario, Agora);
         Assert.Throws<DomainException>(() => TemplateImportacao.Create(semCabecalho, "X", false, Usuario, Agora));
     }
 
@@ -91,7 +91,7 @@ public class TemplateImportacaoTests
     public void Recognized_file_gets_the_template_mapping_as_a_suggestion_and_its_decimal_separator()
     {
         var primeira = NovaImportacao(Layout(true, "SKU", "Descrição", "Unidade") with { SeparadorDecimal = "." });
-        primeira.ConfirmMapeamento(Mapeamento, Usuario, Agora);
+        primeira.ConfirmMapeamento(Mapeamento, null, Usuario, Agora);
         var template = TemplateImportacao.Create(primeira, "Fornecedor A", false, Usuario, Agora);
 
         var segunda = NovaImportacao(Layout(true, "sku", "descricao", "unidade"));
@@ -108,18 +108,18 @@ public class TemplateImportacaoTests
     public void Each_new_confirmation_counts_once_and_a_changed_mapping_replaces_the_old_one()
     {
         var primeira = NovaImportacao();
-        primeira.ConfirmMapeamento(Mapeamento, Usuario, Agora);
+        primeira.ConfirmMapeamento(Mapeamento, null, Usuario, Agora);
         var template = TemplateImportacao.Create(primeira, "Fornecedor A", false, Usuario, Agora);
 
         var segunda = NovaImportacao();
-        segunda.ConfirmMapeamento(Mapeamento, Usuario, Agora.AddDays(1));
+        segunda.ConfirmMapeamento(Mapeamento, null, Usuario, Agora.AddDays(1));
         template.RegisterUse(segunda, novoUso: true, sugeridoPorIa: false, Usuario, Agora.AddDays(1));
         template.RegisterUse(segunda, novoUso: false, sugeridoPorIa: false, Usuario, Agora.AddDays(1));
         Assert.Equal((2, Agora), (template.VezesUsado, template.ConfirmadoEm));
 
         var outro = Guid.NewGuid();
         segunda.CompleteValidacao(1, 0, 0);
-        segunda.ConfirmMapeamento([new("sku", 0), new("descricao", 2), new("unidadeBase", 1)], outro, Agora.AddDays(2));
+        segunda.ConfirmMapeamento([new("sku", 0), new("descricao", 2), new("unidadeBase", 1)], null, outro, Agora.AddDays(2));
         template.RegisterUse(segunda, novoUso: false, sugeridoPorIa: true, outro, Agora.AddDays(2));
 
         Assert.Equal(new MapeamentoColuna("unidadeBase", 1), template.Mapeamento[1]);

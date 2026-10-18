@@ -78,6 +78,7 @@ internal sealed class TemplateImportacaoService(StowiseDbContext db) : ITemplate
             t.Delimitador,
             t.SeparadorDecimal,
             t.Mapeamento,
+            t.Regras,
             t.SugeridoPorIa,
             t.ConfirmadoPor,
             t.ConfirmadoEm,

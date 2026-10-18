@@ -4,7 +4,9 @@ using Microsoft.Extensions.Logging;
 using Npgsql;
 using Stowise.Application.Common;
 using Stowise.Application.Importacoes;
+using Stowise.Domain.Ia;
 using Stowise.Domain.Importacoes;
+using Stowise.Infrastructure.Ia;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Importacoes;
@@ -14,6 +16,8 @@ internal sealed partial class ImportacaoService(
     IFilaTrabalhos fila,
     INotificadorImportacao notificador,
     TimeProvider time,
+    IProvedoresIa provedoresIa,
+    IVerificadorCotaIa cotasIa,
     ILogger<ImportacaoService> logger) : IImportacaoService
 {
     public async Task<Result<ImportacaoDetalhe>> ReceberAsync(ReceberArquivo comando, Guid usuarioId, CancellationToken cancellationToken = default)
@@ -65,7 +69,74 @@ internal sealed partial class ImportacaoService(
         db.Importacoes.Add(importacao);
         db.ArquivosImportacao.Add(ArquivoImportacao.Create(importacao, conteudo));
         await db.SaveChangesAsync(cancellationToken);
+
+        // Arquivo novo (sem template): a IA sugere sozinha, se estiver ligada e a cota permitir. Sem isso, o mapeamento
+        // é manual ou pedido depois em POST /sugestao.
+        if (importacao.Status == StatusImportacao.Recebido
+            && provedoresIa.Para(FuncionalidadeIa.Mapeamento) is not null
+            && !(await cotasIa.CheckAsync(usuarioId, FuncionalidadeIa.Mapeamento, cancellationToken)).Excedida)
+        {
+            importacao.StartSugestao();
+            await db.SaveChangesAsync(cancellationToken);
+            await EnqueueSugestaoAsync(importacao, usuarioId, cancellationToken);
+        }
+
         return ToDetalhe(importacao);
+    }
+
+    public async Task<Result<ImportacaoDetalhe>> SugerirMapeamentoAsync(Guid id, SugerirMapeamento comando, Guid usuarioId, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(comando);
+
+        if (comando.Versao is null)
+        {
+            return AppError.Validation("versao", "Informe a versão da importação lida antes do pedido.");
+        }
+
+        var importacao = await db.Importacoes.FirstOrDefaultAsync(i => i.Id == id, cancellationToken);
+        if (importacao is null)
+        {
+            return NotFound();
+        }
+
+        if (importacao.Versao != comando.Versao)
+        {
+            return AppError.Conflict("A importação foi alterada por outra pessoa depois que você a abriu. Recarregue e tente de novo.");
+        }
+
+        if (provedoresIa.Para(FuncionalidadeIa.Mapeamento) is null)
+        {
+            return AppError.BusinessRule("A IA está desligada. Faça o mapeamento manual.");
+        }
+
+        var cota = await cotasIa.CheckAsync(usuarioId, FuncionalidadeIa.Mapeamento, cancellationToken);
+        if (cota.Excedida)
+        {
+            return AppError.TooManyRequests(GatewayIa.DescribeQuota(cota));
+        }
+
+        db.Entry(importacao).Property(i => i.Versao).OriginalValue = comando.Versao.Value;
+        importacao.StartSugestao();
+        await db.SaveChangesAsync(cancellationToken);
+        await EnqueueSugestaoAsync(importacao, usuarioId, cancellationToken);
+        return ToDetalhe(importacao);
+    }
+
+    /// <summary>Sem fila, a sugestão é dada como indisponível na hora: a importação não fica parada em Mapeando.</summary>
+    private async Task EnqueueSugestaoAsync(Importacao importacao, Guid usuarioId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            fila.EnfileirarSugestaoMapeamento(importacao.Id, usuarioId);
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            LogEnqueueFailed(e, importacao.Id);
+            importacao.FailSugestao("Não foi possível agendar a sugestão da IA. Faça o mapeamento manual.");
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
     }
 
     public async Task<Result<ImportacaoDetalhe>> ConfirmarMapeamentoAsync(Guid id, ConfirmarMapeamento comando, Guid usuarioId, CancellationToken cancellationToken = default)
@@ -106,7 +177,7 @@ internal sealed partial class ImportacaoService(
         var agora = time.GetUtcNow();
         var novoUso = importacao.MapeamentoConfirmadoPor is null;
         db.Entry(importacao).Property(i => i.Versao).OriginalValue = comando.Versao!.Value;
-        importacao.ConfirmMapeamento(colunas, usuarioId, agora);
+        importacao.ConfirmMapeamento(colunas, comando.Regras, usuarioId, agora);
 
         var template = importacao.Fingerprint is null
             ? null
@@ -114,13 +185,14 @@ internal sealed partial class ImportacaoService(
         if (template is null && comando.SalvarTemplate)
         {
             var nome = string.IsNullOrWhiteSpace(comando.NomeTemplate) ? Path.GetFileNameWithoutExtension(importacao.NomeArquivo) : comando.NomeTemplate;
-            template = TemplateImportacao.Create(importacao, nome, sugeridoPorIa: false, usuarioId, agora);
+            template = TemplateImportacao.Create(importacao, nome, importacao.MapeamentoSugeridoPorIa, usuarioId, agora);
             db.TemplatesImportacao.Add(template);
         }
-        else if (template is not null && (comando.SalvarTemplate || importacao.Mapeamento!.SequenceEqual(template.Mapeamento)))
+        else if (template is not null
+            && (comando.SalvarTemplate || (importacao.Mapeamento!.SequenceEqual(template.Mapeamento) && importacao.Regras!.SameAs(template.Regras))))
         {
             // Sem "salvar", o template só conta o uso; com "salvar", também passa a ter o mapeamento confirmado agora.
-            template.RegisterUse(importacao, novoUso, sugeridoPorIa: false, usuarioId, agora);
+            template.RegisterUse(importacao, novoUso, importacao.MapeamentoSugeridoPorIa, usuarioId, agora);
             if (comando.SalvarTemplate && !string.IsNullOrWhiteSpace(comando.NomeTemplate))
             {
                 template.Rename(comando.NomeTemplate);
@@ -350,6 +422,10 @@ internal sealed partial class ImportacaoService(
             i.ProdutosCriados,
             i.ProdutosAtualizados,
             i.MotivoFalha,
+            i.Regras,
+            i.SugestaoIa,
+            i.MapeamentoSugeridoPorIa,
+            i.MotivoSemSugestao,
             i.Versao);
 
     private static AppError NotFound() => AppError.NotFound("Importação não encontrada.");

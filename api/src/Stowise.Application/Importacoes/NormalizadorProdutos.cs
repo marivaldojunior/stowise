@@ -65,10 +65,16 @@ public static partial class NormalizadorProdutos
     private static readonly HashSet<string> Verdadeiro = new(StringComparer.Ordinal) { "sim", "s", "yes", "y", "true", "1", "x" };
     private static readonly HashSet<string> Falso = new(StringComparer.Ordinal) { "nao", "n", "no", "false", "0" };
 
-    public static LinhaNormalizada Normalize(IReadOnlyList<string> linha, IReadOnlyList<MapeamentoColuna> mapeamento, string separadorDecimal)
+    /// <param name="regras">Regras confirmadas (de-para de unidades e textos de sim/não), aplicadas antes das padrão.</param>
+    public static LinhaNormalizada Normalize(
+        IReadOnlyList<string> linha,
+        IReadOnlyList<MapeamentoColuna> mapeamento,
+        string separadorDecimal,
+        RegrasNormalizacao? regras = null)
     {
         ArgumentNullException.ThrowIfNull(linha);
         ArgumentNullException.ThrowIfNull(mapeamento);
+        regras ??= RegrasNormalizacao.Vazias;
 
         var valores = mapeamento.ToDictionary(m => m.Campo, m => m.Coluna < linha.Count ? linha[m.Coluna].Trim() : string.Empty, StringComparer.Ordinal);
         var dados = new Dictionary<string, string?>(StringComparer.Ordinal);
@@ -99,7 +105,7 @@ public static partial class NormalizadorProdutos
             Erro("descricao", $"A descrição deve ter no máximo {Produto.DescricaoMaxLength} caracteres.");
         }
 
-        var unidade = Unidade(Valor("unidadeBase"));
+        var unidade = Unidade(Valor("unidadeBase"), regras);
         dados["unidadeBase"] = unidade;
         if (unidade is null)
         {
@@ -151,8 +157,8 @@ public static partial class NormalizadorProdutos
             Erro("classeArmazenagem", $"Classe {classe} não reconhecida. Use {string.Join(", ", Enum.GetNames<ClasseArmazenagem>())}.");
         }
 
-        var lote = Booleano("controlaLote", Valor("controlaLote"), dados, Erro);
-        var validade = Booleano("controlaValidade", Valor("controlaValidade"), dados, Erro);
+        var lote = Booleano("controlaLote", Valor("controlaLote"), regras, dados, Erro);
+        var validade = Booleano("controlaValidade", Valor("controlaValidade"), regras, dados, Erro);
         if (validade == true && lote == false)
         {
             Erro("controlaValidade", "Produto que controla validade precisa controlar lote.");
@@ -169,11 +175,17 @@ public static partial class NormalizadorProdutos
         return new LinhaNormalizada(dados, erros);
     }
 
-    private static string? Unidade(string valor)
+    private static string? Unidade(string valor, RegrasNormalizacao regras)
     {
         if (valor.Length == 0)
         {
             return null;
+        }
+
+        var deParaConfirmado = regras.Unidades.FirstOrDefault(u => FingerprintLayout.Normalize(u.Origem) == FingerprintLayout.Normalize(valor));
+        if (deParaConfirmado is not null)
+        {
+            return deParaConfirmado.Destino;
         }
 
         if (SinonimosUnidade.TryGetValue(FingerprintLayout.Normalize(valor), out var codigo))
@@ -185,10 +197,13 @@ public static partial class NormalizadorProdutos
         return Produto.IsValidUnidadeBase(maiuscula) ? maiuscula : null;
     }
 
-    private static bool? Booleano(string campo, string valor, Dictionary<string, string?> dados, Action<string, string> erro)
+    private static bool? Booleano(string campo, string valor, RegrasNormalizacao regras, Dictionary<string, string?> dados, Action<string, string> erro)
     {
         var normalizado = FingerprintLayout.Normalize(valor);
-        bool? lido = normalizado.Length == 0 || Falso.Contains(normalizado) ? false : Verdadeiro.Contains(normalizado) ? true : null;
+        bool Em(IEnumerable<string> extras) => extras.Any(e => FingerprintLayout.Normalize(e) == normalizado);
+        bool? lido = normalizado.Length == 0 || Falso.Contains(normalizado) || Em(regras.ValoresFalsos)
+            ? false
+            : Verdadeiro.Contains(normalizado) || Em(regras.ValoresVerdadeiros) ? true : null;
         dados[campo] = lido is null ? null : lido.Value ? "true" : "false";
         if (lido is null)
         {

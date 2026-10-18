@@ -1019,10 +1019,19 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("mapeamento_confirmado_por");
 
+                    b.Property<bool>("MapeamentoSugeridoPorIa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("mapeamento_sugerido_por_ia");
+
                     b.Property<string>("MotivoFalha")
                         .HasMaxLength(500)
                         .HasColumnType("character varying(500)")
                         .HasColumnName("motivo_falha");
+
+                    b.Property<string>("MotivoSemSugestao")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)")
+                        .HasColumnName("motivo_sem_sugestao");
 
                     b.Property<string>("NomeArquivo")
                         .IsRequired()
@@ -1043,6 +1052,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer")
                         .HasColumnName("produtos_criados");
 
+                    b.Property<string>("Regras")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("regras");
+
                     b.Property<string>("SeparadorDecimal")
                         .IsRequired()
                         .HasMaxLength(1)
@@ -1054,6 +1067,10 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)")
                         .HasColumnName("status");
+
+                    b.Property<string>("SugestaoIa")
+                        .HasColumnType("jsonb")
+                        .HasColumnName("sugestao_ia");
 
                     b.Property<long>("TamanhoBytes")
                         .HasColumnType("bigint")
@@ -1227,6 +1244,11 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)")
                         .HasColumnName("nome");
+
+                    b.Property<string>("Regras")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("regras");
 
                     b.Property<string>("SeparadorDecimal")
                         .IsRequired()

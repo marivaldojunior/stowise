@@ -4731,6 +4731,123 @@
         ]
       }
     },
+    "/api/v1/importacoes/{id}/sugestao": {
+      "post": {
+        "tags": [
+          "Importação"
+        ],
+        "summary": "Pede à IA a sugestão de mapeamento e de regras de normalização (a partir do cabeçalho e da amostra). A sugestão é só uma proposta: confirme em PUT /mapeamento. Sem IA ou com cota atingida, o mapeamento segue manual.",
+        "operationId": "SugerirMapeamentoImportacao",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SugerirMapeamento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportacaoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/importacoes/{id}/efetivar": {
       "post": {
         "tags": [
@@ -6309,6 +6426,35 @@
           }
         }
       },
+      "ColunaSugerida": {
+        "required": [
+          "campo",
+          "coluna",
+          "confianca"
+        ],
+        "type": "object",
+        "properties": {
+          "campo": {
+            "type": "string"
+          },
+          "coluna": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "confianca": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "ConfirmarMapeamento": {
         "required": [
           "colunas",
@@ -6342,6 +6488,16 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "regras": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RegrasNormalizacao"
+              }
             ]
           }
         }
@@ -7474,6 +7630,10 @@
           "produtosCriados",
           "produtosAtualizados",
           "motivoFalha",
+          "regras",
+          "sugestaoIa",
+          "mapeamentoSugeridoPorIa",
+          "motivoSemSugestao",
           "versao"
         ],
         "type": "object",
@@ -7622,6 +7782,35 @@
             "format": "int32"
           },
           "motivoFalha": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "regras": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RegrasNormalizacao"
+              }
+            ]
+          },
+          "sugestaoIa": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SugestaoIa"
+              }
+            ]
+          },
+          "mapeamentoSugeridoPorIa": {
+            "type": "boolean"
+          },
+          "motivoSemSugestao": {
             "type": [
               "null",
               "string"
@@ -9064,6 +9253,41 @@
           }
         }
       },
+      "RegrasNormalizacao": {
+        "required": [
+          "separadorDecimal",
+          "unidades",
+          "valoresVerdadeiros",
+          "valoresFalsos"
+        ],
+        "type": "object",
+        "properties": {
+          "separadorDecimal": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "unidades": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UnidadeDePara"
+            }
+          },
+          "valoresVerdadeiros": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "valoresFalsos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "RelatorioImportacao": {
         "required": [
           "id",
@@ -9690,6 +9914,56 @@
           "Consumida"
         ]
       },
+      "SugerirMapeamento": {
+        "required": [
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "versao": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
+      "SugestaoIa": {
+        "required": [
+          "colunas",
+          "regras",
+          "observacao",
+          "chamadaIaId"
+        ],
+        "type": "object",
+        "properties": {
+          "colunas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ColunaSugerida"
+            }
+          },
+          "regras": {
+            "$ref": "#/components/schemas/RegrasNormalizacao"
+          },
+          "observacao": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "chamadaIaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
       "TemplateDetalhe": {
         "required": [
           "id",
@@ -9701,6 +9975,7 @@
           "delimitador",
           "separadorDecimal",
           "mapeamento",
+          "regras",
           "sugeridoPorIa",
           "confirmadoPor",
           "confirmadoEm",
@@ -9746,6 +10021,9 @@
             "items": {
               "$ref": "#/components/schemas/MapeamentoColuna"
             }
+          },
+          "regras": {
+            "$ref": "#/components/schemas/RegrasNormalizacao"
           },
           "sugeridoPorIa": {
             "type": "boolean"
@@ -9801,6 +10079,21 @@
           "Transferencia",
           "Ajuste"
         ]
+      },
+      "UnidadeDePara": {
+        "required": [
+          "origem",
+          "destino"
+        ],
+        "type": "object",
+        "properties": {
+          "origem": {
+            "type": "string"
+          },
+          "destino": {
+            "type": "string"
+          }
+        }
       },
       "UsoCotaIa": {
         "required": [

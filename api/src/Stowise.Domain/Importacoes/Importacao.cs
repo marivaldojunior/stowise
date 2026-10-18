@@ -143,6 +143,18 @@ public sealed class Importacao : Entity
 
     public string? MotivoFalha { get; private set; }
 
+    /// <summary>Regras de normalização propostas (template ou IA) ou confirmadas; nulas: só as regras padrão.</summary>
+    public RegrasNormalizacao? Regras { get; private set; }
+
+    /// <summary>Última sugestão da IA, com a confiança por coluna, para a revisão.</summary>
+    public SugestaoIa? SugestaoIa { get; private set; }
+
+    /// <summary>Se a proposta de mapeamento em revisão veio da IA (e não de um template ou de uma pessoa).</summary>
+    public bool MapeamentoSugeridoPorIa { get; private set; }
+
+    /// <summary>Por que a IA não sugeriu (indisponível, cota, resposta inválida). O fluxo segue manual.</summary>
+    public string? MotivoSemSugestao { get; private set; }
+
     public static Importacao Create(
         TipoImportacao tipo,
         string nomeArquivo,
@@ -210,6 +222,8 @@ public sealed class Importacao : Entity
         EnsureMapeamentoAberto();
         LinkTemplate(template);
         Mapeamento = template.Mapeamento.Where(m => m.Coluna < Colunas.Count).ToList();
+        Regras = template.Regras;
+        MapeamentoSugeridoPorIa = false;
         if (template.Formato == Formato && Formato != FormatoArquivo.Excel)
         {
             SeparadorDecimal = template.SeparadorDecimal;
@@ -235,10 +249,17 @@ public sealed class Importacao : Entity
     /// A pessoa confirma o mapeamento (sugerido ou feito à mão) e a validação das linhas começa. Na revisão, uma
     /// nova confirmação descarta o staging e valida de novo.
     /// </summary>
-    public void ConfirmMapeamento(IReadOnlyList<MapeamentoColuna> mapeamento, Guid usuarioId, DateTimeOffset agora)
+    /// <param name="regras">Nulas: valem as regras da proposta em revisão (template ou IA), que a pessoa viu.</param>
+    public void ConfirmMapeamento(IReadOnlyList<MapeamentoColuna> mapeamento, RegrasNormalizacao? regras, Guid usuarioId, DateTimeOffset agora)
     {
         EnsureMapeamentoAberto();
         Mapeamento = CamposImportacao.Validate(Tipo, mapeamento, Colunas.Count);
+        Regras = (regras ?? Regras ?? RegrasNormalizacao.Vazias).Validate();
+        if (Regras.SeparadorDecimal is { } separador && Formato != FormatoArquivo.Excel)
+        {
+            SeparadorDecimal = separador;
+        }
+
         MapeamentoConfirmadoPor = usuarioId;
         MapeamentoConfirmadoEm = agora;
         (LinhasValidas, LinhasComErro, LinhasPossivelDuplicata, LinhasProcessadas) = (0, 0, 0, 0);
@@ -254,6 +275,61 @@ public sealed class Importacao : Entity
         }
 
         LinhasProcessadas = Math.Clamp(processadas, 0, TotalLinhas);
+    }
+
+    /// <summary>A IA vai sugerir o mapeamento. Só antes da confirmação: depois dela, a importação já está validando.</summary>
+    public void StartSugestao()
+    {
+        if (Status is not (StatusImportacao.Recebido or StatusImportacao.AguardandoConfirmacao))
+        {
+            throw new DomainException($"A IA só sugere o mapeamento antes da confirmação. A importação está em {Status}.");
+        }
+
+        MotivoSemSugestao = null;
+        Status = StatusImportacao.Mapeando;
+    }
+
+    /// <summary>
+    /// Guarda a sugestão como proposta para a pessoa revisar. A sugestão é limpa antes: campo desconhecido, coluna que
+    /// não existe e campo repetido saem (fica o de maior confiança), e a confiança fica entre 0 e 1. Os campos
+    /// obrigatórios podem faltar: a pessoa completa na confirmação.
+    /// </summary>
+    public void ApplySugestao(SugestaoIa sugestao)
+    {
+        ArgumentNullException.ThrowIfNull(sugestao);
+        EnsureStatus(StatusImportacao.Mapeando);
+
+        var campos = CamposImportacao.Para(Tipo).Select(c => c.Nome).ToHashSet(StringComparer.Ordinal);
+        var colunas = sugestao.Colunas
+            .Where(c => campos.Contains(c.Campo) && c.Coluna >= 0 && c.Coluna < Colunas.Count)
+            .Select(c => c with { Confianca = Math.Clamp(c.Confianca, 0m, 1m) })
+            .GroupBy(c => c.Campo, StringComparer.Ordinal)
+            .Select(g => g.OrderByDescending(c => c.Confianca).First())
+            .OrderBy(c => c.Coluna)
+            .ToList();
+        if (colunas.Count == 0)
+        {
+            FailSugestao("A IA não reconheceu nenhuma coluna do arquivo. Faça o mapeamento manual.");
+            return;
+        }
+
+        var limpa = sugestao with { Colunas = colunas, Regras = Clean(sugestao.Regras) };
+        SugestaoIa = limpa;
+        Mapeamento = [.. colunas.Select(c => new MapeamentoColuna(c.Campo, c.Coluna))];
+        Regras = limpa.Regras;
+        MapeamentoSugeridoPorIa = true;
+        MotivoSemSugestao = null;
+        Status = StatusImportacao.AguardandoConfirmacao;
+    }
+
+    /// <summary>Sem sugestão: volta ao ponto anterior (com a proposta do template, se havia) e guarda o motivo.</summary>
+    public void FailSugestao(string motivo)
+    {
+        EnsureStatus(StatusImportacao.Mapeando);
+
+        var texto = motivo?.Trim();
+        MotivoSemSugestao = Guard.Required(texto?.Length > MotivoFalhaMaxLength ? texto[..MotivoFalhaMaxLength] : texto, "Motivo", MotivoFalhaMaxLength);
+        Status = Mapeamento is null ? StatusImportacao.Recebido : StatusImportacao.AguardandoConfirmacao;
     }
 
     /// <summary>O staging terminou: as contagens vêm das linhas gravadas e a importação vai para a revisão.</summary>
@@ -325,6 +401,22 @@ public sealed class Importacao : Entity
         {
             throw new DomainException($"O mapeamento não pode mais mudar: a importação está em {Status}.");
         }
+    }
+
+    /// <summary>Regras da IA que não passam na validação do domínio são descartadas uma a uma, não a sugestão inteira.</summary>
+    private static RegrasNormalizacao Clean(RegrasNormalizacao regras)
+    {
+        var unidades = regras.Unidades
+            .Where(u => !string.IsNullOrWhiteSpace(u.Origem) && Catalogo.Produto.IsValidUnidadeBase(u.Destino?.Trim().ToUpperInvariant()))
+            .Take(RegrasNormalizacao.MaxItens)
+            .ToList();
+        var falsos = regras.ValoresFalsos.Take(RegrasNormalizacao.MaxItens).ToList();
+        var verdadeiros = regras.ValoresVerdadeiros
+            .Where(v => !falsos.Contains(v, StringComparer.OrdinalIgnoreCase))
+            .Take(RegrasNormalizacao.MaxItens)
+            .ToList();
+        var separador = regras.SeparadorDecimal is "," or "." ? regras.SeparadorDecimal : null;
+        return new RegrasNormalizacao(separador, unidades, verdadeiros, falsos).Validate();
     }
 
     private void EnsureStatus(StatusImportacao esperado)

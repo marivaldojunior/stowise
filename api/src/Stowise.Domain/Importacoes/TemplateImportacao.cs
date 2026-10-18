@@ -30,6 +30,8 @@ public sealed class TemplateImportacao : Entity
 
     public IReadOnlyList<MapeamentoColuna> Mapeamento { get; private set; } = [];
 
+    public RegrasNormalizacao Regras { get; private set; } = RegrasNormalizacao.Vazias;
+
     /// <summary>Se o mapeamento veio de uma sugestão da IA (confirmada por uma pessoa).</summary>
     public bool SugeridoPorIa { get; private set; }
 
@@ -72,7 +74,7 @@ public sealed class TemplateImportacao : Entity
             throw new InvalidOperationException("The import does not match the template structure.");
         }
 
-        if (!mapeamento.SequenceEqual(Mapeamento))
+        if (!mapeamento.SequenceEqual(Mapeamento) || !(importacao.Regras ?? RegrasNormalizacao.Vazias).SameAs(Regras))
         {
             Learn(importacao, mapeamento, sugeridoPorIa, usuarioId, agora);
         }
@@ -111,6 +113,7 @@ public sealed class TemplateImportacao : Entity
         Delimitador = importacao.Delimitador;
         SeparadorDecimal = importacao.SeparadorDecimal;
         Mapeamento = mapeamento;
+        Regras = importacao.Regras ?? RegrasNormalizacao.Vazias;
         SugeridoPorIa = sugeridoPorIa;
         ConfirmadoPor = usuarioId;
         ConfirmadoEm = agora;

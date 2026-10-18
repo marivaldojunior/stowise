@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IImportacaoService, ImportacaoService>();
         services.AddScoped<StagingProdutos>();
         services.AddScoped<EfetivacaoProdutos>();
+        services.AddScoped<SugestaoMapeamentoIa>();
         services.AddJobs();
 
         // ADR-0004: camada de IA atrás da API. Desligada (Ia:Habilitada=false), os fluxos seguem manuais.

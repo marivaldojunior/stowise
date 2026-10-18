@@ -30,6 +30,13 @@ public interface IImportacaoService
 
     Task<Result<ImportacaoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Agenda a sugestão de mapeamento e de regras pela IA (a partir do cabeçalho e da amostra). A importação fica em
+    /// <see cref="StatusImportacao.Mapeando"/> até o job terminar; sem sugestão, volta e o mapeamento segue manual.
+    /// IA desligada dá regra de negócio (422) e cota atingida dá 429. Exige a <see cref="ImportacaoDetalhe.Versao"/> lida.
+    /// </summary>
+    Task<Result<ImportacaoDetalhe>> SugerirMapeamentoAsync(Guid id, SugerirMapeamento comando, Guid usuarioId, CancellationToken cancellationToken = default);
+
     /// <summary>Linhas do staging na ordem do arquivo, com filtro por status e ação.</summary>
     Task<Result<PagedResult<ImportacaoLinhaDetalhe>>> ListLinhasAsync(Guid id, LinhaFiltro filtro, CancellationToken cancellationToken = default);
 
@@ -40,11 +47,15 @@ public interface IImportacaoService
 public sealed record ReceberArquivo(TipoImportacao Tipo, string? NomeArquivo, byte[]? Conteudo);
 
 /// <param name="NomeTemplate">Nome do template novo; sem ele, vale o nome do arquivo sem a extensão.</param>
+/// <param name="Regras">Nulas: valem as regras da proposta em revisão (template ou IA).</param>
 public sealed record ConfirmarMapeamento(
     IReadOnlyList<MapeamentoColuna>? Colunas,
     uint? Versao,
     bool SalvarTemplate = false,
-    string? NomeTemplate = null);
+    string? NomeTemplate = null,
+    RegrasNormalizacao? Regras = null);
+
+public sealed record SugerirMapeamento(uint? Versao);
 
 public sealed record EfetivarImportacao(uint? Versao);
 
@@ -121,6 +132,10 @@ public sealed record ImportacaoDetalhe(
     int ProdutosCriados,
     int ProdutosAtualizados,
     string? MotivoFalha,
+    RegrasNormalizacao? Regras,
+    SugestaoIa? SugestaoIa,
+    bool MapeamentoSugeridoPorIa,
+    string? MotivoSemSugestao,
     uint Versao);
 
 /// <summary>Templates aprendidos nas confirmações de mapeamento. Não há criação direta: o template nasce de uma importação.</summary>
@@ -151,6 +166,7 @@ public sealed record TemplateDetalhe(
     string? Delimitador,
     string SeparadorDecimal,
     IReadOnlyList<MapeamentoColuna> Mapeamento,
+    RegrasNormalizacao Regras,
     bool SugeridoPorIa,
     Guid ConfirmadoPor,
     DateTimeOffset ConfirmadoEm,

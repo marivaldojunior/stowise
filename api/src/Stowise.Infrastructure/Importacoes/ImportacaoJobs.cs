@@ -22,6 +22,7 @@ internal sealed partial class ImportacaoJobs(
     StowiseDbContext db,
     StagingProdutos staging,
     EfetivacaoProdutos efetivacao,
+    SugestaoMapeamentoIa sugestao,
     INotificadorImportacao notificador,
     TimeProvider time,
     ILogger<ImportacaoJobs> logger)
@@ -86,6 +87,48 @@ internal sealed partial class ImportacaoJobs(
         await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
     }
 
+    /// <summary>
+    /// Pede a sugestão à IA e guarda como proposta. Sem sugestão (IA fora, cota, resposta inválida), a importação volta
+    /// e o motivo fica visível; as falhas de provedor já foram tratadas pelo gateway, sem exceção.
+    /// </summary>
+    [Queue(Filas.Ia)]
+    [AutomaticRetry(Attempts = 2, DelaysInSeconds = [10, 60], OnAttemptsExceeded = AttemptsExceededAction.Fail)]
+    [DisplayName("Sugestão de mapeamento da importação {0}")]
+    public async Task SugestaoMapeamentoAsync(Guid importacaoId, Guid usuarioId, CancellationToken cancellationToken)
+    {
+        using var activity = JobsTelemetry.Source.StartActivity("importacao.sugestao");
+        activity?.SetTag("stowise.importacao.id", importacaoId);
+
+        var importacao = await db.Importacoes.FirstOrDefaultAsync(i => i.Id == importacaoId, cancellationToken);
+        if (importacao is not { Status: StatusImportacao.Mapeando })
+        {
+            LogSkipped(nameof(SugestaoMapeamentoAsync), importacaoId, importacao?.Status);
+            return;
+        }
+
+        var resposta = await sugestao.SuggestAsync(importacao, usuarioId, cancellationToken);
+
+        // A pessoa pode ter confirmado à mão enquanto a IA trabalhava: nesse caso a sugestão é descartada.
+        await db.Entry(importacao).ReloadAsync(cancellationToken);
+        if (importacao.Status != StatusImportacao.Mapeando)
+        {
+            LogSkipped(nameof(SugestaoMapeamentoAsync), importacaoId, importacao.Status);
+            return;
+        }
+
+        if (resposta is { Sucesso: true, Valor: { } valor })
+        {
+            importacao.ApplySugestao(SugestaoMapeamentoIa.ToSugestao(valor, resposta.ChamadaId));
+        }
+        else
+        {
+            importacao.FailSugestao(resposta.MotivoCota ?? "A IA não conseguiu sugerir o mapeamento agora. Faça o mapeamento manual ou peça de novo.");
+        }
+
+        await db.SaveChangesAsync(cancellationToken);
+        await notificador.NotificarAsync(ProgressoImportacao.From(importacao), cancellationToken);
+    }
+
     [LoggerMessage(Level = LogLevel.Information, Message = "{Job} skipped for import {ImportacaoId}: status is {Status}")]
     private partial void LogSkipped(string job, Guid importacaoId, StatusImportacao? status);
 
@@ -113,7 +156,8 @@ internal sealed partial class ImportacaoFalhaFilter(IServiceScopeFactory scopes,
 
         try
         {
-            MarkFailedAsync(importacaoId).GetAwaiter().GetResult();
+            var sugestao = context.BackgroundJob.Job.Method.Name == nameof(ImportacaoJobs.SugestaoMapeamentoAsync);
+            MarkFailedAsync(importacaoId, sugestao).GetAwaiter().GetResult();
         }
         catch (Exception e) when (e is DbUpdateException or InvalidOperationException or TimeoutException)
         {
@@ -126,7 +170,8 @@ internal sealed partial class ImportacaoFalhaFilter(IServiceScopeFactory scopes,
     {
     }
 
-    private async Task MarkFailedAsync(Guid importacaoId)
+    /// <param name="sugestao">Falha na sugestão da IA não encerra a importação: ela volta para o mapeamento manual.</param>
+    private async Task MarkFailedAsync(Guid importacaoId, bool sugestao)
     {
         await using var scope = scopes.CreateAsyncScope();
         var db = scope.ServiceProvider.GetRequiredService<StowiseDbContext>();
@@ -136,7 +181,20 @@ internal sealed partial class ImportacaoFalhaFilter(IServiceScopeFactory scopes,
             return;
         }
 
-        importacao.Fail(Motivo, scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow());
+        if (sugestao)
+        {
+            if (importacao.Status != StatusImportacao.Mapeando)
+            {
+                return;
+            }
+
+            importacao.FailSugestao("A sugestão da IA falhou depois de várias tentativas. Faça o mapeamento manual.");
+        }
+        else
+        {
+            importacao.Fail(Motivo, scope.ServiceProvider.GetRequiredService<TimeProvider>().GetUtcNow());
+        }
+
         await db.SaveChangesAsync();
         await scope.ServiceProvider.GetRequiredService<INotificadorImportacao>().NotificarAsync(ProgressoImportacao.From(importacao));
     }
