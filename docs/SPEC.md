@@ -314,7 +314,7 @@ Regras de ordem:
 - [ ] Testes de unidade, widget, golden e integração
 - [x] Leitura de código de barras on-device (ML Kit)
 - [x] Movimentação online: entrada, saída e transferência, com leitura do código do produto e do endereço
-- [ ] Consulta de saldo por produto e por endereço
+- [x] Consulta de saldo por produto e por endereço
 - [x] APK de demonstração gerado pelo CI como artefato
 
 **1.7 Entrega**

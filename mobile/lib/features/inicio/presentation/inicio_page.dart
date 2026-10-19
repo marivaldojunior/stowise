@@ -8,7 +8,7 @@ import '../../../core/config/ambiente.dart';
 import '../../auth/presentation/menu_usuario.dart';
 import '../../auth/presentation/sessao_controller.dart';
 
-/// Tela inicial do operador. As ações (movimentação e consulta) entram nas tarefas seguintes do plano.
+/// Tela inicial do operador: movimentar estoque e consultar saldo.
 class InicioPage extends ConsumerWidget {
   const InicioPage({super.key});
 
@@ -35,12 +35,13 @@ class InicioPage extends ConsumerWidget {
               onTap: () => context.push(Rotas.movimentar),
             ),
           ),
-          const Card(
+          Card(
             child: ListTile(
-              leading: Icon(Icons.inventory_2_outlined),
-              title: Text('Consultar saldo'),
-              subtitle: Text('Em breve'),
-              enabled: false,
+              leading: const Icon(Icons.inventory_2_outlined),
+              title: const Text('Consultar saldo'),
+              subtitle: const Text('Por produto ou por endereço'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(Rotas.saldo),
             ),
           ),
           if (ambiente.dev) ...[

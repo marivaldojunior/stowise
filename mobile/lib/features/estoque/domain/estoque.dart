@@ -100,6 +100,62 @@ class MovimentoRegistrado {
   final bool repetido;
 }
 
+/// Saldo de um produto num endereço (e lote).
+class SaldoLinha {
+  const SaldoLinha({
+    required this.enderecoCodigo,
+    required this.sku,
+    required this.descricao,
+    required this.unidade,
+    required this.quantidade,
+    required this.reservada,
+    required this.disponivel,
+    this.lote,
+    this.validade,
+  });
+
+  final String enderecoCodigo;
+  final String sku;
+  final String descricao;
+  final String unidade;
+  final String? lote;
+  final DateTime? validade;
+  final double quantidade;
+  final double reservada;
+  final double disponivel;
+}
+
+class LoteResumo {
+  const LoteResumo({required this.quantidade, this.numero, this.validade});
+
+  final String? numero;
+  final DateTime? validade;
+  final double quantidade;
+}
+
+/// Totais do produto em todos os endereços.
+class ResumoProduto {
+  const ResumoProduto({
+    required this.sku,
+    required this.descricao,
+    required this.unidade,
+    required this.quantidade,
+    required this.reservada,
+    required this.disponivel,
+    required this.enderecos,
+    required this.lotes,
+  });
+
+  final String sku;
+  final String descricao;
+  final String unidade;
+  final double quantidade;
+  final double reservada;
+  final double disponivel;
+  final int enderecos;
+  final List<LoteResumo> lotes;
+}
+
 /// Falha de uma operação de estoque, pronta para a tela.
 class FalhaEstoque implements Exception {
   const FalhaEstoque(this.mensagem, {this.campos = const {}, this.semConexao = false, this.naoEncontrado = false});

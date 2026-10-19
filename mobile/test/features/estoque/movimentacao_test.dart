@@ -4,19 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../ajudantes.dart';
 import '../../api_falsa.dart';
 import 'api_estoque.dart';
+import 'fluxo.dart';
 
 Future<({ApiFalsa api, CofreFalso cofre})> abrirMovimentacao(WidgetTester tester, ApiFalsa api) async {
   final ambiente = await montarApp(tester, api: api, tela: const Size(400, 1200));
   await tester.tap(find.text('Movimentar estoque'));
   await tester.pumpAndSettle();
   return ambiente;
-}
-
-/// Digita o código e envia Enter, como faz o leitor físico do coletor.
-Future<void> lerCodigo(WidgetTester tester, String rotulo, String codigo) async {
-  await tester.enterText(find.widgetWithText(TextField, rotulo), codigo);
-  await tester.testTextInput.receiveAction(TextInputAction.search);
-  await tester.pumpAndSettle();
 }
 
 Future<void> registrar(WidgetTester tester, String acao) async {

@@ -7,6 +7,7 @@ import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/sessao_controller.dart';
 import '../features/estoque/domain/estoque.dart';
 import '../features/estoque/presentation/movimentacao_page.dart';
+import '../features/estoque/presentation/saldo_page.dart';
 import '../features/inicio/presentation/inicio_page.dart';
 
 abstract final class Rotas {
@@ -15,6 +16,7 @@ abstract final class Rotas {
   static const carregando = '/carregando';
   static const semConexao = '/sem-conexao';
   static const movimentar = '/movimentar';
+  static const saldo = '/saldo';
 }
 
 /// Para onde a sessão manda: sem sessão, só o login; com sessão, nada de login ou de telas de abertura.
@@ -47,6 +49,12 @@ final rotasProvider = Provider<GoRouter>((ref) {
         path: Rotas.movimentar,
         builder: (context, state) => MovimentacaoPage(
           tipoInicial: TipoMovimento.values.asNameMap()[state.uri.queryParameters['tipo']] ?? TipoMovimento.entrada,
+        ),
+      ),
+      GoRoute(
+        path: Rotas.saldo,
+        builder: (context, state) => SaldoPage(
+          consultaInicial: ConsultaSaldo.values.asNameMap()[state.uri.queryParameters['por']] ?? ConsultaSaldo.produto,
         ),
       ),
     ],

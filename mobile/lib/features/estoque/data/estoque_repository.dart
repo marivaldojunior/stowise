@@ -113,6 +113,48 @@ class EstoqueRepository {
     );
   });
 
+  Future<ResumoProduto> resumoDoProduto(String produtoId) => _chamar(() async {
+    final resumo = (await _api.getEstoqueApi().obterResumoSaldoProduto(produtoId: produtoId)).data!;
+    return ResumoProduto(
+      sku: resumo.sku,
+      descricao: resumo.descricao,
+      unidade: resumo.unidadeBase,
+      quantidade: resumo.quantidade,
+      reservada: resumo.quantidadeReservada,
+      disponivel: resumo.quantidadeDisponivel,
+      enderecos: resumo.enderecos,
+      lotes: [
+        for (final lote in resumo.lotes)
+          LoteResumo(numero: lote.numero, validade: _dataHora(lote.validade), quantidade: lote.quantidade),
+      ],
+    );
+  });
+
+  /// Saldos por produto ou por endereço (até 100 linhas: o suficiente para uma consulta no corredor).
+  Future<List<SaldoLinha>> saldos({String? produtoId, String? enderecoId}) => _chamar(() async {
+    final pagina = await _api.getEstoqueApi().listarSaldos(
+      produtoId: produtoId,
+      enderecoId: enderecoId,
+      tamanhoPagina: 100,
+    );
+    return [
+      for (final saldo in pagina.data!.itens)
+        SaldoLinha(
+          enderecoCodigo: saldo.enderecoCodigo,
+          sku: saldo.sku,
+          descricao: saldo.descricao,
+          unidade: saldo.unidadeBase,
+          lote: saldo.loteNumero,
+          validade: _dataHora(saldo.validade),
+          quantidade: saldo.quantidade,
+          reservada: saldo.quantidadeReservada,
+          disponivel: saldo.quantidadeDisponivel,
+        ),
+    ];
+  });
+
+  DateTime? _dataHora(Date? data) => data == null ? null : DateTime(data.year, data.month, data.day);
+
   Date? _data(DateTime? data) => data == null ? null : Date(data.year, data.month, data.day);
 
   /// Converte as falhas do Dio na falha do estoque, com a mensagem e os erros por campo da API.

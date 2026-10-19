@@ -5,12 +5,13 @@ import 'package:dio/dio.dart';
 
 /// Requisição recebida pela API falsa, para o teste conferir método, caminho, cabeçalhos e corpo.
 class RequisicaoFalsa {
-  RequisicaoFalsa(this.metodo, this.caminho, this.cabecalhos, this.corpo);
+  RequisicaoFalsa(this.metodo, this.caminho, this.cabecalhos, this.corpo, [this.query = const {}]);
 
   final String metodo;
   final String caminho;
   final Map<String, dynamic> cabecalhos;
   final Object? corpo;
+  final Map<String, dynamic> query;
 }
 
 typedef Responder = ResponseBody Function(RequisicaoFalsa requisicao);
@@ -28,7 +29,13 @@ class ApiFalsa implements HttpClientAdapter {
     Stream<Uint8List>? requestStream,
     Future<void>? cancelFuture,
   ) async {
-    final requisicao = RequisicaoFalsa(options.method, options.path, Map.of(options.headers), _corpo(options.data));
+    final requisicao = RequisicaoFalsa(
+      options.method,
+      options.path,
+      Map.of(options.headers),
+      _corpo(options.data),
+      Map.of(options.queryParameters),
+    );
     requisicoes.add(requisicao);
     return responder(requisicao);
   }

@@ -140,6 +140,39 @@ ApiFalsa apiDeEstoque({
           : json(endereco(codigo, status: codigo.startsWith('B') ? 'Bloqueado' : 'Livre'));
     }
 
+    if (caminho == '/api/v1/saldos/produtos/p-queijo') {
+      return json({
+        'produtoId': 'p-queijo',
+        'sku': 'QUE-MUS-KG',
+        'descricao': 'Queijo muçarela',
+        'unidadeBase': 'KG',
+        'quantidade': 48,
+        'quantidadeReservada': 6,
+        'quantidadeDisponivel': 42,
+        'enderecos': 2,
+        'lotes': [
+          {'loteId': 'l1', 'numero': 'L26100', 'validade': '2026-11-20', 'quantidade': 30, 'quantidadeReservada': 6},
+          {'loteId': 'l2', 'numero': 'L26101', 'validade': '2026-12-05', 'quantidade': 18, 'quantidadeReservada': 0},
+        ],
+      });
+    }
+
+    if (caminho.startsWith('/api/v1/saldos')) {
+      final porEndereco = r.query['enderecoId'] != null;
+      final vazio = (r.query['enderecoId'] ?? '').toString().contains('VAZIO');
+      return json({
+        'itens': vazio
+            ? <Object>[]
+            : [
+                saldoItem('F-01-1-1', 'L26100', '2026-11-20', 30, 6),
+                if (!porEndereco) saldoItem('F-02-1-1', 'L26101', '2026-12-05', 18, 0),
+              ],
+        'pagina': 1,
+        'tamanhoPagina': 100,
+        'total': vazio ? 0 : (porEndereco ? 1 : 2),
+      });
+    }
+
     if (caminho.startsWith('/api/v1/movimentacoes/')) {
       if (movimentar != null) {
         return movimentar(r);
@@ -153,6 +186,23 @@ ApiFalsa apiDeEstoque({
     return problema(404, 'Não encontrado');
   });
 }
+
+Map<String, Object?> saldoItem(String endereco, String lote, String validade, double quantidade, double reservada) => {
+  'enderecoId': 'end-$endereco',
+  'enderecoCodigo': endereco,
+  'armazemId': 'arm-1',
+  'zonaId': 'z-fria',
+  'produtoId': 'p-queijo',
+  'sku': 'QUE-MUS-KG',
+  'descricao': 'Queijo muçarela',
+  'unidadeBase': 'KG',
+  'loteId': 'lote-$lote',
+  'loteNumero': lote,
+  'validade': validade,
+  'quantidade': quantidade,
+  'quantidadeReservada': reservada,
+  'quantidadeDisponivel': quantidade - reservada,
+};
 
 DioException semRede(RequisicaoFalsa r) => DioException.connectionError(
   requestOptions: RequestOptions(path: r.caminho),
