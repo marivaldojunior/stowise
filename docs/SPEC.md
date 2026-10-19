@@ -304,7 +304,7 @@ Regras de ordem:
 - [x] Endereços: cadastro, geração em lote e mapa de ocupação (heatmap)
 - [x] Saldos e extrato de movimentações
 - [x] Upload de arquivo e revisão do mapeamento sugerido
-- [ ] Prévia com erros linha a linha e progresso em tempo real
+- [x] Prévia com erros linha a linha e progresso em tempo real
 
 **1.6 App — Fundação, movimentação e consulta**
 

@@ -17,12 +17,15 @@ import { HttpError } from '@/api/mutator'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { formatarNumero } from '@/lib/numeros'
 import { Amostra } from '@/features/importacoes/Amostra'
+import { Previa } from '@/features/importacoes/Previa'
+import { useProgressoImportacao } from '@/features/importacoes/progresso'
 import { RevisaoMapeamento } from '@/features/importacoes/RevisaoMapeamento'
 import { emAndamento, ETAPAS, ROTULO_STATUS_IMPORTACAO } from '@/features/importacoes/rotulos'
 import { cn } from '@/lib/utils'
 
-/** Consulta periódica enquanto um job trabalha (reserva do tempo real). */
+/** Consulta periódica enquanto um job trabalha, quando o tempo real (SignalR) não está conectado. */
 const INTERVALO_CONSULTA_MS = 3_000
 
 function Etapas({ status }: { status: StatusImportacao }) {
@@ -53,12 +56,35 @@ function Etapas({ status }: { status: StatusImportacao }) {
   )
 }
 
-function Aguardando({ texto }: { texto: string }) {
+function Aguardando({ texto, importacao }: { texto: string; importacao?: ImportacaoDetalhe }) {
+  const total = importacao?.totalLinhas ?? 0
+  const feitas = Math.min(importacao?.linhasProcessadas ?? 0, total)
+  const percentual = total === 0 ? 0 : Math.round((feitas / total) * 100)
+
   return (
-    <p role="status" className="flex items-center gap-2 rounded-md border p-4 text-sm">
-      <Loader2 className="size-4 animate-spin" aria-hidden />
-      {texto}
-    </p>
+    <div role="status" className="flex flex-col gap-3 rounded-md border p-4 text-sm">
+      <p className="flex items-center gap-2">
+        <Loader2 className="size-4 animate-spin" aria-hidden />
+        {texto}
+      </p>
+      {importacao && (
+        <>
+          <div
+            role="progressbar"
+            aria-label="Progresso"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={percentual}
+            className="h-2 overflow-hidden rounded-full bg-muted"
+          >
+            <div className="h-full bg-primary transition-[width]" style={{ width: `${percentual}%` }} />
+          </div>
+          <p className="text-muted-foreground tabular-nums">
+            {formatarNumero(feitas)} de {formatarNumero(total)} linha(s) · {percentual}%
+          </p>
+        </>
+      )}
+    </div>
   )
 }
 
@@ -148,9 +174,19 @@ function EtapaMapeamento({ importacao }: { importacao: ImportacaoDetalhe }) {
 /** /importacoes/:id: o fluxo da importação, etapa por etapa. */
 export function ImportacaoPage() {
   const { id = '' } = useParams()
+  const [acompanhar, setAcompanhar] = useState(false)
+  const tempoReal = useProgressoImportacao(id, acompanhar)
   const importacao = useObterImportacao(id, {
-    query: { refetchInterval: (query) => (query.state.data && emAndamento(query.state.data.status) ? INTERVALO_CONSULTA_MS : false) },
+    query: {
+      // Sem tempo real (hub fora do ar), a tela consulta a API de tempos em tempos enquanto o job trabalha.
+      refetchInterval: (query) =>
+        query.state.data && emAndamento(query.state.data.status) && !tempoReal ? INTERVALO_CONSULTA_MS : false,
+    },
   })
+  const andamento = importacao.data ? emAndamento(importacao.data.status) : false
+  if (andamento !== acompanhar) {
+    setAcompanhar(andamento)
+  }
 
   if (importacao.isPending) {
     return <Skeleton className="h-8 w-64" role="status" aria-label="Carregando a importação" />
@@ -191,7 +227,11 @@ export function ImportacaoPage() {
       {(atual.status === 'Recebido' || atual.status === 'AguardandoConfirmacao') && (
         <EtapaMapeamento importacao={atual} />
       )}
-      {atual.status === 'Validando' && <Aguardando texto="Validando as linhas do arquivo…" />}
+      {atual.status === 'Validando' && <Aguardando texto="Validando as linhas do arquivo…" importacao={atual} />}
+      {atual.status === 'Efetivando' && (
+        <Aguardando texto="Gravando os produtos no catálogo…" importacao={atual} />
+      )}
+      {(atual.status === 'AguardandoRevisao' || atual.status === 'Concluido') && <Previa importacao={atual} />}
     </section>
   )
 }

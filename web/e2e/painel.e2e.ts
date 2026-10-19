@@ -89,3 +89,40 @@ test('Gestão cadastra um produto com caixa e o encontra no catálogo', async ({
   await page.getByRole('searchbox', { name: 'Buscar por SKU ou descrição' }).fill(sku)
   await expect(page.getByRole('row').filter({ hasText: sku })).toContainText('Produto de teste e2e')
 })
+
+test('Gestão importa produtos de um CSV, acompanha a validação e efetiva', async ({ page }) => {
+  // Os jobs (Hangfire) consultam a fila a cada 5 s: cada etapa pode levar alguns segundos.
+  test.setTimeout(120_000)
+  const marca = Date.now()
+  const csv = ['SKU;Descricao;Unidade', `IMP-${marca}-1;Arroz importado e2e;UN`, `IMP-${marca}-2;Feijão importado e2e;KG`].join(
+    '\n',
+  )
+
+  await page.goto('/importacoes')
+  await entrar(page, ADMIN.email, ADMIN.senha)
+  await page.getByLabel('Arquivo de produtos').setInputFiles({
+    name: `produtos-${marca}.csv`,
+    mimeType: 'text/csv',
+    buffer: Buffer.from(csv, 'utf-8'),
+  })
+  await expect(page.getByRole('heading', { name: `produtos-${marca}.csv` })).toBeVisible()
+
+  // A IA fica desligada no docker compose: o mapeamento é manual.
+  for (const [campo, coluna] of [
+    ['sku', '1. SKU'],
+    ['descricao', '2. Descricao'],
+    ['unidadeBase', '3. Unidade'],
+  ] as const) {
+    await page.getByRole('combobox', { name: `Coluna do campo ${campo}` }).click()
+    await page.getByRole('option', { name: coluna }).click()
+  }
+  await page.getByRole('button', { name: 'Confirmar o mapeamento e validar' }).click()
+
+  await expect(page.getByRole('heading', { name: 'Prévia' })).toBeVisible({ timeout: 60_000 })
+  await page.getByRole('button', { name: 'Efetivar a importação' }).click()
+  await expect(page.getByRole('heading', { name: 'Resultado' })).toBeVisible({ timeout: 60_000 })
+
+  await page.getByRole('link', { name: 'Ver o catálogo' }).click()
+  await page.getByRole('searchbox', { name: 'Buscar por SKU ou descrição' }).fill(`IMP-${marca}`)
+  await expect(page.getByRole('row').filter({ hasText: 'importado e2e' })).toHaveCount(2)
+})
