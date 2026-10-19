@@ -127,7 +127,7 @@ export function RevisaoMapeamento({ importacao, campos, falha, enviando, onConfi
         <h2 id="titulo-mapeamento" className="text-lg font-semibold">
           Campos e colunas
         </h2>
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
           <Table>
             <TableHeader>
               <TableRow>

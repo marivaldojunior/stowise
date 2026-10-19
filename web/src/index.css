@@ -28,6 +28,12 @@
     --color-success: var(--success);
     --color-warning: var(--warning);
     --color-info: var(--info);
+    --color-sinal: var(--sinal);
+    --color-sinal-foreground: var(--sinal-foreground);
+    --color-ia: var(--ia);
+    --color-ia-2: var(--ia-2);
+    --color-marca-2: var(--marca-2);
+    --color-tinta: var(--tinta);
     --color-accent-foreground: var(--accent-foreground);
     --color-accent: var(--accent);
     --color-muted-foreground: var(--muted-foreground);
@@ -52,82 +58,203 @@
 }
 
 /*
- * Tema do Stowise: base neutra do shadcn com a cor da marca (verde-azulado) no primary e cores semânticas para
- * situações (success, warning, info). Use as classes do tema (bg-primary, text-success...), nunca cores fixas.
+ * Identidade do Stowise, tirada do próprio armazém:
+ * - primary / marca-2: verde-azulado da operação (estoque), em degradê para o ciano;
+ * - tinta: azul-petróleo escuro do menu lateral e das áreas de destaque;
+ * - sinal: âmbar da fita de segurança e da etiqueta de palete (atenção e ação);
+ * - ia / ia-2: violeta → magenta, usado só nos recursos de IA;
+ * - success, warning, info e destructive: o sentido das situações.
+ * Use as classes do tema (bg-primary, text-ia, bg-grade-marca...), nunca cores fixas do Tailwind.
  */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
+    --background: oklch(0.982 0.006 210);
+    --foreground: oklch(0.2 0.025 240);
     --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
+    --card-foreground: oklch(0.2 0.025 240);
     --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.5 0.1 190);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
+    --popover-foreground: oklch(0.2 0.025 240);
+    --primary: oklch(0.52 0.115 192);
+    --primary-foreground: oklch(0.99 0.01 190);
+    --marca-2: oklch(0.7 0.13 205);
+    --tinta: oklch(0.26 0.05 230);
+    --sinal: oklch(0.8 0.16 75);
+    --sinal-foreground: oklch(0.28 0.06 60);
+    --ia: oklch(0.55 0.21 292);
+    --ia-2: oklch(0.63 0.23 340);
+    --secondary: oklch(0.955 0.012 205);
+    --secondary-foreground: oklch(0.26 0.05 230);
+    --muted: oklch(0.955 0.01 210);
+    --muted-foreground: oklch(0.5 0.025 235);
+    --accent: oklch(0.95 0.02 195);
+    --accent-foreground: oklch(0.26 0.05 230);
     --destructive: oklch(0.577 0.245 27.325);
     --success: oklch(0.52 0.13 155);
     --warning: oklch(0.6 0.14 65);
     --info: oklch(0.52 0.13 250);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.62 0.1 190);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
+    --border: oklch(0.91 0.012 215);
+    --input: oklch(0.9 0.014 215);
+    --ring: oklch(0.62 0.12 192);
+    --chart-1: oklch(0.52 0.115 192);
+    --chart-2: oklch(0.7 0.13 205);
+    --chart-3: oklch(0.8 0.16 75);
+    --chart-4: oklch(0.55 0.21 292);
+    --chart-5: oklch(0.63 0.23 340);
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.5 0.1 190);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.62 0.1 190);
+    --sidebar: oklch(0.26 0.05 230);
+    --sidebar-foreground: oklch(0.93 0.015 210);
+    --sidebar-primary: oklch(0.7 0.13 205);
+    --sidebar-primary-foreground: oklch(0.2 0.04 230);
+    --sidebar-accent: oklch(0.32 0.06 225);
+    --sidebar-accent-foreground: oklch(0.98 0.01 200);
+    --sidebar-border: oklch(1 0 0 / 8%);
+    --sidebar-ring: oklch(0.7 0.13 205);
+
+    /* Sombras em camadas, com um pouco da tinta: a profundidade lembra prateleiras e paletes. */
+    --sombra-cartao: 0 1px 2px oklch(0.26 0.05 230 / 0.06), 0 6px 18px -8px oklch(0.26 0.05 230 / 0.16);
+    --sombra-elevada: 0 2px 4px oklch(0.26 0.05 230 / 0.06), 0 18px 40px -16px oklch(0.26 0.05 230 / 0.28);
+    --brilho-marca: 0 8px 22px -8px oklch(0.52 0.115 192 / 0.55);
+    --brilho-ia: 0 8px 22px -8px oklch(0.55 0.21 292 / 0.55);
+    --linha-planta: oklch(0.52 0.115 192 / 0.07);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.205 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.205 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.74 0.11 190);
-    --primary-foreground: oklch(0.2 0.03 200);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
+    --background: oklch(0.17 0.022 235);
+    --foreground: oklch(0.95 0.01 210);
+    --card: oklch(0.21 0.028 232);
+    --card-foreground: oklch(0.95 0.01 210);
+    --popover: oklch(0.22 0.03 232);
+    --popover-foreground: oklch(0.95 0.01 210);
+    --primary: oklch(0.74 0.12 192);
+    --primary-foreground: oklch(0.18 0.035 230);
+    --marca-2: oklch(0.8 0.12 205);
+    --tinta: oklch(0.13 0.025 235);
+    --sinal: oklch(0.82 0.15 78);
+    --sinal-foreground: oklch(0.22 0.05 60);
+    --ia: oklch(0.72 0.17 292);
+    --ia-2: oklch(0.74 0.19 340);
+    --secondary: oklch(0.27 0.03 230);
+    --secondary-foreground: oklch(0.95 0.01 210);
+    --muted: oklch(0.25 0.028 232);
+    --muted-foreground: oklch(0.72 0.02 220);
+    --accent: oklch(0.28 0.04 220);
+    --accent-foreground: oklch(0.95 0.01 210);
     --destructive: oklch(0.704 0.191 22.216);
     --success: oklch(0.74 0.14 155);
     --warning: oklch(0.8 0.14 75);
     --info: oklch(0.72 0.12 250);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 15%);
-    --ring: oklch(0.6 0.1 190);
-    --chart-1: oklch(0.87 0 0);
-    --chart-2: oklch(0.556 0 0);
-    --chart-3: oklch(0.439 0 0);
-    --chart-4: oklch(0.371 0 0);
-    --chart-5: oklch(0.269 0 0);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.74 0.11 190);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(1 0 0 / 10%);
-    --sidebar-ring: oklch(0.6 0.1 190);
+    --border: oklch(1 0 0 / 9%);
+    --input: oklch(1 0 0 / 14%);
+    --ring: oklch(0.6 0.1 192);
+    --chart-1: oklch(0.74 0.12 192);
+    --chart-2: oklch(0.8 0.12 205);
+    --chart-3: oklch(0.82 0.15 78);
+    --chart-4: oklch(0.72 0.17 292);
+    --chart-5: oklch(0.74 0.19 340);
+    --sidebar: oklch(0.13 0.025 235);
+    --sidebar-foreground: oklch(0.92 0.015 210);
+    --sidebar-primary: oklch(0.8 0.12 205);
+    --sidebar-primary-foreground: oklch(0.15 0.03 230);
+    --sidebar-accent: oklch(0.22 0.04 225);
+    --sidebar-accent-foreground: oklch(0.98 0.01 200);
+    --sidebar-border: oklch(1 0 0 / 7%);
+    --sidebar-ring: oklch(0.6 0.1 192);
+
+    --sombra-cartao: 0 1px 2px oklch(0 0 0 / 0.3), 0 8px 22px -10px oklch(0 0 0 / 0.55);
+    --sombra-elevada: 0 2px 6px oklch(0 0 0 / 0.35), 0 22px 46px -18px oklch(0 0 0 / 0.7);
+    --brilho-marca: 0 8px 26px -8px oklch(0.74 0.12 192 / 0.45);
+    --brilho-ia: 0 8px 26px -8px oklch(0.72 0.17 292 / 0.45);
+    --linha-planta: oklch(0.74 0.12 192 / 0.06);
+}
+
+/* Degradês da identidade. */
+@utility bg-grade-marca {
+    background-image: linear-gradient(135deg, var(--primary) 0%, var(--marca-2) 100%);
+}
+
+@utility bg-grade-tinta {
+    background-image:
+        radial-gradient(120% 80% at 0% 0%, oklch(0.52 0.115 192 / 0.35) 0%, transparent 55%),
+        radial-gradient(90% 70% at 100% 100%, oklch(0.55 0.21 292 / 0.22) 0%, transparent 60%),
+        linear-gradient(160deg, var(--tinta) 0%, oklch(0.2 0.04 235) 100%);
+}
+
+@utility bg-grade-ia {
+    background-image: linear-gradient(135deg, var(--ia) 0%, var(--ia-2) 100%);
+}
+
+@utility bg-grade-sinal {
+    background-image: linear-gradient(135deg, var(--sinal) 0%, oklch(0.72 0.17 55) 100%);
+}
+
+@utility texto-grade-ia {
+    background-image: linear-gradient(90deg, var(--ia) 0%, var(--ia-2) 100%);
+    background-clip: text;
+    color: transparent;
+}
+
+/* Faixa de assinatura: operação (verde-azulado), sinal (âmbar) e IA (violeta), como uma fita de armazém. */
+@utility faixa-stowise {
+    background-image: linear-gradient(90deg, var(--primary) 0%, var(--marca-2) 35%, var(--sinal) 60%, var(--ia) 85%, var(--ia-2) 100%);
+}
+
+/* Grade de planta baixa (o desenho do armazém). */
+@utility fundo-planta {
+    background-image:
+        linear-gradient(var(--linha-planta) 1px, transparent 1px),
+        linear-gradient(90deg, var(--linha-planta) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+@utility fundo-planta-clara {
+    background-image:
+        linear-gradient(oklch(1 0 0 / 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, oklch(1 0 0 / 0.06) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+@utility sombra-cartao {
+    box-shadow: var(--sombra-cartao);
+}
+
+@utility sombra-elevada {
+    box-shadow: var(--sombra-elevada);
+}
+
+@utility brilho-marca {
+    box-shadow: var(--brilho-marca);
+}
+
+@utility brilho-ia {
+    box-shadow: var(--brilho-ia);
+}
+
+/* Etiqueta de endereço ou de SKU: o código como impresso na prateleira. */
+@utility etiqueta {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 0.3rem;
+    border: 1px solid color-mix(in oklch, var(--foreground) 14%, transparent);
+    border-left: 3px solid var(--sinal);
+    background-color: color-mix(in oklch, var(--card) 70%, var(--muted));
+    padding: 0.05rem 0.4rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.02em;
+}
+
+/* Código de barras decorativo (barras de larguras variadas). */
+@utility codigo-de-barras {
+    background-image: repeating-linear-gradient(
+        90deg,
+        currentColor 0 2px,
+        transparent 2px 4px,
+        currentColor 4px 5px,
+        transparent 5px 8px,
+        currentColor 8px 11px,
+        transparent 11px 13px,
+        currentColor 13px 14px,
+        transparent 14px 17px
+    );
 }
 
 @layer base {

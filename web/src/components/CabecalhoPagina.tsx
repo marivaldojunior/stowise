@@ -28,8 +28,9 @@ export function CabecalhoPagina({ titulo, tituloAba, descricao, acoes, voltar }:
         </Button>
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
+        <div className="flex min-w-0 flex-col gap-1.5">
+          <span className="h-1 w-10 rounded-full faixa-stowise" aria-hidden />
+          <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{titulo}</h1>
           {descricao && <div className="text-sm text-muted-foreground">{descricao}</div>}
         </div>
         {acoes && <div className="flex flex-wrap gap-2">{acoes}</div>}

@@ -8,7 +8,11 @@ const ESTILO: Record<TomAlerta, { classe: string; Icone: typeof Info }> = {
   erro: { classe: 'border-destructive/40 bg-destructive/5 [&>svg]:text-destructive', Icone: CircleAlert },
   aviso: { classe: 'border-warning/40 bg-warning/5 [&>svg]:text-warning', Icone: TriangleAlert },
   info: { classe: 'border-info/30 bg-info/5 [&>svg]:text-info', Icone: Info },
-  ia: { classe: 'border-primary/30 bg-primary/5 [&>svg]:text-primary', Icone: Sparkles },
+  ia: {
+    classe:
+      'border-ia/30 bg-[linear-gradient(120deg,color-mix(in_oklch,var(--ia)_10%,transparent),color-mix(in_oklch,var(--ia-2)_6%,transparent))] [&>svg]:text-ia',
+    Icone: Sparkles,
+  },
 }
 
 interface Props {

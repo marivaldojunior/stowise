@@ -33,15 +33,15 @@ export function ResumoEstoqueProduto({ produtoId }: { produtoId: string }) {
           <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {(
               [
-                ['Em estoque', formatarNumero(resumo.data.quantidade, resumo.data.unidadeBase)],
-                ['Reservado', formatarNumero(resumo.data.quantidadeReservada, resumo.data.unidadeBase)],
-                ['Disponível', formatarNumero(resumo.data.quantidadeDisponivel, resumo.data.unidadeBase)],
-                ['Endereços', formatarNumero(resumo.data.enderecos)],
+                ['Em estoque', formatarNumero(resumo.data.quantidade, resumo.data.unidadeBase), ''],
+                ['Reservado', formatarNumero(resumo.data.quantidadeReservada, resumo.data.unidadeBase), 'text-warning'],
+                ['Disponível', formatarNumero(resumo.data.quantidadeDisponivel, resumo.data.unidadeBase), 'text-success'],
+                ['Endereços', formatarNumero(resumo.data.enderecos), ''],
               ] as const
-            ).map(([rotulo, valor]) => (
-              <div key={rotulo} className="rounded-lg bg-muted/50 p-3">
+            ).map(([rotulo, valor, cor]) => (
+              <div key={rotulo} className="rounded-xl bg-muted/50 p-3 ring-1 ring-border/60">
                 <dt className="text-xs text-muted-foreground">{rotulo}</dt>
-                <dd className="text-lg font-semibold tabular-nums">{valor}</dd>
+                <dd className={`text-lg font-bold tabular-nums ${cor}`}>{valor}</dd>
               </div>
             ))}
           </dl>

@@ -103,7 +103,7 @@ function Linhas({ importacao }: { importacao: ImportacaoDetalhe }) {
           </SelectContent>
         </Select>
       </div>
-      <div className="rounded-md border">
+      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
         <Table>
           <TableHeader>
             <TableRow>

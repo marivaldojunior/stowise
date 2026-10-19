@@ -81,7 +81,7 @@ export function ExtratoPage() {
       {extrato.isError ? (
         <Alerta tom="erro">Não foi possível carregar o extrato: {falhaDe(extrato.error).mensagem}</Alerta>
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
           <Table>
             <TableHeader>
               <TableRow>
@@ -107,7 +107,7 @@ export function ExtratoPage() {
                       <TableCell className="whitespace-nowrap">{formatarDataHora(item.ocorridoEm)}</TableCell>
                       <TableCell>{ROTULO_MOVIMENTACAO[item.tipo]}</TableCell>
                       <TableCell>
-                        <Link to={`/catalogo/${item.produtoId}`} className="font-mono text-xs hover:underline">
+                        <Link to={`/catalogo/${item.produtoId}`} className="etiqueta hover:underline">
                           {item.sku}
                         </Link>
                       </TableCell>

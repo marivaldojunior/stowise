@@ -83,7 +83,7 @@ export function SaldosPage() {
       {lista.isError ? (
         <Alerta tom="erro">Não foi possível carregar os saldos: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
           <Table>
             <TableHeader>
               <TableRow>
@@ -104,14 +104,14 @@ export function SaldosPage() {
               ) : (
                 lista.data.itens.map((saldo) => (
                   <TableRow key={`${saldo.enderecoId}-${saldo.produtoId}-${saldo.loteId ?? ''}`}>
-                    <TableCell className="font-mono text-xs">
-                      <Link to={`/estoque/extrato?enderecoId=${saldo.enderecoId}`} className="hover:underline">
+                    <TableCell>
+                      <Link to={`/estoque/extrato?enderecoId=${saldo.enderecoId}`} className="etiqueta hover:underline">
                         {saldo.enderecoCodigo}
                       </Link>
                     </TableCell>
                     <TableCell>
                       <Link to={`/catalogo/${saldo.produtoId}`} className="hover:underline">
-                        <span className="font-mono text-xs">{saldo.sku}</span> · {saldo.descricao}
+                        <span className="etiqueta">{saldo.sku}</span> {saldo.descricao}
                       </Link>
                     </TableCell>
                     <TableCell>{saldo.loteNumero ?? '—'}</TableCell>

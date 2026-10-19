@@ -66,7 +66,7 @@ function ListaEnderecos({ zonaId, onSelecionar }: { zonaId: string; onSelecionar
       {lista.isError ? (
         <Alerta tom="erro">Não foi possível carregar os endereços: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
           <Table>
             <TableHeader>
               <TableRow>
@@ -88,7 +88,7 @@ function ListaEnderecos({ zonaId, onSelecionar }: { zonaId: string; onSelecionar
                     <TableCell>
                       <button
                         type="button"
-                        className="font-mono text-xs hover:underline"
+                        className="etiqueta hover:underline"
                         onClick={() => onSelecionar(endereco)}
                       >
                         {endereco.codigo}

@@ -80,7 +80,7 @@ export function CatalogoPage() {
       {lista.isError ? (
         <Alerta tom="erro">Não foi possível carregar o catálogo: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
           <Table>
             <TableHeader>
               <TableRow>
@@ -104,8 +104,8 @@ export function CatalogoPage() {
                     className="cursor-pointer"
                     onClick={() => void navigate(`/catalogo/${produto.id}`)}
                   >
-                    <TableCell className="font-mono text-xs">
-                      <Link to={`/catalogo/${produto.id}`} className="hover:underline">
+                    <TableCell>
+                      <Link to={`/catalogo/${produto.id}`} className="etiqueta hover:underline">
                         {produto.sku}
                       </Link>
                     </TableCell>

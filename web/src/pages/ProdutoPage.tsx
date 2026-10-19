@@ -117,7 +117,7 @@ export function ProdutoPage() {
         titulo={atual.descricao}
         descricao={
           <span className="flex items-center gap-2">
-            <span className="font-mono">{atual.sku}</span>
+            <span className="etiqueta">{atual.sku}</span>
             {atual.ativo ? <Situacao tom="sucesso">Ativo</Situacao> : <Situacao tom="neutro">Inativo</Situacao>}
           </span>
         }

@@ -70,7 +70,7 @@ export function Embalagens({ produto, somenteLeitura, onProduto }: Props) {
         )
       }
     >
-      <div className="rounded-md border">
+      <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
         <Table>
           <TableHeader>
             <TableRow>

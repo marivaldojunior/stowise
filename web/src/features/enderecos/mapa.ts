@@ -15,8 +15,10 @@ export const ROTULO_STATUS: Record<StatusEndereco, string> = {
 /** Cor de cada situação no mapa (tokens do tema, funcionam no claro e no escuro). */
 export const COR_STATUS: Record<StatusEndereco, string> = {
   Livre: 'bg-success/20 ring-1 ring-inset ring-success/40 hover:bg-success/35',
-  Ocupado: 'bg-primary hover:bg-primary/80',
-  Bloqueado: 'bg-destructive/80 hover:bg-destructive',
+  Ocupado: 'bg-grade-marca shadow-sm hover:brightness-110',
+  // Fita de risco: o endereço bloqueado aparece como interditado no armazém.
+  Bloqueado:
+    'bg-[repeating-linear-gradient(135deg,var(--destructive)_0_3px,color-mix(in_oklch,var(--destructive)_45%,transparent)_3px_6px)] shadow-sm hover:brightness-110',
 }
 
 export const TOM_STATUS: Record<StatusEndereco, Tom> = {

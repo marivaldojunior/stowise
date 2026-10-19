@@ -29,7 +29,7 @@ export function Amostra({ importacao }: { importacao: ImportacaoDetalhe }) {
       <p className="text-sm text-muted-foreground">
         {importacao.totalLinhas} linha(s) · {detalhes.join(' · ')}
       </p>
-      <div className="overflow-x-auto rounded-md border">
+      <div className="overflow-x-auto rounded-2xl border border-border/70 bg-card sombra-cartao">
         <Table>
           <TableHeader>
             <TableRow>

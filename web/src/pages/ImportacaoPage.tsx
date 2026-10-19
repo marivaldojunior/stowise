@@ -48,7 +48,7 @@ function Etapas({ status }: { status: StatusImportacao }) {
             aria-current={ativa ? 'step' : undefined}
             className={cn(
               'flex items-center gap-1.5 rounded-full border px-3 py-1',
-              ativa && 'border-primary bg-primary/10 font-medium text-primary',
+              ativa && 'border-transparent bg-grade-marca font-medium text-primary-foreground brilho-marca',
               feita && 'border-success/40 text-success',
               !ativa && !feita && 'text-muted-foreground',
             )}
@@ -132,7 +132,7 @@ function EtapaMapeamento({ importacao }: { importacao: ImportacaoDetalhe }) {
         <Alerta
           tom="info"
           acao={
-            <Button variant="outline" size="sm" disabled={sugerir.isPending} onClick={() => void pedirSugestao()}>
+            <Button variant="ia" size="sm" disabled={sugerir.isPending} onClick={() => void pedirSugestao()}>
               <Sparkles /> Pedir sugestão à IA
             </Button>
           }

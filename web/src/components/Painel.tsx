@@ -14,10 +14,11 @@ interface Props {
 export function Painel({ titulo, descricao, acoes, children, className }: Props) {
   const id = useId()
   return (
-    <section aria-labelledby={id} className={cn('flex min-w-0 flex-col gap-4 rounded-xl border bg-card p-4 sm:p-5', className)}>
+    <section aria-labelledby={id} className={cn('flex min-w-0 flex-col gap-4 rounded-2xl border border-border/70 bg-card p-4 sombra-cartao sm:p-5', className)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="flex flex-col gap-0.5">
-          <h2 id={id} className="text-base font-semibold">
+          <h2 id={id} className="flex items-center gap-2 text-base font-semibold">
+            <span className="h-4 w-1 rounded-full bg-grade-marca" aria-hidden />
             {titulo}
           </h2>
           {descricao && <p className="text-sm text-muted-foreground">{descricao}</p>}

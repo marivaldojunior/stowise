@@ -43,7 +43,7 @@ export const ETAPAS = [
 /** Aguardando você = aviso; job trabalhando = info. */
 export const TOM_STATUS_IMPORTACAO: Record<StatusImportacao, Tom> = {
   Recebido: 'neutro',
-  Mapeando: 'info',
+  Mapeando: 'ia',
   AguardandoConfirmacao: 'aviso',
   Validando: 'info',
   AguardandoRevisao: 'aviso',

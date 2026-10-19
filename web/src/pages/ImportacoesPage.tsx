@@ -35,7 +35,7 @@ export function ImportacoesPage() {
       {lista.isError ? (
         <Alerta tom="erro">Não foi possível carregar as importações: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
-        <div className="rounded-md border">
+        <div className="overflow-hidden rounded-2xl border border-border/70 bg-card sombra-cartao">
           <Table>
             <TableHeader>
               <TableRow>

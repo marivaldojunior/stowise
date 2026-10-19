@@ -4,9 +4,9 @@ import { cn } from '@/lib/utils'
 /**
  * Tom de uma situação, sempre com o mesmo sentido em todo o painel:
  * sucesso (ativo, livre, válida, concluído), aviso (reservado, duplicata, aguardando você), perigo (bloqueado, erro,
- * falhou), info (em andamento), marca (destaque neutro) e neutro (inativo, ignorado).
+ * falhou), info (em andamento), marca (destaque neutro), ia (trabalho da IA) e neutro (inativo, ignorado).
  */
-export type Tom = 'sucesso' | 'aviso' | 'perigo' | 'info' | 'marca' | 'neutro'
+export type Tom = 'sucesso' | 'aviso' | 'perigo' | 'info' | 'marca' | 'ia' | 'neutro'
 
 const CORES: Record<Tom, string> = {
   sucesso: 'bg-success/12 text-success ring-success/25',
@@ -14,6 +14,7 @@ const CORES: Record<Tom, string> = {
   perigo: 'bg-destructive/10 text-destructive ring-destructive/25',
   info: 'bg-info/12 text-info ring-info/25',
   marca: 'bg-primary/12 text-primary ring-primary/25',
+  ia: 'bg-ia/12 text-ia ring-ia/30',
   neutro: 'bg-muted text-muted-foreground ring-border',
 }
 
