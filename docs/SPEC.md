@@ -322,7 +322,7 @@ Regras de ordem:
 - [ ] Deploy de demonstração da API e da Web, com dados de exemplo e usuário de teste
 - [x] README com diagrama de arquitetura, como rodar localmente, links para os ADRs e badges de CI
 - [x] Seção "Decisões técnicas" no README, com os trade-offs de cada ADR em uma linha
-- [ ] GIF curto de cada cliente (Web e App) no README
+- [x] GIF curto de cada cliente (Web e App) no README
 - [ ] Tag `v0.1.0` com notas de release
 - [ ] Repositório fixado no perfil do GitHub
 

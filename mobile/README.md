@@ -46,3 +46,13 @@ Goldens: a referência é o Linux (o CI). Fora do Linux, a comparação é pulad
 - `lib/app`: app, tema (cor da marca e `CoresStowise`) e rotas (go_router).
 - `lib/core`: configuração do ambiente e serviços comuns.
 - `lib/features/<area>/{data,domain,presentation}`: cada funcionalidade em camadas.
+
+## Capturas para o README
+
+`tool/capturas` desenha as telas reais com as fontes do Flutter (Roboto e Material Icons) e a API falsa dos testes, sem aparelho. Fica fora de `test/`, então não roda no CI.
+
+```bash
+flutter test tool/capturas
+python tool/capturas/montar_gif.py   # junta em docs/media/app.gif (precisa do Pillow)
+```
+

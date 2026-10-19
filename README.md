@@ -24,6 +24,12 @@ O Stowise testa recursos de IA sobre um caso real: um sistema de inventário e a
 | Painel web | Catálogo, endereços com mapa de ocupação, saldos e extrato, usuários e perfis, importação com revisão da sugestão da IA e progresso em tempo real |
 | App | Login, leitura de código de barras no aparelho (ML Kit ou leitor do coletor), entrada, saída e transferência, e consulta de saldo por produto ou endereço |
 
+<p align="center">
+  <img src="docs/media/painel.gif" alt="Painel web: início, catálogo, produto, mapa de endereços, saldos e importação com a sugestão da IA" width="640">
+  &nbsp;
+  <img src="docs/media/app.gif" alt="App de campo: login, início, entrada de uma caixa lida pelo código de barras e consulta de saldo" width="230">
+</p>
+
 Planejado nos próximos marcos ([plano completo](docs/SPEC.md)): NF-e com casamento de itens por IA e sugestão de endereço explicável, inventário offline no app, busca semântica com pgvector, consulta em linguagem natural e perguntas sobre documentos (RAG).
 
 Regras que valem para todos os recursos de IA:
