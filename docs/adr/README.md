@@ -11,5 +11,6 @@ Uma decisão por arquivo, numerada em sequência (`NNNN-titulo-curto.md`), a par
 | [0005](0005-autenticacao.md) | Autenticação com ASP.NET Core Identity, JWT próprio e refresh token rotativo | Aceito |
 | [0006](0006-idempotencia-e-concorrencia.md) | Idempotência por chave do cliente e concorrência otimista (xmin) com nova tentativa | Aceito |
 | [0007](0007-jobs-em-background.md) | Jobs em background com Hangfire e armazenamento no PostgreSQL | Aceito |
+| [0008](0008-arquitetura-do-app.md) | App Flutter com Riverpod, go_router, flavors e cliente gerado do contrato | Aceito |
 
 Decisões já previstas no [SPEC](../SPEC.md#decisões-de-arquitetura-adrs), a registrar quando forem implementadas: quantidades na unidade base, relacional no núcleo e `jsonb` no staging, snapshot das decisões automáticas, IA só sugere, aprendizado por confirmação e pipeline de RAG.

@@ -15,20 +15,38 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "dev.stowise.stowise_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
+    // Flavors (ADR-0008): dev aponta para a API local e aceita HTTP; prod usa a URL de demonstração (HTTPS).
+    // resValue define o nome do app por flavor (AGP novo exige ligar o recurso).
+    buildFeatures {
+        resValues = true
+    }
+
+    flavorDimensions += "ambiente"
+    productFlavors {
+        create("dev") {
+            dimension = "ambiente"
+            applicationIdSuffix = ".dev"
+            versionNameSuffix = "-dev"
+            resValue("string", "app_name", "Stowise Dev")
+            manifestPlaceholders["usaHttp"] = "true"
+        }
+        create("prod") {
+            dimension = "ambiente"
+            resValue("string", "app_name", "Stowise")
+            manifestPlaceholders["usaHttp"] = "false"
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
+            // APK de demonstração: assinado com a chave de debug (não vai para a loja).
             signingConfig = signingConfigs.getByName("debug")
         }
     }

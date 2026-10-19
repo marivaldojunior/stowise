@@ -48,8 +48,10 @@ npx shadcn@4.21.1 add <componente>   # novo componente do shadcn/ui em src/compo
 # Testes do painel: a rede é o MSW (src/test/msw/api.ts: server.use, usarSessao, problema, gravarRequisicoes);
 # requisição sem handler falha o teste.
 
-# Mobile (em mobile/)
-flutter analyze && flutter test
+# Mobile (em mobile/); arquitetura no ADR-0008
+dart format --output=none --set-exit-if-changed lib test && flutter analyze && flutter test
+flutter run --flavor dev -t lib/main_dev.dart   # API local em http://10.0.2.2:5073 (emulador)
+flutter test --update-goldens                    # regrava os goldens depois de mudança visual intencional
 
 # Banco + API (na raiz)
 docker compose up -d --build

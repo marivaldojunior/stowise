@@ -1,6 +1,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- O app fala com a API do Stowise. -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="stowise_mobile"
+        android:label="@string/app_name"
+        android:usesCleartextTraffic="${usaHttp}"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
