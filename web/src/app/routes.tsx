@@ -4,6 +4,8 @@ import { ExigePerfil, RotaProtegida } from '../features/auth/RotaProtegida'
 import { CatalogoPage } from '../pages/CatalogoPage'
 import { EnderecosPage } from '../pages/EnderecosPage'
 import { ExtratoPage } from '../pages/ExtratoPage'
+import { ImportacaoPage } from '../pages/ImportacaoPage'
+import { ImportacoesPage } from '../pages/ImportacoesPage'
 import { InicioPage } from '../pages/InicioPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NaoEncontradaPage } from '../pages/NaoEncontradaPage'
@@ -38,6 +40,22 @@ export const routes: RouteObject[] = [
       { path: 'enderecos', element: <EnderecosPage /> },
       { path: 'estoque', element: <SaldosPage /> },
       { path: 'estoque/extrato', element: <ExtratoPage /> },
+      {
+        path: 'importacoes',
+        element: (
+          <ExigePerfil perfis={PERFIS_GESTAO}>
+            <ImportacoesPage />
+          </ExigePerfil>
+        ),
+      },
+      {
+        path: 'importacoes/:id',
+        element: (
+          <ExigePerfil perfis={PERFIS_GESTAO}>
+            <ImportacaoPage />
+          </ExigePerfil>
+        ),
+      },
       {
         path: 'usuarios',
         element: (
