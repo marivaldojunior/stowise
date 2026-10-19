@@ -7,6 +7,11 @@ on:
   pull_request:
     paths: ['mobile/**', 'api/openapi/**', '.github/workflows/mobile.yml']
   workflow_dispatch:
+    inputs:
+      atualizar_goldens:
+        description: 'Regravar os goldens no Linux e publicar as imagens como artefato'
+        type: boolean
+        default: false
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -49,6 +54,28 @@ jobs:
         run: dart format --output=none --set-exit-if-changed lib test integration_test
       - run: flutter analyze
       - run: flutter test
+
+  # Regrava os goldens no Linux (a referência) e publica as imagens; baixe o artefato e faça o commit em test/goldens.
+  goldens:
+    if: github.event_name == 'workflow_dispatch' && inputs.atualizar_goldens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.1
+          cache: true
+
+      - run: flutter pub get
+      - run: flutter test --update-goldens
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: goldens
+          path: mobile/test/goldens
+          retention-days: 7
 
   # Teste de integração (integration_test) num emulador Android: o app real, com API, cofre e preferências em memória.
   integracao:

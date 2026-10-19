@@ -39,7 +39,7 @@ Testes:
 - `test/`: unidade, widget e golden. A rede é a `ApiFalsa` (adaptador do Dio em memória); o cofre e as preferências também são falsos.
 - `integration_test/`: o fluxo do operador no app real (login, entrada, saldo e saída). No CI, roda num emulador Android (API 34).
 
-Goldens: `flutter test --update-goldens` regrava as imagens em `test/goldens` depois de uma mudança visual intencional.
+Goldens: a referência é o Linux (o CI). Fora do Linux, a comparação é pulada. Depois de uma mudança visual intencional, rode o workflow `mobile` manualmente com `atualizar_goldens` marcado, baixe o artefato `goldens` e faça o commit em `test/goldens`.
 
 ## Estrutura
 
