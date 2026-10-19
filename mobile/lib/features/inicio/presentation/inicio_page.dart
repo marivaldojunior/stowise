@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
+import '../../../app/rotas.dart';
 import '../../../core/config/ambiente.dart';
 import '../../auth/presentation/menu_usuario.dart';
 import '../../auth/presentation/sessao_controller.dart';
@@ -23,12 +26,13 @@ class InicioPage extends ConsumerWidget {
           if (usuario != null) Text('Olá, ${usuario.primeiroNome}', style: tema.textTheme.headlineSmall),
           Text('O que você quer fazer?', style: tema.textTheme.titleMedium),
           const SizedBox(height: 16),
-          const Card(
+          Card(
             child: ListTile(
-              leading: Icon(Icons.swap_horiz),
-              title: Text('Movimentar estoque'),
-              subtitle: Text('Em breve'),
-              enabled: false,
+              leading: const Icon(Icons.swap_horiz),
+              title: const Text('Movimentar estoque'),
+              subtitle: const Text('Entrada, saída e transferência'),
+              trailing: const Icon(Icons.chevron_right),
+              onTap: () => context.push(Rotas.movimentar),
             ),
           ),
           const Card(

@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../features/auth/presentation/estado_sessao_pages.dart';
 import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/sessao_controller.dart';
+import '../features/estoque/domain/estoque.dart';
+import '../features/estoque/presentation/movimentacao_page.dart';
 import '../features/inicio/presentation/inicio_page.dart';
 
 abstract final class Rotas {
@@ -12,6 +14,7 @@ abstract final class Rotas {
   static const login = '/login';
   static const carregando = '/carregando';
   static const semConexao = '/sem-conexao';
+  static const movimentar = '/movimentar';
 }
 
 /// Para onde a sessão manda: sem sessão, só o login; com sessão, nada de login ou de telas de abertura.
@@ -40,6 +43,12 @@ final rotasProvider = Provider<GoRouter>((ref) {
       GoRoute(path: Rotas.login, builder: (context, state) => const LoginPage()),
       GoRoute(path: Rotas.carregando, builder: (context, state) => const CarregandoPage()),
       GoRoute(path: Rotas.semConexao, builder: (context, state) => const SemConexaoPage()),
+      GoRoute(
+        path: Rotas.movimentar,
+        builder: (context, state) => MovimentacaoPage(
+          tipoInicial: TipoMovimento.values.asNameMap()[state.uri.queryParameters['tipo']] ?? TipoMovimento.entrada,
+        ),
+      ),
     ],
   );
   ref.onDispose(() {

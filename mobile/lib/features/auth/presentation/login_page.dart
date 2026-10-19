@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../app/tema.dart';
+import '../../../app/widgets/aviso.dart';
 import '../domain/sessao.dart';
 import 'sessao_controller.dart';
 
@@ -75,10 +75,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       'Use o e-mail e a senha da sua conta.',
                       style: tema.textTheme.bodyMedium?.copyWith(color: tema.colorScheme.onSurfaceVariant),
                     ),
-                    if (aviso != null) ...[
-                      const SizedBox(height: 16),
-                      _Mensagem(texto: aviso, cor: context.cores.aviso, icone: Icons.info_outline),
-                    ],
+                    if (aviso != null) ...[const SizedBox(height: 16), Aviso(texto: aviso, tom: TomAviso.aviso)],
                     const SizedBox(height: 24),
                     TextFormField(
                       controller: _email,
@@ -106,10 +103,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                       onFieldSubmitted: (_) => _entrar(),
                       validator: (valor) => (valor ?? '').isEmpty ? 'Informe a senha.' : null,
                     ),
-                    if (_erro != null) ...[
-                      const SizedBox(height: 16),
-                      _Mensagem(texto: _erro!, cor: tema.colorScheme.error, icone: Icons.error_outline),
-                    ],
+                    if (_erro != null) ...[const SizedBox(height: 16), Aviso(texto: _erro!, tom: TomAviso.erro)],
                     const SizedBox(height: 24),
                     FilledButton(
                       onPressed: _enviando ? null : _entrar,
@@ -145,37 +139,6 @@ class _Marca extends StatelessWidget {
         const SizedBox(width: 12),
         Text('Stowise', style: tema.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
       ],
-    );
-  }
-}
-
-class _Mensagem extends StatelessWidget {
-  const _Mensagem({required this.texto, required this.cor, required this.icone});
-
-  final String texto;
-  final Color cor;
-  final IconData icone;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      liveRegion: true,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: cor.withValues(alpha: 0.08),
-          border: Border.all(color: cor.withValues(alpha: 0.4)),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icone, color: cor, size: 20),
-            const SizedBox(width: 8),
-            Expanded(child: Text(texto)),
-          ],
-        ),
-      ),
     );
   }
 }
