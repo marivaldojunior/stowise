@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Stowise.Api.Endpoints;
 using Stowise.Application.Auth;
@@ -52,6 +54,15 @@ public sealed class UsuariosDemonstracaoTests(PostgresFixture postgres)
 
         var certa = await EntrarAsync(client, "gestor@demo.stowise.dev", Senha);
         Assert.Equal(HttpStatusCode.OK, certa.StatusCode);
+
+        // Na lista de usuários (Admin), a conta não aparece como bloqueada.
+        var admin = await EntrarAsync(client, "admin@stowise.test", "Senha-de-teste-123");
+        var token = (await admin.Content.ReadFromJsonAsync<AuthResponse>())!.AccessToken;
+        using var pedido = new HttpRequestMessage(HttpMethod.Get, "/api/v1/usuarios?busca=gestor@demo.stowise.dev");
+        pedido.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var lista = await client.SendAsync(pedido);
+        var json = await lista.Content.ReadFromJsonAsync<JsonElement>();
+        Assert.False(json.GetProperty("itens")[0].GetProperty("bloqueado").GetBoolean());
     }
 
     [DockerFact]

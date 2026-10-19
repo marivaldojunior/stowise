@@ -29,7 +29,13 @@ internal sealed partial class AuthService(
 
         if (!await users.CheckPasswordAsync(usuario, senha))
         {
-            await users.AccessFailedAsync(usuario);
+            // Conta sem bloqueio (ex.: demonstração pública): o AccessFailedAsync gravaria um fim de bloqueio que não
+            // vale, e a conta apareceria como bloqueada na lista de usuários.
+            if (await users.GetLockoutEnabledAsync(usuario))
+            {
+                await users.AccessFailedAsync(usuario);
+            }
+
             return null;
         }
 
