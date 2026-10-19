@@ -113,6 +113,8 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IUsuarioService, UsuarioService>();
         services.AddScoped<AdminBootstrapper>();
+        services.AddOptions<DemonstracaoOptions>().BindConfiguration(DemonstracaoOptions.SectionName);
+        services.AddScoped<UsuariosDemonstracao>();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer();
         services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)

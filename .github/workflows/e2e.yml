@@ -4,9 +4,9 @@ name: e2e
 on:
   push:
     branches: [main]
-    paths: ['web/**', 'api/**', 'infra/**', 'docker-compose.yml', '.github/workflows/e2e.yml']
+    paths: ['web/**', 'api/**', 'infra/**', 'docker-compose.yml', 'Dockerfile', '.dockerignore', '.github/workflows/e2e.yml']
   pull_request:
-    paths: ['web/**', 'api/**', 'infra/**', 'docker-compose.yml', '.github/workflows/e2e.yml']
+    paths: ['web/**', 'api/**', 'infra/**', 'docker-compose.yml', 'Dockerfile', '.dockerignore', '.github/workflows/e2e.yml']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -60,3 +60,54 @@ jobs:
           name: playwright-report
           path: web/playwright-report
           retention-days: 7
+
+  # Imagem de demonstração (Dockerfile da raiz): painel + API numa só origem, em Production, como no deploy.
+  imagem-demonstracao:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      db:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_DB: stowise
+          POSTGRES_USER: stowise
+          POSTGRES_PASSWORD: stowise
+        ports: ['5432:5432']
+        options: --health-cmd "pg_isready -U stowise" --health-interval 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build da imagem
+        run: docker build -t stowise-demo .
+
+      - name: Subir a imagem (Production, com dados e contas de demonstração)
+        run: |
+          docker run -d --name stowise --network host \
+            -e ASPNETCORE_ENVIRONMENT=Production \
+            -e ConnectionStrings__Stowise="Host=localhost;Port=5432;Database=stowise;Username=stowise;Password=stowise" \
+            -e Jwt__SigningKey="chave-so-do-ci-0123456789abcdef0123456789" \
+            -e Database__MigrateOnStartup=true \
+            -e Database__SeedSampleData=true \
+            -e Demonstracao__Senha="Demo-Stowise-2026" \
+            stowise-demo
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/health/ready > /dev/null; then exit 0; fi
+            sleep 2
+          done
+          docker logs stowise
+          exit 1
+
+      - name: Painel, API e conta de demonstração
+        run: |
+          set -e
+          curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
+          curl -fsS http://localhost:8080/catalogo/qualquer | grep -q '<div id="root">'
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/produtos)" = 401
+          test "$(curl -s -o /dev/null -w '%{http_code}' http://localhost:8080/api/v1/nao-existe)" = 404
+          curl -fsS -X POST http://localhost:8080/api/v1/auth/login -H 'Content-Type: application/json' \
+            -d '{"email":"gestor@demo.stowise.dev","senha":"Demo-Stowise-2026"}' | grep -q accessToken
+
+      - name: Logs da API
+        if: failure()
+        run: docker logs stowise
+

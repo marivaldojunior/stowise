@@ -9,6 +9,7 @@ namespace Stowise.Infrastructure.Persistence;
 internal sealed partial class DatabaseInitializer(
     StowiseDbContext db,
     AdminBootstrapper adminBootstrapper,
+    UsuariosDemonstracao usuariosDemonstracao,
     IOptions<DatabaseOptions> options,
     ILogger<DatabaseInitializer> logger)
 {
@@ -21,6 +22,7 @@ internal sealed partial class DatabaseInitializer(
         }
 
         await adminBootstrapper.EnsureAdminAsync();
+        await usuariosDemonstracao.EnsureAsync();
 
         if (options.Value.SeedSampleData)
         {

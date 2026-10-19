@@ -6,6 +6,7 @@ using Stowise.Api.Errors;
 using Stowise.Api.Hubs;
 using Stowise.Api.Observability;
 using Stowise.Api.OpenApi;
+using Stowise.Api.Web;
 using Stowise.Application.Auth;
 using Stowise.Application.Importacoes;
 using Stowise.Infrastructure;
@@ -38,6 +39,9 @@ await app.Services.InitializeDatabaseAsync();
 app.UseStowiseProblemDetails();
 app.UseStowiseRequestLogging();
 
+// Painel React servido pela própria API na imagem de demonstração (Dockerfile da raiz).
+app.UsePainelWeb();
+
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -63,6 +67,8 @@ v1.MapReservasEndpoints();
 v1.MapConsultasEstoqueEndpoints();
 v1.MapImportacoesEndpoints();
 v1.MapIaEndpoints();
+
+app.MapPainelWeb();
 
 await app.RunAsync();
 

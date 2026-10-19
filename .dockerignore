@@ -1,0 +1,19 @@
+# Contexto da imagem de demonstração (Dockerfile da raiz): só web/ e api/src entram.
+**/bin/
+**/obj/
+**/TestResults/
+**/node_modules/
+**/dist/
+**/coverage-report/
+.git/
+.github/
+.vs/
+.vscode/
+.claude/
+*.user
+api/tests/
+mobile/
+docs/
+web/e2e/
+web/test-results/
+web/playwright-report/

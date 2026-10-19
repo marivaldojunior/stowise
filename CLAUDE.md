@@ -57,6 +57,9 @@ tool/gerar_cliente.sh                            # regera o cliente da API (pack
 
 # Banco + API (na raiz)
 docker compose up -d --build
+
+# Imagem de demonstração (na raiz): API + painel numa só origem; deploy Neon + Render em docs/deploy.md (ADR-0009)
+docker build -t stowise-demo .
 ```
 
 ## Estrutura da API

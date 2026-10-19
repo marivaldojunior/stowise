@@ -1,0 +1,43 @@
+# Blueprint do Render (docs/deploy.md): a demonstração pública do Stowise.
+# Uma imagem (Dockerfile da raiz) com a API e o painel; o banco é o Neon (PostgreSQL com pgvector).
+# Segredos nunca ficam aqui: os campos "sync: false" são preenchidos no painel do Render.
+services:
+  - type: web
+    name: stowise
+    runtime: docker
+    plan: free
+    # Perto do Neon na região aws-us-east-2 (Ohio). Se mudar uma, mude a outra.
+    region: ohio
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    # Liveness sem banco: o Neon gratuito suspende sem uso e acorda na primeira consulta.
+    healthCheckPath: /health/live
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      # Formato Npgsql (não a URI postgres://): Host=...;Database=...;Username=...;Password=...;SSL Mode=Require
+      - key: ConnectionStrings__Stowise
+        sync: false
+      # Chave HS256 do JWT: gerada pelo Render (base64 de 256 bits) e nunca exposta.
+      - key: Jwt__SigningKey
+        generateValue: true
+      - key: Database__MigrateOnStartup
+        value: "true"
+      - key: Database__SeedSampleData
+        value: "true"
+      # Admin privado (não vai no README): gestão de usuários da demonstração.
+      - key: AdminBootstrap__Email
+        sync: false
+      - key: AdminBootstrap__Password
+        sync: false
+      # Senha das contas públicas gestor@demo.stowise.dev e operador@demo.stowise.dev.
+      - key: Demonstracao__Senha
+        sync: false
+      # IA desligada até a chave existir; para ligar: Ia__Habilitada=true e ANTHROPIC_API_KEY.
+      - key: Ia__Habilitada
+        value: "false"
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      # Uma instância pequena: um worker do Hangfire basta.
+      - key: Jobs__Workers
+        value: "1"
