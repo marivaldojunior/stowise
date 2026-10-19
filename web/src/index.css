@@ -114,7 +114,6 @@
     --sombra-elevada: 0 2px 4px oklch(0.26 0.05 230 / 0.06), 0 18px 40px -16px oklch(0.26 0.05 230 / 0.28);
     --brilho-marca: 0 8px 22px -8px oklch(0.52 0.115 192 / 0.55);
     --brilho-ia: 0 8px 22px -8px oklch(0.55 0.21 292 / 0.55);
-    --linha-planta: oklch(0.52 0.115 192 / 0.07);
 }
 
 .dark {
@@ -163,7 +162,6 @@
     --sombra-elevada: 0 2px 6px oklch(0 0 0 / 0.35), 0 22px 46px -18px oklch(0 0 0 / 0.7);
     --brilho-marca: 0 8px 26px -8px oklch(0.74 0.12 192 / 0.45);
     --brilho-ia: 0 8px 26px -8px oklch(0.72 0.17 292 / 0.45);
-    --linha-planta: oklch(0.74 0.12 192 / 0.06);
 }
 
 /* Degradês da identidade. */
@@ -195,21 +193,6 @@
 /* Faixa de assinatura: operação (verde-azulado), sinal (âmbar) e IA (violeta), como uma fita de armazém. */
 @utility faixa-stowise {
     background-image: linear-gradient(90deg, var(--primary) 0%, var(--marca-2) 35%, var(--sinal) 60%, var(--ia) 85%, var(--ia-2) 100%);
-}
-
-/* Grade de planta baixa (o desenho do armazém). */
-@utility fundo-planta {
-    background-image:
-        linear-gradient(var(--linha-planta) 1px, transparent 1px),
-        linear-gradient(90deg, var(--linha-planta) 1px, transparent 1px);
-    background-size: 28px 28px;
-}
-
-@utility fundo-planta-clara {
-    background-image:
-        linear-gradient(oklch(1 0 0 / 0.06) 1px, transparent 1px),
-        linear-gradient(90deg, oklch(1 0 0 / 0.06) 1px, transparent 1px);
-    background-size: 28px 28px;
 }
 
 @utility sombra-cartao {

@@ -153,7 +153,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   }
 }
 
-/// Topo do login: a marca, o lema e uma etiqueta de prateleira sobre a planta do armazém.
+/// Topo do login: a marca, o lema e uma etiqueta de prateleira sobre a tinta.
 class _Cabecalho extends StatelessWidget {
   const _Cabecalho();
 

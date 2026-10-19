@@ -171,9 +171,6 @@ class _CartaoResumo extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CustomPaint(painter: PlantaPainter(cor: Colors.white.withValues(alpha: 0.05))),
-          ),
           Positioned(
             left: 0,
             right: 0,

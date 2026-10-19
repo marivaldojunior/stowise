@@ -79,7 +79,7 @@ Camadas com dependência em um só sentido ([ADR-0002](docs/adr/0002-solucao-em-
 
 ## Interface do painel (web)
 
-- **Identidade:** verde-azulado da operação (`primary` → `marca-2`), `tinta` (azul-petróleo do menu e dos destaques), `sinal` (âmbar de fita de segurança e etiqueta de palete) e `ia` → `ia-2` (violeta → magenta, **só** em recursos de IA). Motivos: grade de planta baixa (`fundo-planta`), etiqueta de endereço/SKU (`etiqueta`), código de barras (`codigo-de-barras`) e a faixa de assinatura (`faixa-stowise`).
+- **Identidade:** verde-azulado da operação (`primary` → `marca-2`), `tinta` (azul-petróleo do menu e dos destaques), `sinal` (âmbar de fita de segurança e etiqueta de palete) e `ia` → `ia-2` (violeta → magenta, **só** em recursos de IA). Motivos: etiqueta de endereço/SKU (`etiqueta`), código de barras (`codigo-de-barras`) e a faixa de assinatura (`faixa-stowise`).
 - **Tema:** cores só pelos tokens e utilitários de `web/src/index.css` (`bg-grade-marca`, `bg-grade-tinta`, `bg-grade-ia`, `bg-grade-sinal`, `sombra-cartao`, `sombra-elevada`, `brilho-marca`, `brilho-ia`; `success`, `warning`, `info` e `destructive` dão o sentido). Não use cores fixas do Tailwind (ex.: `emerald-600`). Botão de ação de IA: `variant="ia"`.
 - **Componentes padrão** (`web/src/components`): `CabecalhoPagina` (título, descrição, ações, voltar e título da aba), `Painel` (seção em card), `Situacao` (selo de status com tom: sucesso, aviso, perigo, info, marca, neutro), `Alerta` e `MensagemErro`, `LinhasCarregando` e `LinhaVazia` (estados de tabela), `EstadoPagina` (não encontrada, acesso negado, erro), `Paginacao`, `Campo`.
 - **Páginas novas** entram em `web/src/app/paginas.tsx` com `lazy` (carregadas sob demanda); filtros de lista ficam na URL (`useFiltrosDaUrl`).

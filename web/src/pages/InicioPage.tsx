@@ -130,11 +130,10 @@ function Indicador({
   )
 }
 
-/** Abertura da página: saudação sobre a planta do armazém, com etiquetas de endereço ao fundo. */
+/** Abertura da página: saudação sobre a tinta, com etiquetas de endereço ao fundo. */
 function Boasvindas({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <header className="relative isolate overflow-hidden rounded-3xl bg-grade-tinta p-5 text-white sombra-elevada sm:p-7">
-      <div className="pointer-events-none absolute inset-0 -z-10 fundo-planta-clara" aria-hidden />
       {/* Etiquetas de prateleira, decorativas. */}
       <div className="pointer-events-none absolute top-5 right-5 -z-10 hidden flex-col items-end gap-2 opacity-80 md:flex" aria-hidden>
         {['A-01-1-1', 'B-03-2-1', 'F-01-1-1'].map((codigo, indice) => (

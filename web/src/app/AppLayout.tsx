@@ -66,8 +66,6 @@ export function AppLayout() {
   return (
     <div className="flex min-h-svh">
       <aside className="relative hidden w-64 shrink-0 overflow-hidden bg-grade-tinta p-4 text-sidebar-foreground md:sticky md:top-0 md:flex md:h-svh md:flex-col md:gap-8">
-        {/* Planta do armazém ao fundo do menu. */}
-        <div className="pointer-events-none absolute inset-0 fundo-planta-clara [mask-image:linear-gradient(to_bottom,black,transparent_85%)]" aria-hidden />
         <Marca className="relative px-1 pt-1 text-white" />
         <div className="relative">
           <MenuPrincipal />
@@ -106,11 +104,6 @@ export function AppLayout() {
         </header>
 
         <main className="relative isolate mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">
-          {/* Brilho suave e planta do armazém no topo da área de trabalho. */}
-          <div
-            className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-72 fundo-planta [mask-image:linear-gradient(to_bottom,black,transparent)]"
-            aria-hidden
-          />
           <Suspense fallback={<Skeleton className="h-8 w-56" role="status" aria-label="Carregando a página" />}>
             <Outlet />
           </Suspense>

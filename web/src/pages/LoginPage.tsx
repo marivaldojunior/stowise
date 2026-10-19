@@ -49,7 +49,6 @@ export function LoginPage() {
   return (
     <main className="grid min-h-svh lg:grid-cols-[1.1fr_1fr]">
       <section className="relative isolate hidden flex-col justify-between overflow-hidden bg-grade-tinta p-10 text-white lg:flex">
-        <div className="pointer-events-none absolute inset-0 -z-10 fundo-planta-clara" aria-hidden />
         <Marca className="text-white" />
         {/* Prateleira com etiquetas de endereço: o armazém que o Stowise organiza. */}
         <div className="pointer-events-none relative mx-auto my-8 w-full max-w-md" aria-hidden>
@@ -97,7 +96,6 @@ export function LoginPage() {
         <p className="text-xs text-white/55">Projeto experimental de recursos de IA.</p>
       </section>
       <div className="relative isolate flex items-center justify-center p-4">
-        <div className="pointer-events-none absolute inset-0 -z-10 fundo-planta [mask-image:radial-gradient(circle_at_center,black,transparent_70%)]" aria-hidden />
         <div className="flex w-full max-w-sm flex-col gap-6 rounded-3xl border border-border/70 bg-card/90 p-6 sombra-elevada backdrop-blur sm:p-8">
           <Marca className="lg:hidden" />
           <div className="flex flex-col gap-1">

@@ -68,32 +68,7 @@ class MarcaStowise extends StatelessWidget {
   }
 }
 
-/// Grade de planta baixa (o desenho do armazém), em linhas finas.
-class PlantaPainter extends CustomPainter {
-  const PlantaPainter({required this.cor, this.passo = 26});
-
-  final Color cor;
-  final double passo;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final traco = Paint()
-      ..color = cor
-      ..strokeWidth = 1;
-    for (var x = 0.0; x <= size.width; x += passo) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), traco);
-    }
-
-    for (var y = 0.0; y <= size.height; y += passo) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), traco);
-    }
-  }
-
-  @override
-  bool shouldRepaint(PlantaPainter oldDelegate) => oldDelegate.cor != cor || oldDelegate.passo != passo;
-}
-
-/// Área escura do topo: degradê da tinta com a planta do armazém e a faixa de assinatura embaixo.
+/// Área escura do topo: degradê da tinta com brilhos da marca e da IA.
 class CabecalhoTinta extends StatelessWidget {
   const CabecalhoTinta({required this.child, this.padding = const EdgeInsets.fromLTRB(20, 12, 20, 28), super.key});
 
@@ -112,9 +87,6 @@ class CabecalhoTinta extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: Stack(
         children: [
-          Positioned.fill(
-            child: CustomPaint(painter: PlantaPainter(cor: Colors.white.withValues(alpha: 0.06))),
-          ),
           // Brilho da marca no canto e da IA do outro lado, como no painel web.
           Positioned(top: -60, left: -40, child: _Brilho(cor: Theme.of(context).colorScheme.primary)),
           Positioned(bottom: -70, right: -50, child: _Brilho(cor: cores.ia, opacidade: 0.28)),
@@ -165,10 +137,7 @@ class BarraStowise extends StatelessWidget implements PreferredSizeWidget {
     return AppBar(
       title: Text(titulo),
       actions: acoes,
-      flexibleSpace: Container(
-        decoration: BoxDecoration(gradient: cores.gradienteTinta),
-        child: CustomPaint(painter: PlantaPainter(cor: Colors.white.withValues(alpha: 0.05))),
-      ),
+      flexibleSpace: DecoratedBox(decoration: BoxDecoration(gradient: cores.gradienteTinta)),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(3),
         child: Container(
