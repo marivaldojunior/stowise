@@ -45,14 +45,17 @@ internal sealed partial class UsuariosDemonstracao(
                 continue;
             }
 
-            // Sem bloqueio por senha errada: na demonstração pública, qualquer visitante poderia bloquear a conta.
-            var usuario = new Usuario(email, nome, time.GetUtcNow()) { LockoutEnabled = false };
+            var usuario = new Usuario(email, nome, time.GetUtcNow());
             var criada = await users.CreateAsync(usuario, senha);
             if (!criada.Succeeded)
             {
                 throw new InvalidOperationException(
                     $"Could not create demo user {email}: {string.Join("; ", criada.Errors.Select(e => e.Description))}");
             }
+
+            // Sem bloqueio por senha errada: na demonstração pública, qualquer visitante poderia bloquear a conta.
+            // O CreateAsync liga o bloqueio pela configuração (AllowedForNewUsers); por isso, desliga depois de criar.
+            await users.SetLockoutEnabledAsync(usuario, false);
 
             await users.AddToRoleAsync(usuario, perfil);
             criadas++;
