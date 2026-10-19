@@ -312,7 +312,7 @@ Regras de ordem:
 - [x] Cliente da API gerado a partir do contrato OpenAPI (openapi-generator, dart-dio)
 - [x] Autenticação e armazenamento seguro de tokens
 - [ ] Testes de unidade, widget, golden e integração
-- [ ] Leitura de código de barras on-device (ML Kit)
+- [x] Leitura de código de barras on-device (ML Kit)
 - [ ] Movimentação online: entrada, saída e transferência, com leitura do código do produto e do endereço
 - [ ] Consulta de saldo por produto e por endereço
 - [x] APK de demonstração gerado pelo CI como artefato
