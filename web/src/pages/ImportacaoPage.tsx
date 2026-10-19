@@ -1,7 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { ArrowLeft, Check, Loader2, Sparkles } from 'lucide-react'
+import { Check, Loader2, Sparkles } from 'lucide-react'
 import { useState } from 'react'
-import { Link, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { toast } from 'sonner'
 import { type Falha, falhaDe } from '@/api/falha'
 import {
@@ -14,7 +14,6 @@ import {
 } from '@/api/gerado/stowise'
 import type { ImportacaoDetalhe, StatusImportacao } from '@/api/gerado/modelos'
 import { HttpError } from '@/api/mutator'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatarNumero } from '@/lib/numeros'
@@ -22,8 +21,14 @@ import { Amostra } from '@/features/importacoes/Amostra'
 import { Previa } from '@/features/importacoes/Previa'
 import { useProgressoImportacao } from '@/features/importacoes/progresso'
 import { RevisaoMapeamento } from '@/features/importacoes/RevisaoMapeamento'
-import { emAndamento, ETAPAS, ROTULO_STATUS_IMPORTACAO } from '@/features/importacoes/rotulos'
+import { emAndamento, ETAPAS, ROTULO_STATUS_IMPORTACAO, TOM_STATUS_IMPORTACAO } from '@/features/importacoes/rotulos'
 import { cn } from '@/lib/utils'
+import { Situacao } from '@/components/Situacao'
+import { CabecalhoPagina } from '@/components/CabecalhoPagina'
+import { Alerta } from '@/components/Alerta'
+import { formatarDataHora } from '@/features/estoque/formato'
+
+const VOLTAR = { para: '/importacoes', rotulo: 'Importações' }
 
 /** Consulta periódica enquanto um job trabalha, quando o tempo real (SignalR) não está conectado. */
 const INTERVALO_CONSULTA_MS = 3_000
@@ -43,8 +48,9 @@ function Etapas({ status }: { status: StatusImportacao }) {
             aria-current={ativa ? 'step' : undefined}
             className={cn(
               'flex items-center gap-1.5 rounded-full border px-3 py-1',
-              ativa && 'border-primary font-medium',
-              feita && 'text-muted-foreground',
+              ativa && 'border-primary bg-primary/10 font-medium text-primary',
+              feita && 'border-success/40 text-success',
+              !ativa && !feita && 'text-muted-foreground',
             )}
           >
             {feita && <Check className="size-3.5" aria-hidden />}
@@ -62,9 +68,9 @@ function Aguardando({ texto, importacao }: { texto: string; importacao?: Importa
   const percentual = total === 0 ? 0 : Math.round((feitas / total) * 100)
 
   return (
-    <div role="status" className="flex flex-col gap-3 rounded-md border p-4 text-sm">
+    <div role="status" className="flex flex-col gap-3 rounded-xl border border-info/30 bg-info/5 p-4 text-sm">
       <p className="flex items-center gap-2">
-        <Loader2 className="size-4 animate-spin" aria-hidden />
+        <Loader2 className="size-4 animate-spin text-info" aria-hidden />
         {texto}
       </p>
       {importacao && (
@@ -123,30 +129,36 @@ function EtapaMapeamento({ importacao }: { importacao: ImportacaoDetalhe }) {
   return (
     <div className="flex flex-col gap-6">
       {importacao.status === 'Recebido' && (
-        <div className="flex flex-wrap items-center gap-3 rounded-md border p-3 text-sm">
-          <span className="flex-1">
-            {importacao.motivoSemSugestao ?? 'Faça o mapeamento abaixo ou peça uma sugestão à IA.'}
-          </span>
-          <Button variant="outline" size="sm" disabled={sugerir.isPending} onClick={() => void pedirSugestao()}>
-            <Sparkles /> Pedir sugestão à IA
-          </Button>
-        </div>
+        <Alerta
+          tom="info"
+          acao={
+            <Button variant="outline" size="sm" disabled={sugerir.isPending} onClick={() => void pedirSugestao()}>
+              <Sparkles /> Pedir sugestão à IA
+            </Button>
+          }
+        >
+          {importacao.motivoSemSugestao ?? 'Faça o mapeamento abaixo ou peça uma sugestão à IA.'}
+        </Alerta>
       )}
       {conflito && (
-        <div role="alert" className="flex flex-wrap items-center gap-3 rounded-md border border-destructive p-3 text-sm">
-          <span>Outra pessoa alterou esta importação. Carregue a versão atual.</span>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => {
-              setConflito(false)
-              setFalha(null)
-              void queryClient.invalidateQueries({ queryKey: getObterImportacaoQueryKey(importacao.id) })
-            }}
-          >
-            Carregar a versão atual
-          </Button>
-        </div>
+        <Alerta
+          tom="aviso"
+          acao={
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setConflito(false)
+                setFalha(null)
+                void queryClient.invalidateQueries({ queryKey: getObterImportacaoQueryKey(importacao.id) })
+              }}
+            >
+              Carregar a versão atual
+            </Button>
+          }
+        >
+          Outra pessoa alterou esta importação. Carregue a versão atual.
+        </Alerta>
       )}
       <Amostra importacao={importacao} />
       <RevisaoMapeamento
@@ -194,34 +206,30 @@ export function ImportacaoPage() {
 
   if (importacao.isError) {
     return (
-      <p role="alert" className="text-destructive">
-        {falhaDe(importacao.error).mensagem}
-      </p>
+      <section className="flex flex-col gap-4">
+        <CabecalhoPagina titulo="Importação" voltar={VOLTAR} />
+        <Alerta tom="erro">{falhaDe(importacao.error).mensagem}</Alerta>
+      </section>
     )
   }
 
   const atual = importacao.data
   return (
     <section className="flex flex-col gap-6">
-      <Button variant="ghost" size="sm" asChild className="self-start">
-        <Link to="/importacoes">
-          <ArrowLeft /> Importações
-        </Link>
-      </Button>
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-semibold tracking-tight">{atual.nomeArquivo}</h1>
-          <Badge variant={atual.status === 'Falhou' ? 'destructive' : 'secondary'}>
-            {ROTULO_STATUS_IMPORTACAO[atual.status]}
-          </Badge>
-        </div>
-        {atual.status !== 'Falhou' && <Etapas status={atual.status} />}
-      </div>
+      <CabecalhoPagina
+        voltar={VOLTAR}
+        titulo={atual.nomeArquivo}
+        descricao={
+          <span className="flex flex-wrap items-center gap-2">
+            <Situacao tom={TOM_STATUS_IMPORTACAO[atual.status]}>{ROTULO_STATUS_IMPORTACAO[atual.status]}</Situacao>
+            <span>Enviado em {formatarDataHora(atual.iniciadoEm)}</span>
+          </span>
+        }
+      />
+      {atual.status !== 'Falhou' && <Etapas status={atual.status} />}
 
       {atual.status === 'Falhou' && (
-        <p role="alert" className="rounded-md border border-destructive p-4 text-sm">
-          A importação falhou: {atual.motivoFalha ?? 'motivo não informado.'}
-        </p>
+        <Alerta tom="erro">A importação falhou: {atual.motivoFalha ?? 'motivo não informado.'}</Alerta>
       )}
       {atual.status === 'Mapeando' && <Aguardando texto="A IA está sugerindo o mapeamento das colunas…" />}
       {(atual.status === 'Recebido' || atual.status === 'AguardandoConfirmacao') && (

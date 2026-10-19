@@ -6,12 +6,13 @@ import { Paginacao } from '@/components/Paginacao'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CabecalhoEstoque } from '@/features/estoque/CabecalhoEstoque'
 import { formatarData } from '@/features/estoque/formato'
 import { TODOS, useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
 import { formatarNumero } from '@/lib/numeros'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Alerta } from '@/components/Alerta'
 
 const TAMANHO_PAGINA = 50
 
@@ -80,9 +81,7 @@ export function SaldosPage() {
       </div>
 
       {lista.isError ? (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar os saldos: {falhaDe(lista.error).mensagem}
-        </p>
+        <Alerta tom="erro">Não foi possível carregar os saldos: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -99,17 +98,9 @@ export function SaldosPage() {
             </TableHeader>
             <TableBody>
               {lista.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <Skeleton className="h-5 w-full" role="status" aria-label="Carregando os saldos" />
-                  </TableCell>
-                </TableRow>
+                <LinhasCarregando colunas={7} rotulo="Carregando os saldos" />
               ) : lista.data.itens.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    Nenhum saldo encontrado.
-                  </TableCell>
-                </TableRow>
+                <LinhaVazia colunas={7} texto="Nenhum saldo encontrado." />
               ) : (
                 lista.data.itens.map((saldo) => (
                   <TableRow key={`${saldo.enderecoId}-${saldo.produtoId}-${saldo.loteId ?? ''}`}>

@@ -300,7 +300,7 @@ describe('mapeamento', () => {
 
     expect(await screen.findByText('A IA está desligada. Faça o mapeamento manual.')).toBeInTheDocument()
     expect(screen.getByRole('columnheader', { name: '2. Nome' })).toBeInTheDocument()
-    expect(screen.getByText('Falta escolher a coluna de: sku, descricao.')).toBeInTheDocument()
+    expect(screen.getByText('Falta escolher a coluna de: SKU, Descrição.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Confirmar o mapeamento e validar' })).toBeDisabled()
 
     await user.click(screen.getByRole('combobox', { name: 'Coluna do campo sku' }))
@@ -437,7 +437,7 @@ describe('validação, prévia e efetivação', () => {
     renderRoute('/importacoes/imp-1')
     const user = userEvent.setup()
 
-    expect(await screen.findByText('pesoKg: 2')).toBeInTheDocument()
+    expect(await screen.findByText('Peso (kg): 2')).toBeInTheDocument()
     expect(screen.getByText('unidade: 1')).toBeInTheDocument()
     const linha = (await screen.findByText('Peso inválido: abc.')).closest('tr') as HTMLElement
     expect(within(linha).getByText('Com erro')).toBeInTheDocument()

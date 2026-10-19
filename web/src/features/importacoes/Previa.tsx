@@ -11,27 +11,28 @@ import {
 } from '@/api/gerado/stowise'
 import type { ImportacaoDetalhe, StatusLinha } from '@/api/gerado/modelos'
 import { Paginacao } from '@/components/Paginacao'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { TODOS } from '@/lib/filtrosDaUrl'
 import { formatarNumero } from '@/lib/numeros'
-import { ROTULO_ACAO_LINHA, ROTULO_STATUS_LINHA } from './rotulos'
+import { ROTULO_ACAO_LINHA, ROTULO_STATUS_LINHA, rotuloCampo, TOM_STATUS_LINHA } from './rotulos'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Situacao } from '@/components/Situacao'
+import { MensagemErro } from '@/components/Alerta'
 
 const TAMANHO_PAGINA = 50
 
 function Contador({ rotulo, valor, destaque }: { rotulo: string; valor: number; destaque?: 'erro' | 'aviso' }) {
   return (
-    <div className="rounded-md border p-3">
+    <div className="rounded-lg bg-muted/50 p-3">
       <dt className="text-xs text-muted-foreground">{rotulo}</dt>
       <dd
         className={
           destaque === 'erro' && valor > 0
             ? 'text-lg font-semibold text-destructive tabular-nums'
             : destaque === 'aviso' && valor > 0
-              ? 'text-lg font-semibold text-amber-600 tabular-nums dark:text-amber-400'
+              ? 'text-lg font-semibold text-warning tabular-nums'
               : 'text-lg font-semibold tabular-nums'
         }
       >
@@ -57,8 +58,8 @@ function ErrosPorCampo({ id }: { id: string }) {
       </h3>
       <ul className="flex flex-wrap gap-2 text-sm">
         {erros.map(([campo, quantidade]) => (
-          <li key={campo} className="rounded-md bg-destructive/10 px-2 py-1">
-            {campo}: {formatarNumero(quantidade)}
+          <li key={campo} className="rounded-md bg-destructive/10 px-2 py-1 text-destructive">
+            {rotuloCampo(campo)}: {formatarNumero(quantidade)}
           </li>
         ))}
       </ul>
@@ -116,11 +117,7 @@ function Linhas({ importacao }: { importacao: ImportacaoDetalhe }) {
           </TableHeader>
           <TableBody>
             {linhas.isPending ? (
-              <TableRow>
-                <TableCell colSpan={6}>
-                  <Skeleton className="h-5 w-full" role="status" aria-label="Carregando as linhas" />
-                </TableCell>
-              </TableRow>
+              <LinhasCarregando colunas={6} rotulo="Carregando as linhas" />
             ) : linhas.isError ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-destructive">
@@ -128,11 +125,7 @@ function Linhas({ importacao }: { importacao: ImportacaoDetalhe }) {
                 </TableCell>
               </TableRow>
             ) : linhas.data.itens.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
-                  Nenhuma linha.
-                </TableCell>
-              </TableRow>
+              <LinhaVazia colunas={6} texto="Nenhuma linha." />
             ) : (
               linhas.data.itens.map((linha) => (
                 <TableRow key={linha.id}>
@@ -140,9 +133,7 @@ function Linhas({ importacao }: { importacao: ImportacaoDetalhe }) {
                   <TableCell className="font-mono text-xs">{linha.dadosNormalizados.sku ?? '—'}</TableCell>
                   <TableCell>{linha.dadosNormalizados.descricao ?? '—'}</TableCell>
                   <TableCell>
-                    <Badge variant={linha.status === 'Erro' ? 'destructive' : 'secondary'}>
-                      {ROTULO_STATUS_LINHA[linha.status]}
-                    </Badge>
+                    <Situacao tom={TOM_STATUS_LINHA[linha.status]}>{ROTULO_STATUS_LINHA[linha.status]}</Situacao>
                   </TableCell>
                   <TableCell>
                     {linha.produtoCorrespondenteId ? (
@@ -160,7 +151,7 @@ function Linhas({ importacao }: { importacao: ImportacaoDetalhe }) {
                       <ul className="flex flex-col gap-0.5 text-sm text-destructive">
                         {linha.erros.map((erro) => (
                           <li key={`${erro.campo}-${erro.mensagem}`}>
-                            <span className="font-medium">{erro.campo}:</span> {erro.mensagem}
+                            <span className="font-medium">{rotuloCampo(erro.campo)}:</span> {erro.mensagem}
                           </li>
                         ))}
                       </ul>
@@ -221,7 +212,7 @@ export function Previa({ importacao }: { importacao: ImportacaoDetalhe }) {
       </section>
 
       {revisando && (
-        <div className="flex flex-col gap-2 rounded-md border p-4">
+        <div className="flex flex-col gap-3 rounded-xl border border-primary/30 bg-primary/5 p-4">
           <p className="text-sm">
             {importacao.linhasValidas > 0
               ? `A efetivação grava as ${formatarNumero(importacao.linhasValidas)} linha(s) válida(s) no catálogo. As linhas com erro ficam de fora.`
@@ -234,11 +225,7 @@ export function Previa({ importacao }: { importacao: ImportacaoDetalhe }) {
           >
             Efetivar a importação
           </Button>
-          {erro && (
-            <p role="alert" className="text-sm text-destructive">
-              {erro}
-            </p>
-          )}
+          {erro && <MensagemErro>{erro}</MensagemErro>}
         </div>
       )}
       {concluida && (

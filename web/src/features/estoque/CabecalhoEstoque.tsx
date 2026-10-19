@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
 import { cn } from '@/lib/utils'
+import { CabecalhoPagina } from '@/components/CabecalhoPagina'
 
 /** Saldos e Extrato como abas, mantendo os filtros de produto e endereço ao trocar. */
 function Abas() {
@@ -89,10 +90,7 @@ function FiltrosDeLink() {
 export function CabecalhoEstoque() {
   return (
     <div className="flex flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Estoque</h1>
-        <p className="text-muted-foreground">Saldo por endereço e lote, e o histórico das movimentações.</p>
-      </div>
+      <CabecalhoPagina titulo="Estoque" descricao="Saldo por endereço e lote, e o histórico das movimentações." />
       <Abas />
       <FiltrosDeLink />
     </div>

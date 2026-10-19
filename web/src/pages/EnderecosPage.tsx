@@ -4,21 +4,23 @@ import { falhaDe } from '@/api/falha'
 import { useListarArmazens, useListarEnderecos, useObterArmazem } from '@/api/gerado/stowise'
 import type { EnderecoDetalhe, ListarEnderecosParams, StatusEndereco } from '@/api/gerado/modelos'
 import { Paginacao } from '@/components/Paginacao'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { PERFIS_GESTAO, useAuth } from '@/features/auth/contexto'
 import { ROTULO_CLASSE } from '@/features/catalogo/rotulos'
 import { GerarEmLote, NovoEndereco } from '@/features/enderecos/CadastroEnderecos'
 import { DetalheEndereco } from '@/features/enderecos/DetalheEndereco'
-import { ROTULO_STATUS, useMapaEnderecos } from '@/features/enderecos/mapa'
+import { ROTULO_STATUS, TOM_STATUS, useMapaEnderecos } from '@/features/enderecos/mapa'
 import { MapaOcupacao } from '@/features/enderecos/MapaOcupacao'
 import { TODOS, useBusca, useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
 import { formatarNumero } from '@/lib/numeros'
 import { cn } from '@/lib/utils'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Alerta } from '@/components/Alerta'
+import { CabecalhoPagina } from '@/components/CabecalhoPagina'
+import { Situacao } from '@/components/Situacao'
 
 const TAMANHO_PAGINA = 50
 
@@ -62,9 +64,7 @@ function ListaEnderecos({ zonaId, onSelecionar }: { zonaId: string; onSelecionar
         </Select>
       </div>
       {lista.isError ? (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar os endereços: {falhaDe(lista.error).mensagem}
-        </p>
+        <Alerta tom="erro">Não foi possível carregar os endereços: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -79,17 +79,9 @@ function ListaEnderecos({ zonaId, onSelecionar }: { zonaId: string; onSelecionar
             </TableHeader>
             <TableBody>
               {lista.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Skeleton className="h-5 w-full" role="status" aria-label="Carregando os endereços" />
-                  </TableCell>
-                </TableRow>
+                <LinhasCarregando colunas={5} rotulo="Carregando os endereços" />
               ) : lista.data.itens.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Nenhum endereço encontrado.
-                  </TableCell>
-                </TableRow>
+                <LinhaVazia colunas={5} texto="Nenhum endereço encontrado." />
               ) : (
                 lista.data.itens.map((endereco) => (
                   <TableRow key={endereco.id}>
@@ -103,9 +95,7 @@ function ListaEnderecos({ zonaId, onSelecionar }: { zonaId: string; onSelecionar
                       </button>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={endereco.status === 'Bloqueado' ? 'destructive' : 'secondary'}>
-                        {ROTULO_STATUS[endereco.status]}
-                      </Badge>
+                      <Situacao tom={TOM_STATUS[endereco.status]}>{ROTULO_STATUS[endereco.status]}</Situacao>
                     </TableCell>
                     <TableCell>{formatarNumero(endereco.capacidadePesoKg, 'kg')}</TableCell>
                     <TableCell>
@@ -144,29 +134,30 @@ export function EnderecosPage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Endereços</h1>
-          <p className="text-muted-foreground">Posições de armazenagem por armazém e zona.</p>
-        </div>
-        {temPerfil(...PERFIS_GESTAO) && zona && (
-          <span className="flex gap-2">
-            <Button variant="outline" onClick={() => setDialogo({ tipo: 'novo' })}>
-              <Plus /> Novo endereço
-            </Button>
-            <Button onClick={() => setDialogo({ tipo: 'lote' })}>
-              <Layers /> Gerar em lote
-            </Button>
-          </span>
-        )}
-      </div>
+      <CabecalhoPagina
+        titulo="Endereços"
+        descricao="Posições de armazenagem por armazém e zona."
+        acoes={
+          temPerfil(...PERFIS_GESTAO) &&
+          zona && (
+            <>
+              <Button variant="outline" onClick={() => setDialogo({ tipo: 'novo' })}>
+                <Plus /> Novo endereço
+              </Button>
+              <Button onClick={() => setDialogo({ tipo: 'lote' })}>
+                <Layers /> Gerar em lote
+              </Button>
+            </>
+          )
+        }
+      />
 
       {armazens.data?.length === 0 ? (
-        <p className="text-sm text-muted-foreground">Nenhum armazém cadastrado.</p>
+        <Alerta tom="info">Nenhum armazém cadastrado.</Alerta>
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <Select value={armazemId ?? ''} onValueChange={trocarArmazem}>
-            <SelectTrigger aria-label="Armazém" className="w-56">
+            <SelectTrigger aria-label="Armazém" className="w-full sm:w-80">
               <SelectValue placeholder="Armazém" />
             </SelectTrigger>
             <SelectContent>
@@ -212,15 +203,13 @@ export function EnderecosPage() {
       )}
 
       {armazem.data && armazem.data.zonas.length === 0 && (
-        <p className="text-sm text-muted-foreground">Este armazém ainda não tem zonas.</p>
+        <Alerta tom="info">Este armazém ainda não tem zonas.</Alerta>
       )}
 
       {zonaId &&
         (visao === 'mapa' ? (
           mapa.isError ? (
-            <p role="alert" className="text-sm text-destructive">
-              Não foi possível carregar o mapa: {falhaDe(mapa.error).mensagem}
-            </p>
+            <Alerta tom="erro">Não foi possível carregar o mapa: {falhaDe(mapa.error).mensagem}</Alerta>
           ) : (
             <MapaOcupacao
               enderecos={mapa.data}

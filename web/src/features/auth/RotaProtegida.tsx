@@ -1,6 +1,8 @@
 import { ShieldX } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Navigate, useLocation } from 'react-router'
+import { Link, Navigate, useLocation } from 'react-router'
+import { EstadoPagina } from '@/components/EstadoPagina'
+import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from './contexto'
 
@@ -30,11 +32,17 @@ export function ExigePerfil({ perfis, children }: { perfis: readonly string[]; c
 
   if (!temPerfil(...perfis)) {
     return (
-      <section className="flex flex-col items-start gap-3">
-        <ShieldX className="size-8 text-destructive" aria-hidden />
-        <h1 className="text-2xl font-semibold tracking-tight">Acesso negado</h1>
-        <p className="text-muted-foreground">Esta área é só para o perfil {perfis.join(' ou ')}.</p>
-      </section>
+      <EstadoPagina
+        icone={ShieldX}
+        tom="perigo"
+        titulo="Acesso negado"
+        descricao={`Esta área é só para o perfil ${perfis.join(' ou ')}.`}
+        acao={
+          <Button asChild variant="outline">
+            <Link to="/">Voltar para o início</Link>
+          </Button>
+        }
+      />
     )
   }
 

@@ -2,14 +2,16 @@ import { Link } from 'react-router'
 import { falhaDe } from '@/api/falha'
 import { useListarImportacoes } from '@/api/gerado/stowise'
 import { Paginacao } from '@/components/Paginacao'
-import { Badge } from '@/components/ui/badge'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { formatarDataHora } from '@/features/estoque/formato'
 import { EnvioArquivo } from '@/features/importacoes/EnvioArquivo'
-import { ROTULO_STATUS_IMPORTACAO } from '@/features/importacoes/rotulos'
+import { ROTULO_STATUS_IMPORTACAO, TOM_STATUS_IMPORTACAO } from '@/features/importacoes/rotulos'
 import { useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
 import { formatarNumero } from '@/lib/numeros'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Alerta } from '@/components/Alerta'
+import { CabecalhoPagina } from '@/components/CabecalhoPagina'
+import { Situacao } from '@/components/Situacao'
 
 const TAMANHO_PAGINA = 20
 
@@ -23,19 +25,15 @@ export function ImportacoesPage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Importações</h1>
-        <p className="text-muted-foreground">
-          Cadastro de produtos em massa. A IA sugere o mapeamento das colunas; você confere antes de importar.
-        </p>
-      </div>
+      <CabecalhoPagina
+        titulo="Importações"
+        descricao="Cadastro de produtos em massa. A IA sugere o mapeamento das colunas; você confere antes de importar."
+      />
 
       <EnvioArquivo />
 
       {lista.isError ? (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar as importações: {falhaDe(lista.error).mensagem}
-        </p>
+        <Alerta tom="erro">Não foi possível carregar as importações: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -50,17 +48,9 @@ export function ImportacoesPage() {
             </TableHeader>
             <TableBody>
               {lista.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Skeleton className="h-5 w-full" role="status" aria-label="Carregando as importações" />
-                  </TableCell>
-                </TableRow>
+                <LinhasCarregando colunas={5} rotulo="Carregando as importações" />
               ) : lista.data.itens.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Nenhuma importação ainda.
-                  </TableCell>
-                </TableRow>
+                <LinhaVazia colunas={5} texto="Nenhuma importação ainda." />
               ) : (
                 lista.data.itens.map((importacao) => (
                   <TableRow key={importacao.id}>
@@ -70,9 +60,7 @@ export function ImportacoesPage() {
                       </Link>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={importacao.status === 'Falhou' ? 'destructive' : 'secondary'}>
-                        {ROTULO_STATUS_IMPORTACAO[importacao.status]}
-                      </Badge>
+                      <Situacao tom={TOM_STATUS_IMPORTACAO[importacao.status]}>{ROTULO_STATUS_IMPORTACAO[importacao.status]}</Situacao>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">{formatarNumero(importacao.totalLinhas)}</TableCell>
                     <TableCell className="text-right tabular-nums">

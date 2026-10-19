@@ -410,7 +410,11 @@ const handlers = [
 
   // Importações: os jobs terminam na hora (sem tempo real; a tela usa a consulta periódica).
   http.get('/api/v1/importacoes/produtos/campos', () => HttpResponse.json(CAMPOS)),
-  http.get('/api/v1/importacoes', ({ request }) => pagina(importacoes, new URL(request.url))),
+  http.get('/api/v1/importacoes', ({ request }) => {
+    const url = new URL(request.url)
+    const status = url.searchParams.get('status')
+    return pagina(importacoes.filter((i) => !status || i.status === status), url)
+  }),
   http.post('/api/v1/importacoes/produtos', async ({ request }) => {
     const arquivo = (await request.formData()).get('arquivo') as File | null
     const nova: ImportacaoDetalhe = {

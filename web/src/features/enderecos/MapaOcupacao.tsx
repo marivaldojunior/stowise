@@ -40,7 +40,7 @@ export function MapaOcupacao({ enderecos, carregando, onSelecionar }: Props) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 rounded-xl border bg-card p-4 sm:p-5">
       <Legenda enderecos={enderecos} />
       <div className="flex flex-col gap-6">
         {agruparPorRua(enderecos).map(({ rua, niveis }) => (

@@ -13,7 +13,6 @@ import {
 import type { ListarUsuariosParams, UsuarioDetalhe } from '@/api/gerado/modelos'
 import { FiltroSituacao } from '@/components/FiltroSituacao'
 import { Paginacao } from '@/components/Paginacao'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -24,23 +23,26 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { useAuth } from '@/features/auth/contexto'
 import { FormularioUsuario } from '@/features/usuarios/FormularioUsuario'
 import { RedefinirSenha } from '@/features/usuarios/RedefinirSenha'
 import { TODOS, useBusca, useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Alerta } from '@/components/Alerta'
+import { CabecalhoPagina } from '@/components/CabecalhoPagina'
+import { Situacao } from '@/components/Situacao'
 
 const TAMANHO_PAGINA = 20
 
 type Dialogo = { tipo: 'novo' } | { tipo: 'editar' | 'senha'; usuario: UsuarioDetalhe } | null
 
-function Situacao({ usuario }: { usuario: UsuarioDetalhe }) {
+function SituacaoUsuario({ usuario }: { usuario: UsuarioDetalhe }) {
   if (!usuario.ativo) {
-    return <Badge variant="outline">Inativo</Badge>
+    return <Situacao tom="neutro">Inativo</Situacao>
   }
 
-  return usuario.bloqueado ? <Badge variant="destructive">Bloqueado</Badge> : <Badge variant="secondary">Ativo</Badge>
+  return usuario.bloqueado ? <Situacao tom="perigo">Bloqueado</Situacao> : <Situacao tom="sucesso">Ativo</Situacao>
 }
 
 function AcoesUsuario({ usuario, onDialogo }: { usuario: UsuarioDetalhe; onDialogo: (d: Dialogo) => void }) {
@@ -103,15 +105,15 @@ export function UsuariosPage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Usuários</h1>
-          <p className="text-muted-foreground">Contas de acesso ao Stowise e os perfis de cada uma.</p>
-        </div>
-        <Button onClick={() => setDialogo({ tipo: 'novo' })}>
-          <Plus /> Novo usuário
-        </Button>
-      </div>
+      <CabecalhoPagina
+        titulo="Usuários"
+        descricao="Contas de acesso ao Stowise e os perfis de cada uma."
+        acoes={
+          <Button onClick={() => setDialogo({ tipo: 'novo' })}>
+            <Plus /> Novo usuário
+          </Button>
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         <Input
@@ -139,9 +141,7 @@ export function UsuariosPage() {
       </div>
 
       {lista.isError ? (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar os usuários: {falhaDe(lista.error).mensagem}
-        </p>
+        <Alerta tom="erro">Não foi possível carregar os usuários: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -158,17 +158,9 @@ export function UsuariosPage() {
             </TableHeader>
             <TableBody>
               {lista.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={5}>
-                    <Skeleton className="h-5 w-full" role="status" aria-label="Carregando os usuários" />
-                  </TableCell>
-                </TableRow>
+                <LinhasCarregando colunas={5} rotulo="Carregando os usuários" />
               ) : lista.data.itens.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Nenhum usuário encontrado.
-                  </TableCell>
-                </TableRow>
+                <LinhaVazia colunas={5} texto="Nenhum usuário encontrado." />
               ) : (
                 lista.data.itens.map((usuario) => (
                   <TableRow key={usuario.id}>
@@ -177,14 +169,14 @@ export function UsuariosPage() {
                     <TableCell>
                       <span className="flex flex-wrap gap-1">
                         {usuario.perfis.map((perfil) => (
-                          <Badge key={perfil} variant="outline">
+                          <Situacao key={perfil} tom="marca">
                             {perfil}
-                          </Badge>
+                          </Situacao>
                         ))}
                       </span>
                     </TableCell>
                     <TableCell>
-                      <Situacao usuario={usuario} />
+                      <SituacaoUsuario usuario={usuario} />
                     </TableCell>
                     <TableCell>
                       <AcoesUsuario usuario={usuario} onDialogo={setDialogo} />

@@ -1,18 +1,17 @@
-import { Menu } from 'lucide-react'
-import { useState } from 'react'
+import { Menu, TriangleAlert } from 'lucide-react'
+import { Suspense, useState } from 'react'
 import { isRouteErrorResponse, NavLink, Outlet, useRouteError } from 'react-router'
+import { EstadoPagina } from '@/components/EstadoPagina'
+import { Marca } from '@/components/Marca'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { useAuth } from '@/features/auth/contexto'
 import { cn } from '@/lib/utils'
 import { MenuUsuario } from './MenuUsuario'
 import { navegacao } from './navegacao'
 import { SeletorTema } from './SeletorTema'
-
-function Marca() {
-  return <span className="text-base font-semibold tracking-tight">Stowise</span>
-}
 
 /**
  * Links do menu principal, só os que os perfis do usuário podem usar. Na tela pequena, fechar o menu depois do
@@ -33,8 +32,8 @@ function MenuPrincipal({ onNavegar }: { onNavegar?: () => void }) {
             onClick={onNavegar}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-2 rounded-md px-3 py-2 text-sm transition-colors hover:bg-muted',
-                isActive && 'bg-muted font-medium',
+                'flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground',
+                isActive && 'bg-primary/10 font-medium text-primary hover:bg-primary/15 hover:text-primary',
               )
             }
           >
@@ -45,7 +44,7 @@ function MenuPrincipal({ onNavegar }: { onNavegar?: () => void }) {
           <span
             key={rotulo}
             aria-disabled="true"
-            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground"
+            className="flex items-center gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground/60"
           >
             <Icone className="size-4" />
             {rotulo}
@@ -65,13 +64,14 @@ export function AppLayout() {
 
   return (
     <div className="flex min-h-svh">
-      <aside className="hidden w-60 shrink-0 border-r bg-sidebar p-4 md:flex md:flex-col md:gap-6">
-        <Marca />
+      <aside className="hidden w-60 shrink-0 border-r bg-sidebar p-4 md:sticky md:top-0 md:flex md:h-svh md:flex-col md:gap-6">
+        <Marca className="px-1" />
         <MenuPrincipal />
+        <p className="mt-auto px-1 text-xs text-muted-foreground">Projeto experimental de recursos de IA.</p>
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-14 items-center gap-2 border-b px-4">
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur">
           <Sheet open={menuAberto} onOpenChange={setMenuAberto}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir o menu">
@@ -98,7 +98,9 @@ export function AppLayout() {
         </header>
 
         <main className="mx-auto w-full max-w-6xl flex-1 p-4 md:p-8">
-          <Outlet />
+          <Suspense fallback={<Skeleton className="h-8 w-56" role="status" aria-label="Carregando a página" />}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>
@@ -111,12 +113,18 @@ export function ErroDaRota() {
   const mensagem = isRouteErrorResponse(erro) ? `${erro.status} ${erro.statusText}` : 'Erro inesperado no painel.'
 
   return (
-    <main className="mx-auto flex max-w-xl flex-col gap-4 p-8">
-      <h1 className="text-2xl font-semibold">Algo deu errado</h1>
-      <p className="text-muted-foreground">{mensagem}</p>
-      <Button asChild className="self-start">
-        <a href="/">Recarregar o painel</a>
-      </Button>
+    <main className="p-4">
+      <EstadoPagina
+        icone={TriangleAlert}
+        tom="perigo"
+        titulo="Algo deu errado"
+        descricao={mensagem}
+        acao={
+          <Button asChild>
+            <a href="/">Recarregar o painel</a>
+          </Button>
+        }
+      />
     </main>
   )
 }

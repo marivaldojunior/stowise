@@ -5,7 +5,6 @@ import { erroDoCampo, type Falha, falhaDe } from '@/api/falha'
 import { useAdicionarEmbalagem, useAtualizarEmbalagem, useRemoverEmbalagem } from '@/api/gerado/stowise'
 import type { EmbalagemDetalhe, ProdutoDetalhe, TipoEmbalagem } from '@/api/gerado/modelos'
 import { Campo } from '@/components/Campo'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -22,6 +21,8 @@ import { CamposMedidas } from './CamposMedidas'
 import { ehFalha, MEDIDAS_VAZIAS, type MedidasTexto, medidasDe, medidasParaApi } from './medidas'
 import { ROTULO_EMBALAGEM } from './rotulos'
 import { lerNumero } from '@/lib/numeros'
+import { Painel } from '@/components/Painel'
+import { Situacao } from '@/components/Situacao'
 
 interface Props {
   produto: ProdutoDetalhe
@@ -58,17 +59,17 @@ export function Embalagens({ produto, somenteLeitura, onProduto }: Props) {
   }
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="titulo-embalagens">
-      <div className="flex items-center justify-between gap-2">
-        <h2 id="titulo-embalagens" className="text-lg font-semibold">
-          Embalagens
-        </h2>
-        {!somenteLeitura && (
+    <Painel
+      titulo="Embalagens"
+      descricao="Unidade base e as caixas e paletes, com fator, código de barras e medidas."
+      acoes={
+        !somenteLeitura && (
           <Button variant="outline" size="sm" onClick={() => setDialogo({ tipo: 'nova' })}>
             <Plus /> Nova embalagem
           </Button>
-        )}
-      </div>
+        )
+      }
+    >
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -91,7 +92,7 @@ export function Embalagens({ produto, somenteLeitura, onProduto }: Props) {
                 <TableCell>
                   <span className="flex items-center gap-2">
                     {ROTULO_EMBALAGEM[embalagem.tipo]}
-                    {embalagem.unidadeBase && <Badge variant="outline">base</Badge>}
+                    {embalagem.unidadeBase && <Situacao tom="marca">base</Situacao>}
                   </span>
                 </TableCell>
                 <TableCell>
@@ -138,7 +139,7 @@ export function Embalagens({ produto, somenteLeitura, onProduto }: Props) {
           onProduto={onProduto}
         />
       )}
-    </section>
+    </Painel>
   )
 }
 

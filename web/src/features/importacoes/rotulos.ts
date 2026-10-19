@@ -1,4 +1,5 @@
 import type { AcaoLinha, StatusImportacao, StatusLinha } from '@/api/gerado/modelos'
+import type { Tom } from '@/components/Situacao'
 
 export const ROTULO_STATUS_IMPORTACAO: Record<StatusImportacao, string> = {
   Recebido: 'Recebido',
@@ -38,3 +39,44 @@ export const ETAPAS = [
   { rotulo: 'Revisão', status: ['AguardandoRevisao'] },
   { rotulo: 'Efetivação', status: ['Efetivando', 'Concluido'] },
 ] as const satisfies readonly { rotulo: string; status: readonly StatusImportacao[] }[]
+
+/** Aguardando você = aviso; job trabalhando = info. */
+export const TOM_STATUS_IMPORTACAO: Record<StatusImportacao, Tom> = {
+  Recebido: 'neutro',
+  Mapeando: 'info',
+  AguardandoConfirmacao: 'aviso',
+  Validando: 'info',
+  AguardandoRevisao: 'aviso',
+  Efetivando: 'info',
+  Concluido: 'sucesso',
+  Falhou: 'perigo',
+}
+
+export const TOM_STATUS_LINHA: Record<StatusLinha, Tom> = {
+  Valida: 'sucesso',
+  Erro: 'perigo',
+  PossivelDuplicata: 'aviso',
+  Ignorada: 'neutro',
+}
+
+/** Nomes dos campos de produto para a tela (a API usa os nomes do código). */
+const ROTULO_CAMPO: Record<string, string> = {
+  sku: 'SKU',
+  descricao: 'Descrição',
+  unidadeBase: 'Unidade base',
+  gtin: 'GTIN (código de barras)',
+  ncm: 'NCM',
+  cest: 'CEST',
+  categoria: 'Categoria',
+  classeArmazenagem: 'Classe de armazenagem',
+  controlaLote: 'Controla lote',
+  controlaValidade: 'Controla validade',
+  pesoKg: 'Peso (kg)',
+  alturaCm: 'Altura (cm)',
+  larguraCm: 'Largura (cm)',
+  comprimentoCm: 'Comprimento (cm)',
+}
+
+export function rotuloCampo(campo: string): string {
+  return ROTULO_CAMPO[campo] ?? campo
+}

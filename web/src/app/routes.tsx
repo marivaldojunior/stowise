@@ -1,18 +1,21 @@
 import type { RouteObject } from 'react-router'
 import { PERFIS_GESTAO, Perfis } from '../features/auth/contexto'
 import { ExigePerfil, RotaProtegida } from '../features/auth/RotaProtegida'
-import { CatalogoPage } from '../pages/CatalogoPage'
-import { EnderecosPage } from '../pages/EnderecosPage'
-import { ExtratoPage } from '../pages/ExtratoPage'
-import { ImportacaoPage } from '../pages/ImportacaoPage'
-import { ImportacoesPage } from '../pages/ImportacoesPage'
 import { InicioPage } from '../pages/InicioPage'
 import { LoginPage } from '../pages/LoginPage'
 import { NaoEncontradaPage } from '../pages/NaoEncontradaPage'
-import { NovoProdutoPage, ProdutoPage } from '../pages/ProdutoPage'
-import { SaldosPage } from '../pages/SaldosPage'
-import { UsuariosPage } from '../pages/UsuariosPage'
 import { AppLayout, ErroDaRota } from './AppLayout'
+import {
+  CatalogoPage,
+  EnderecosPage,
+  ExtratoPage,
+  ImportacaoPage,
+  ImportacoesPage,
+  NovoProdutoPage,
+  ProdutoPage,
+  SaldosPage,
+  UsuariosPage,
+} from './paginas'
 
 /** Rotas do painel. Só o login é público. Os testes montam as mesmas rotas num roteador em memória. */
 export const routes: RouteObject[] = [

@@ -17,7 +17,7 @@ describe('painel', () => {
 
     renderRoute('/')
 
-    expect(await screen.findByRole('heading', { name: 'Stowise' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Olá, Ana' })).toBeInTheDocument()
     expect(await screen.findByText('API e banco disponíveis.')).toBeInTheDocument()
     expect(requisicoes.some((r) => r.url === '/health/ready')).toBe(true)
     expect(screen.getByRole('link', { name: 'Início' })).toHaveAttribute('aria-current', 'page')

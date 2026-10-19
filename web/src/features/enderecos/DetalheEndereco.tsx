@@ -12,7 +12,6 @@ import {
 } from '@/api/gerado/stowise'
 import type { EnderecoDetalhe } from '@/api/gerado/modelos'
 import { Campo } from '@/components/Campo'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -25,7 +24,8 @@ import {
 import { PERFIS_GESTAO, useAuth } from '@/features/auth/contexto'
 import { formatarNumero } from '@/lib/numeros'
 import { CAMPOS_DIMENSOES, dimensoesDe, ehFalha, numerosDe } from './dimensoes'
-import { getMapaEnderecosQueryKey, ROTULO_STATUS } from './mapa'
+import { getMapaEnderecosQueryKey, ROTULO_STATUS, TOM_STATUS } from './mapa'
+import { Situacao } from '@/components/Situacao'
 
 type Modo = 'ver' | 'bloquear' | 'editar'
 
@@ -101,9 +101,7 @@ export function DetalheEndereco({ endereco, onFechar }: Props) {
           <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
             <dt className="text-muted-foreground">Situação</dt>
             <dd>
-              <Badge variant={endereco.status === 'Bloqueado' ? 'destructive' : 'secondary'}>
-                {ROTULO_STATUS[endereco.status]}
-              </Badge>
+              <Situacao tom={TOM_STATUS[endereco.status]}>{ROTULO_STATUS[endereco.status]}</Situacao>
             </dd>
             {endereco.motivoBloqueio && (
               <>

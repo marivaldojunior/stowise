@@ -1,6 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
+import { MemoryRouter } from 'react-router'
 import { apiFetch } from '@/api/mutator'
 import { gravarRequisicoes, problema, requisicoesPara, server, sessao, usarSessao } from '@/test/msw/api'
 import { renderRoute } from '@/test/renderRoute'
@@ -54,7 +55,7 @@ describe('rotas protegidas', () => {
     const requisicoes = gravarRequisicoes()
     renderRoute('/')
 
-    expect(await screen.findByRole('heading', { name: 'Stowise' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Olá, Ana' })).toBeInTheDocument()
     expect(requisicoesPara(requisicoes, '/api/v1/auth/refresh')[0].corpo).toEqual({
       refreshToken: null,
       useCookie: true,
@@ -229,16 +230,20 @@ describe('perfis', () => {
 
   it('ExigePerfil mostra a área para o perfil certo e "Acesso negado" para os outros', () => {
     const { rerender } = render(
-      <ContextoDaAuth.Provider value={comPerfis([Perfis.Admin])}>
-        <ExigePerfil perfis={[Perfis.Admin]}>Área do Admin</ExigePerfil>
-      </ContextoDaAuth.Provider>,
+      <MemoryRouter>
+        <ContextoDaAuth.Provider value={comPerfis([Perfis.Admin])}>
+          <ExigePerfil perfis={[Perfis.Admin]}>Área do Admin</ExigePerfil>
+        </ContextoDaAuth.Provider>
+      </MemoryRouter>,
     )
     expect(screen.getByText('Área do Admin')).toBeInTheDocument()
 
     rerender(
-      <ContextoDaAuth.Provider value={comPerfis([Perfis.Operador])}>
-        <ExigePerfil perfis={[Perfis.Admin]}>Área do Admin</ExigePerfil>
-      </ContextoDaAuth.Provider>,
+      <MemoryRouter>
+        <ContextoDaAuth.Provider value={comPerfis([Perfis.Operador])}>
+          <ExigePerfil perfis={[Perfis.Admin]}>Área do Admin</ExigePerfil>
+        </ContextoDaAuth.Provider>
+      </MemoryRouter>,
     )
     expect(screen.queryByText('Área do Admin')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Acesso negado' })).toBeInTheDocument()

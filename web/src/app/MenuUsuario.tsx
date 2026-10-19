@@ -1,6 +1,6 @@
 import { LogOut, UserRound } from 'lucide-react'
 import { useNavigate } from 'react-router'
-import { Badge } from '@/components/ui/badge'
+import { Situacao } from '@/components/Situacao'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -11,6 +11,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useAuth } from '@/features/auth/contexto'
+
+function iniciais(nome: string): string {
+  const partes = nome.trim().split(/\s+/)
+  return ((partes[0]?.[0] ?? '') + (partes.length > 1 ? (partes.at(-1)?.[0] ?? '') : '')).toUpperCase()
+}
 
 /** Nome, e-mail e perfis do usuário, com a saída do painel. */
 export function MenuUsuario() {
@@ -23,8 +28,13 @@ export function MenuUsuario() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Menu do usuário">
-          <UserRound />
+        <Button variant="ghost" className="gap-2 px-2" aria-label="Menu do usuário">
+          <span className="flex size-7 items-center justify-center rounded-full bg-primary/12 text-xs font-semibold text-primary">
+            {iniciais(usuario.nome) || <UserRound className="size-4" />}
+          </span>
+          <span className="hidden max-w-40 truncate text-sm font-normal sm:inline" aria-hidden>
+            {usuario.nome}
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -33,9 +43,9 @@ export function MenuUsuario() {
           <span className="truncate text-xs font-normal">{usuario.email}</span>
           <span className="flex flex-wrap gap-1">
             {usuario.perfis.map((perfil) => (
-              <Badge key={perfil} variant="secondary">
+              <Situacao key={perfil} tom="marca">
                 {perfil}
-              </Badge>
+              </Situacao>
             ))}
           </span>
         </DropdownMenuLabel>

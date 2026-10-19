@@ -1,4 +1,4 @@
-import { Plus, Sparkles, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { erroDoCampo, type Falha } from '@/api/falha'
 import type {
@@ -9,13 +9,15 @@ import type {
   UnidadeDePara,
 } from '@/api/gerado/modelos'
 import { Campo } from '@/components/Campo'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Situacao } from '@/components/Situacao'
+import { Alerta, MensagemErro } from '@/components/Alerta'
+import { rotuloCampo } from './rotulos'
 
 const NAO_IMPORTAR = 'nao-importar'
 
@@ -112,18 +114,13 @@ export function RevisaoMapeamento({ importacao, campos, falha, enviando, onConfi
   return (
     <form className="flex flex-col gap-6" noValidate onSubmit={enviar}>
       {usouIa && (
-        <p className="flex items-start gap-2 rounded-md border bg-muted/40 p-3 text-sm">
-          <Sparkles className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <span>
-            A IA sugeriu este mapeamento. Confira cada campo antes de confirmar.
-            {importacao.sugestaoIa?.observacao && ` ${importacao.sugestaoIa.observacao}`}
-          </span>
-        </p>
+        <Alerta tom="ia">
+          A IA sugeriu este mapeamento. Confira cada campo antes de confirmar.
+          {importacao.sugestaoIa?.observacao && ` ${importacao.sugestaoIa.observacao}`}
+        </Alerta>
       )}
       {importacao.templateId && (
-        <p className="rounded-md border bg-muted/40 p-3 text-sm">
-          O arquivo tem a mesma estrutura de um template salvo. O mapeamento veio dele.
-        </p>
+        <Alerta tom="info">O arquivo tem a mesma estrutura de um template salvo. O mapeamento veio dele.</Alerta>
       )}
 
       <section aria-labelledby="titulo-mapeamento" className="flex flex-col gap-3">
@@ -148,8 +145,13 @@ export function RevisaoMapeamento({ importacao, campos, falha, enviando, onConfi
                     <TableCell>
                       <span className="flex flex-col">
                         <span className="font-medium">
-                          {campo.nome}
-                          {campo.obrigatorio && <span className="text-destructive"> *</span>}
+                          {rotuloCampo(campo.nome)}
+                          {campo.obrigatorio && (
+                            <span className="text-destructive" aria-label="obrigatório">
+                              {' '}
+                              *
+                            </span>
+                          )}
                         </span>
                         <span className="text-xs text-muted-foreground">{campo.descricao}</span>
                       </span>
@@ -173,9 +175,10 @@ export function RevisaoMapeamento({ importacao, campos, falha, enviando, onConfi
                           </SelectContent>
                         </Select>
                         {usouIa && nivel !== undefined && mapeamento[campo.nome] !== undefined && (
-                          <Badge variant={nivel < 0.6 ? 'destructive' : 'secondary'} title="Confiança da IA">
+                          <Situacao tom={nivel < 0.6 ? 'aviso' : nivel < 0.85 ? 'info' : 'sucesso'}>
+                            <span className="sr-only">Confiança da IA: </span>
                             {Math.round(nivel * 100)}%
-                          </Badge>
+                          </Situacao>
                         )}
                       </span>
                       {erroDoCampo(falha, campo.nome) && (
@@ -293,14 +296,10 @@ export function RevisaoMapeamento({ importacao, campos, falha, enviando, onConfi
 
       {faltando.length > 0 && (
         <p className="text-sm text-muted-foreground">
-          Falta escolher a coluna de: {faltando.map((c) => c.nome).join(', ')}.
+          Falta escolher a coluna de: {faltando.map((c) => rotuloCampo(c.nome)).join(', ')}.
         </p>
       )}
-      {falha && (
-        <p role="alert" className="text-sm text-destructive">
-          {erroDoCampo(falha, 'colunas') ?? falha.mensagem}
-        </p>
-      )}
+      {falha && <MensagemErro>{erroDoCampo(falha, 'colunas') ?? falha.mensagem}</MensagemErro>}
       <Button type="submit" className="self-start" disabled={enviando || faltando.length > 0}>
         {enviando ? 'Confirmando…' : 'Confirmar o mapeamento e validar'}
       </Button>

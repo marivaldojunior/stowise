@@ -5,15 +5,17 @@ import { useListarCategorias, useListarProdutos } from '@/api/gerado/stowise'
 import type { ListarProdutosParams } from '@/api/gerado/modelos'
 import { FiltroSituacao } from '@/components/FiltroSituacao'
 import { Paginacao } from '@/components/Paginacao'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { PERFIS_GESTAO, useAuth } from '@/features/auth/contexto'
 import { ROTULO_CLASSE } from '@/features/catalogo/rotulos'
 import { TODOS, useBusca, useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Alerta } from '@/components/Alerta'
+import { CabecalhoPagina } from '@/components/CabecalhoPagina'
+import { Situacao } from '@/components/Situacao'
 
 const TAMANHO_PAGINA = 20
 
@@ -36,19 +38,19 @@ export function CatalogoPage() {
 
   return (
     <section className="flex flex-col gap-6">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Catálogo</h1>
-          <p className="text-muted-foreground">Produtos, unidades e embalagens.</p>
-        </div>
-        {temPerfil(...PERFIS_GESTAO) && (
-          <Button asChild>
-            <Link to="/catalogo/novo">
-              <Plus /> Novo produto
-            </Link>
-          </Button>
-        )}
-      </div>
+      <CabecalhoPagina
+        titulo="Catálogo"
+        descricao="Produtos, unidades e embalagens."
+        acoes={
+          temPerfil(...PERFIS_GESTAO) && (
+            <Button asChild>
+              <Link to="/catalogo/novo">
+                <Plus /> Novo produto
+              </Link>
+            </Button>
+          )
+        }
+      />
 
       <div className="flex flex-wrap gap-2">
         <Input
@@ -76,9 +78,7 @@ export function CatalogoPage() {
       </div>
 
       {lista.isError ? (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar o catálogo: {falhaDe(lista.error).mensagem}
-        </p>
+        <Alerta tom="erro">Não foi possível carregar o catálogo: {falhaDe(lista.error).mensagem}</Alerta>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -94,17 +94,9 @@ export function CatalogoPage() {
             </TableHeader>
             <TableBody>
               {lista.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={6}>
-                    <Skeleton className="h-5 w-full" role="status" aria-label="Carregando o catálogo" />
-                  </TableCell>
-                </TableRow>
+                <LinhasCarregando colunas={6} rotulo="Carregando o catálogo" />
               ) : lista.data.itens.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    Nenhum produto encontrado.
-                  </TableCell>
-                </TableRow>
+                <LinhaVazia colunas={6} texto="Nenhum produto encontrado." />
               ) : (
                 lista.data.itens.map((produto) => (
                   <TableRow
@@ -125,9 +117,9 @@ export function CatalogoPage() {
                     </TableCell>
                     <TableCell>
                       {produto.ativo ? (
-                        <Badge variant="secondary">Ativo</Badge>
+                        <Situacao tom="sucesso">Ativo</Situacao>
                       ) : (
-                        <Badge variant="outline">Inativo</Badge>
+                        <Situacao tom="neutro">Inativo</Situacao>
                       )}
                     </TableCell>
                   </TableRow>

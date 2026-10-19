@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { listarEnderecos } from '@/api/gerado/stowise'
 import type { EnderecoDetalhe, StatusEndereco } from '@/api/gerado/modelos'
+import type { Tom } from '@/components/Situacao'
 
 /** Maior página que a API aceita (Paging.MaxPageSize). */
 const TAMANHO_PAGINA_MAPA = 100
@@ -13,9 +14,15 @@ export const ROTULO_STATUS: Record<StatusEndereco, string> = {
 
 /** Cor de cada situação no mapa (tokens do tema, funcionam no claro e no escuro). */
 export const COR_STATUS: Record<StatusEndereco, string> = {
-  Livre: 'bg-muted-foreground/15 hover:bg-muted-foreground/30',
-  Ocupado: 'bg-primary/80 hover:bg-primary',
-  Bloqueado: 'bg-destructive/70 hover:bg-destructive',
+  Livre: 'bg-success/20 ring-1 ring-inset ring-success/40 hover:bg-success/35',
+  Ocupado: 'bg-primary hover:bg-primary/80',
+  Bloqueado: 'bg-destructive/80 hover:bg-destructive',
+}
+
+export const TOM_STATUS: Record<StatusEndereco, Tom> = {
+  Livre: 'sucesso',
+  Ocupado: 'marca',
+  Bloqueado: 'perigo',
 }
 
 export function getMapaEnderecosQueryKey(zonaId: string) {

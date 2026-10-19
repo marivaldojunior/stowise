@@ -6,13 +6,14 @@ import { Paginacao } from '@/components/Paginacao'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CabecalhoEstoque } from '@/features/estoque/CabecalhoEstoque'
 import { formatarDataHora, limiteDoDia, ROTULO_MOVIMENTACAO, sinal } from '@/features/estoque/formato'
 import { TODOS, useFiltrosDaUrl } from '@/lib/filtrosDaUrl'
 import { formatarNumero } from '@/lib/numeros'
 import { cn } from '@/lib/utils'
+import { LinhaVazia, LinhasCarregando } from '@/components/EstadoTabela'
+import { Alerta } from '@/components/Alerta'
 
 const TAMANHO_PAGINA = 50
 
@@ -78,9 +79,7 @@ export function ExtratoPage() {
       </div>
 
       {extrato.isError ? (
-        <p role="alert" className="text-sm text-destructive">
-          Não foi possível carregar o extrato: {falhaDe(extrato.error).mensagem}
-        </p>
+        <Alerta tom="erro">Não foi possível carregar o extrato: {falhaDe(extrato.error).mensagem}</Alerta>
       ) : (
         <div className="rounded-md border">
           <Table>
@@ -97,17 +96,9 @@ export function ExtratoPage() {
             </TableHeader>
             <TableBody>
               {extrato.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={7}>
-                    <Skeleton className="h-5 w-full" role="status" aria-label="Carregando o extrato" />
-                  </TableCell>
-                </TableRow>
+                <LinhasCarregando colunas={7} rotulo="Carregando o extrato" />
               ) : extrato.data.itens.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    Nenhuma movimentação no período.
-                  </TableCell>
-                </TableRow>
+                <LinhaVazia colunas={7} texto="Nenhuma movimentação no período." />
               ) : (
                 extrato.data.itens.map((item) => {
                   const sentido = sinal(item)
@@ -127,7 +118,7 @@ export function ExtratoPage() {
                       <TableCell
                         className={cn(
                           'text-right font-medium tabular-nums',
-                          sentido === '+' && 'text-emerald-600 dark:text-emerald-400',
+                          sentido === '+' && 'text-success',
                           sentido === '−' && 'text-destructive',
                         )}
                       >

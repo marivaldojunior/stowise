@@ -26,12 +26,17 @@ export function problema(status: number, title: string, detail?: string, errors?
 }
 
 /**
- * Respostas padrão: sem sessão (o refresh do cookie é recusado) e API saudável. Cada teste acrescenta as rotas que
+ * Respostas padrão: sem sessão (o refresh do cookie é recusado), API saudável e listas vazias. Cada teste acrescenta as rotas que
  * usa com `server.use(...)`; uma requisição sem handler faz o teste falhar (onUnhandledRequest: 'error').
  */
 export const handlersPadrao = [
   http.post('/api/v1/auth/refresh', () => problema(401, 'Sessão inválida')),
   http.get('/health/ready', () => HttpResponse.json({ status: 'Healthy', totalDurationMs: 1, checks: [] })),
+  // Indicadores da página inicial, vazios: os testes que usam estas rotas definem os próprios dados.
+  ...['/api/v1/produtos', '/api/v1/enderecos', '/api/v1/saldos', '/api/v1/movimentacoes', '/api/v1/importacoes'].map(
+    (rota) => http.get(rota, () => HttpResponse.json({ itens: [], pagina: 1, tamanhoPagina: 1, total: 0 })),
+  ),
+  http.get('/api/v1/armazens', () => HttpResponse.json([])),
 ]
 
 export const server = setupServer(...handlersPadrao)

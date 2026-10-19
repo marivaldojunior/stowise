@@ -2,10 +2,13 @@ import { type FormEvent, useState } from 'react'
 import { type Location, Navigate, useLocation, useNavigate } from 'react-router'
 import { erroDoCampo, type Falha, falhaDe } from '@/api/falha'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/features/auth/contexto'
+import { Boxes } from 'lucide-react'
+import { Alerta, MensagemErro } from '@/components/Alerta'
+import { Marca } from '@/components/Marca'
+import { useTituloAba } from '@/lib/tituloAba'
 
 /** Página pedida antes do login (RotaProtegida). Sem ela, o painel abre no início. */
 function destino(location: Location): string {
@@ -21,6 +24,7 @@ export function LoginPage() {
   const [senha, setSenha] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [falha, setFalha] = useState<Falha | null>(null)
+  useTituloAba('Entrar')
 
   if (status === 'autenticado' && !enviando) {
     return <Navigate to={destino(location)} replace />
@@ -43,13 +47,31 @@ export function LoginPage() {
   const erroSenha = erroDoCampo(falha, 'senha')
 
   return (
-    <main className="flex min-h-svh items-center justify-center p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-xl">Entrar no Stowise</CardTitle>
-          <CardDescription>Use o e-mail e a senha da sua conta.</CardDescription>
-        </CardHeader>
-        <CardContent>
+    <main className="grid min-h-svh lg:grid-cols-[1.1fr_1fr]">
+      <section className="hidden flex-col justify-between bg-primary p-10 text-primary-foreground lg:flex dark:border-r dark:bg-primary/10 dark:text-foreground">
+        <span className="flex items-center gap-2 text-lg font-semibold">
+          <span className="flex size-8 items-center justify-center rounded-lg bg-primary-foreground/15 dark:bg-primary dark:text-primary-foreground">
+            <Boxes className="size-5" aria-hidden />
+          </span>
+          Stowise
+        </span>
+        <div className="flex max-w-md flex-col gap-4">
+          <p className="text-3xl leading-tight font-semibold">Inventário e armazenagem com IA.</p>
+          <ul className="flex flex-col gap-2 text-sm opacity-85">
+            <li>Catálogo, endereços e estoque com histórico completo.</li>
+            <li>Importação de produtos com o mapeamento sugerido pela IA.</li>
+            <li>A IA só sugere: você confere antes de gravar.</li>
+          </ul>
+        </div>
+        <p className="text-xs opacity-70">Projeto experimental de recursos de IA.</p>
+      </section>
+      <div className="flex items-center justify-center p-4">
+        <div className="flex w-full max-w-sm flex-col gap-6">
+          <Marca className="lg:hidden" />
+          <div className="flex flex-col gap-1">
+            <h1 className="text-2xl font-semibold tracking-tight">Entrar no Stowise</h1>
+            <p className="text-sm text-muted-foreground">Use o e-mail e a senha da sua conta.</p>
+          </div>
           <form className="flex flex-col gap-4" noValidate onSubmit={(evento) => void enviar(evento)}>
             <div className="flex flex-col gap-2">
               <Label htmlFor="email">E-mail</Label>
@@ -87,17 +109,18 @@ export function LoginPage() {
                 </p>
               )}
             </div>
-            {falha && (
-              <p role="alert" className="text-sm text-destructive">
-                {falha.mensagem}
-              </p>
-            )}
+            {falha && <MensagemErro>{falha.mensagem}</MensagemErro>}
             <Button type="submit" disabled={enviando}>
               {enviando ? 'Entrando…' : 'Entrar'}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+          {import.meta.env.MODE === 'demo' && (
+            <Alerta tom="info">
+              Modo demonstração: entre com admin@, gestor@ ou operador@stowise.dev e qualquer senha.
+            </Alerta>
+          )}
+        </div>
+      </div>
     </main>
   )
 }
