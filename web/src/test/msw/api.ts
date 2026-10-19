@@ -49,6 +49,15 @@ export interface Requisicao {
   corpo: unknown
 }
 
+/** Corpo JSON como objeto; outros (ex.: multipart do upload) ficam como texto. */
+function lerCorpo(texto: string, tipo: string | null): unknown {
+  if (!texto) {
+    return undefined
+  }
+
+  return tipo?.includes('json') ? (JSON.parse(texto) as unknown) : texto
+}
+
 /** Grava as requisições que chegam ao MSW, para o teste conferir método, token e corpo. */
 export function gravarRequisicoes(): Requisicao[] {
   const requisicoes: Requisicao[] = []
@@ -65,7 +74,7 @@ export function gravarRequisicoes(): Requisicao[] {
       .clone()
       .text()
       .then((texto) => {
-        requisicao.corpo = texto ? (JSON.parse(texto) as unknown) : undefined
+        requisicao.corpo = lerCorpo(texto, request.headers.get('Content-Type'))
       })
   })
   return requisicoes
