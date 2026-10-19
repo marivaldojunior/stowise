@@ -3,9 +3,9 @@ name: mobile
 on:
   push:
     branches: [main]
-    paths: ['mobile/**', '.github/workflows/mobile.yml']
+    paths: ['mobile/**', 'api/openapi/**', '.github/workflows/mobile.yml']
   pull_request:
-    paths: ['mobile/**', '.github/workflows/mobile.yml']
+    paths: ['mobile/**', 'api/openapi/**', '.github/workflows/mobile.yml']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -21,6 +21,12 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
+      # Java do openapi-generator (geração do cliente da API).
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -28,6 +34,16 @@ jobs:
           cache: true
 
       - run: flutter pub get
+
+      # O cliente gerado (openapi-generator, dart-dio) tem de bater com o contrato versionado da API (ADR-0008).
+      - name: Cliente da API igual ao contrato
+        run: |
+          tool/gerar_cliente.sh
+          if [ -n "$(git status --porcelain -- packages/stowise_api)" ]; then
+            git status --porcelain -- packages/stowise_api
+            echo "::error::packages/stowise_api não bate com api/openapi/v1.json. Rode 'tool/gerar_cliente.sh' em mobile/ e faça o commit."
+            exit 1
+          fi
       - name: Lint (format)
         run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze

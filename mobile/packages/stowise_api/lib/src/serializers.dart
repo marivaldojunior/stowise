@@ -1,0 +1,233 @@
+//
+// AUTO-GENERATED FILE, DO NOT MODIFY!
+//
+
+// ignore_for_file: unused_import
+
+import 'package:one_of_serializer/any_of_serializer.dart';
+import 'package:one_of_serializer/one_of_serializer.dart';
+import 'package:built_collection/built_collection.dart';
+import 'package:built_value/json_object.dart';
+import 'package:built_value/serializer.dart';
+import 'package:built_value/standard_json_plugin.dart';
+import 'package:built_value/iso_8601_date_time_serializer.dart';
+import 'package:stowise_api/src/date_serializer.dart';
+import 'package:stowise_api/src/model/date.dart';
+
+import 'package:stowise_api/src/model/acao_linha.dart';
+import 'package:stowise_api/src/model/adicionar_embalagem.dart';
+import 'package:stowise_api/src/model/alterar_limites_cota_ia.dart';
+import 'package:stowise_api/src/model/armazem_detalhe.dart';
+import 'package:stowise_api/src/model/armazem_resumo.dart';
+import 'package:stowise_api/src/model/atualizar_produto.dart';
+import 'package:stowise_api/src/model/atualizar_usuario_request.dart';
+import 'package:stowise_api/src/model/auth_response.dart';
+import 'package:stowise_api/src/model/bloquear_endereco.dart';
+import 'package:stowise_api/src/model/campo_importacao.dart';
+import 'package:stowise_api/src/model/categoria_detalhe.dart';
+import 'package:stowise_api/src/model/chamada_ia_detalhe.dart';
+import 'package:stowise_api/src/model/classe_armazenagem.dart';
+import 'package:stowise_api/src/model/coluna_arquivo.dart';
+import 'package:stowise_api/src/model/coluna_sugerida.dart';
+import 'package:stowise_api/src/model/confirmar_mapeamento.dart';
+import 'package:stowise_api/src/model/consumir_reserva.dart';
+import 'package:stowise_api/src/model/cota_ia_detalhe.dart';
+import 'package:stowise_api/src/model/criar_armazem.dart';
+import 'package:stowise_api/src/model/criar_endereco.dart';
+import 'package:stowise_api/src/model/criar_produto.dart';
+import 'package:stowise_api/src/model/criar_reserva.dart';
+import 'package:stowise_api/src/model/criar_usuario_request.dart';
+import 'package:stowise_api/src/model/dimensoes_endereco_comando.dart';
+import 'package:stowise_api/src/model/efetivar_importacao.dart';
+import 'package:stowise_api/src/model/embalagem_detalhe.dart';
+import 'package:stowise_api/src/model/embalagem_medidas.dart';
+import 'package:stowise_api/src/model/endereco_detalhe.dart';
+import 'package:stowise_api/src/model/erro_linha.dart';
+import 'package:stowise_api/src/model/extrato_item.dart';
+import 'package:stowise_api/src/model/formato_arquivo.dart';
+import 'package:stowise_api/src/model/funcionalidade_ia.dart';
+import 'package:stowise_api/src/model/geracao_enderecos_resultado.dart';
+import 'package:stowise_api/src/model/gerar_enderecos.dart';
+import 'package:stowise_api/src/model/http_validation_problem_details.dart';
+import 'package:stowise_api/src/model/importacao_detalhe.dart';
+import 'package:stowise_api/src/model/importacao_linha_detalhe.dart';
+import 'package:stowise_api/src/model/importacao_resumo.dart';
+import 'package:stowise_api/src/model/importar_produtos_request.dart';
+import 'package:stowise_api/src/model/layout_arquivo.dart';
+import 'package:stowise_api/src/model/login_request.dart';
+import 'package:stowise_api/src/model/lote_informado.dart';
+import 'package:stowise_api/src/model/mapeamento_coluna.dart';
+import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_chamada_ia_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_endereco_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_extrato_item.dart';
+import 'package:stowise_api/src/model/paged_result_of_importacao_linha_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_importacao_resumo.dart';
+import 'package:stowise_api/src/model/paged_result_of_produto_resumo.dart';
+import 'package:stowise_api/src/model/paged_result_of_reserva_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_saldo_item.dart';
+import 'package:stowise_api/src/model/paged_result_of_saldo_na_data.dart';
+import 'package:stowise_api/src/model/paged_result_of_template_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_usuario_detalhe.dart';
+import 'package:stowise_api/src/model/problem_details.dart';
+import 'package:stowise_api/src/model/produto_detalhe.dart';
+import 'package:stowise_api/src/model/produto_por_codigo.dart';
+import 'package:stowise_api/src/model/produto_resumo.dart';
+import 'package:stowise_api/src/model/redefinir_senha_request.dart';
+import 'package:stowise_api/src/model/refresh_request.dart';
+import 'package:stowise_api/src/model/registrar_ajuste.dart';
+import 'package:stowise_api/src/model/registrar_entrada.dart';
+import 'package:stowise_api/src/model/registrar_saida.dart';
+import 'package:stowise_api/src/model/registrar_transferencia.dart';
+import 'package:stowise_api/src/model/regras_normalizacao.dart';
+import 'package:stowise_api/src/model/relatorio_importacao.dart';
+import 'package:stowise_api/src/model/renomear_armazem.dart';
+import 'package:stowise_api/src/model/renomear_template.dart';
+import 'package:stowise_api/src/model/reserva_detalhe.dart';
+import 'package:stowise_api/src/model/resumo_saldo_lote.dart';
+import 'package:stowise_api/src/model/resumo_saldo_produto.dart';
+import 'package:stowise_api/src/model/saldo_item.dart';
+import 'package:stowise_api/src/model/saldo_na_data.dart';
+import 'package:stowise_api/src/model/salvar_categoria.dart';
+import 'package:stowise_api/src/model/salvar_cota_ia.dart';
+import 'package:stowise_api/src/model/salvar_zona.dart';
+import 'package:stowise_api/src/model/status_endereco.dart';
+import 'package:stowise_api/src/model/status_importacao.dart';
+import 'package:stowise_api/src/model/status_linha.dart';
+import 'package:stowise_api/src/model/status_reserva.dart';
+import 'package:stowise_api/src/model/sugerir_mapeamento.dart';
+import 'package:stowise_api/src/model/sugestao_ia.dart';
+import 'package:stowise_api/src/model/template_detalhe.dart';
+import 'package:stowise_api/src/model/tipo_embalagem.dart';
+import 'package:stowise_api/src/model/tipo_importacao.dart';
+import 'package:stowise_api/src/model/tipo_movimentacao.dart';
+import 'package:stowise_api/src/model/unidade_de_para.dart';
+import 'package:stowise_api/src/model/uso_cota_ia.dart';
+import 'package:stowise_api/src/model/usuario_detalhe.dart';
+import 'package:stowise_api/src/model/usuario_resumo.dart';
+import 'package:stowise_api/src/model/zona_detalhe.dart';
+
+part 'serializers.g.dart';
+
+@SerializersFor([
+  AcaoLinha,
+  AdicionarEmbalagem,
+  AlterarLimitesCotaIa,
+  ArmazemDetalhe,
+  ArmazemResumo,
+  AtualizarProduto,
+  AtualizarUsuarioRequest,
+  AuthResponse,
+  BloquearEndereco,
+  CampoImportacao,
+  CategoriaDetalhe,
+  ChamadaIaDetalhe,
+  ClasseArmazenagem,
+  ColunaArquivo,
+  ColunaSugerida,
+  ConfirmarMapeamento,
+  ConsumirReserva,
+  CotaIaDetalhe,
+  CriarArmazem,
+  CriarEndereco,
+  CriarProduto,
+  CriarReserva,
+  CriarUsuarioRequest,
+  DimensoesEnderecoComando,
+  EfetivarImportacao,
+  EmbalagemDetalhe,
+  EmbalagemMedidas,
+  EnderecoDetalhe,
+  ErroLinha,
+  ExtratoItem,
+  FormatoArquivo,
+  FuncionalidadeIa,
+  GeracaoEnderecosResultado,
+  GerarEnderecos,
+  HttpValidationProblemDetails,
+  ImportacaoDetalhe,
+  ImportacaoLinhaDetalhe,
+  ImportacaoResumo,
+  ImportarProdutosRequest,
+  LayoutArquivo,
+  LoginRequest,
+  LoteInformado,
+  MapeamentoColuna,
+  MovimentacaoDetalhe,
+  PagedResultOfChamadaIaDetalhe,
+  PagedResultOfEnderecoDetalhe,
+  PagedResultOfExtratoItem,
+  PagedResultOfImportacaoLinhaDetalhe,
+  PagedResultOfImportacaoResumo,
+  PagedResultOfProdutoResumo,
+  PagedResultOfReservaDetalhe,
+  PagedResultOfSaldoItem,
+  PagedResultOfSaldoNaData,
+  PagedResultOfTemplateDetalhe,
+  PagedResultOfUsuarioDetalhe,
+  ProblemDetails,
+  ProdutoDetalhe,
+  ProdutoPorCodigo,
+  ProdutoResumo,
+  RedefinirSenhaRequest,
+  RefreshRequest,
+  RegistrarAjuste,
+  RegistrarEntrada,
+  RegistrarSaida,
+  RegistrarTransferencia,
+  RegrasNormalizacao,
+  RelatorioImportacao,
+  RenomearArmazem,
+  RenomearTemplate,
+  ReservaDetalhe,
+  ResumoSaldoLote,
+  ResumoSaldoProduto,
+  SaldoItem,
+  SaldoNaData,
+  SalvarCategoria,
+  SalvarCotaIa,
+  SalvarZona,
+  StatusEndereco,
+  StatusImportacao,
+  StatusLinha,
+  StatusReserva,
+  SugerirMapeamento,
+  SugestaoIa,
+  TemplateDetalhe,
+  TipoEmbalagem,
+  TipoImportacao,
+  TipoMovimentacao,
+  UnidadeDePara,
+  UsoCotaIa,
+  UsuarioDetalhe,
+  UsuarioResumo,
+  ZonaDetalhe,
+])
+Serializers serializers = (_$serializers.toBuilder()
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(ArmazemResumo)]),
+        () => ListBuilder<ArmazemResumo>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(CotaIaDetalhe)]),
+        () => ListBuilder<CotaIaDetalhe>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(CategoriaDetalhe)]),
+        () => ListBuilder<CategoriaDetalhe>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(String)]),
+        () => ListBuilder<String>(),
+      )
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(CampoImportacao)]),
+        () => ListBuilder<CampoImportacao>(),
+      )
+      ..add(const OneOfSerializer())
+      ..add(const AnyOfSerializer())
+      ..add(const DateSerializer())
+      ..add(Iso8601DateTimeSerializer()))
+    .build();
+
+Serializers standardSerializers = (serializers.toBuilder()..addPlugin(StandardJsonPlugin())).build();

@@ -26,6 +26,8 @@ O app de campo começa no Marco 1 com login, movimentação e consulta de saldo.
 - Os testes de widget montam o app inteiro com providers trocados; os goldens rodam com densidade 1 e tolerância de 0,5% (CI em Linux, desenvolvimento em Windows).
 - Mudança de endpoint exige regravar o contrato, regerar o cliente web (orval) e o cliente do app.
 - O cliente gerado usa `built_value`, que precisa de `build_runner`; o código gerado fica no repositório, para o app compilar sem gerar nada.
+- O gerador tira os acentos das tags do contrato nos nomes das classes (`CatlogoApi`, `UsuriosApi`, `EstruturaFsicaApi`). Os nomes ficam estranhos, mas estáveis; trocar as tags da API mudaria a documentação do painel.
+- A geração baixa o openapi-generator 7.14.0 do Maven Central e confere o SHA-1 antes de usar; o jar fica em `mobile/.tool`, fora do Git.
 - O APK de demonstração é assinado com a chave de debug: serve para instalar e testar, não para publicar na loja.
 
 ## Alternativas consideradas
