@@ -28,10 +28,16 @@ O workflow `mobile` gera o APK `prod` (um por arquitetura) a cada push na `main`
 ## Verificar
 
 ```bash
-dart format --output=none --set-exit-if-changed lib test
+dart format --output=none --set-exit-if-changed lib test integration_test
 flutter analyze
 flutter test
+flutter test integration_test -d flutter-tester
 ```
+
+Testes:
+
+- `test/`: unidade, widget e golden. A rede é a `ApiFalsa` (adaptador do Dio em memória); o cofre e as preferências também são falsos.
+- `integration_test/`: o fluxo do operador no app real (login, entrada, saldo e saída). No CI, roda num emulador Android (API 34).
 
 Goldens: `flutter test --update-goldens` regrava as imagens em `test/goldens` depois de uma mudança visual intencional.
 

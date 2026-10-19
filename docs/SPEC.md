@@ -311,7 +311,7 @@ Regras de ordem:
 - [x] Projeto com flavors (dev/prod), arquitetura em camadas, Riverpod ou Bloc e go\_router
 - [x] Cliente da API gerado a partir do contrato OpenAPI (openapi-generator, dart-dio)
 - [x] Autenticação e armazenamento seguro de tokens
-- [ ] Testes de unidade, widget, golden e integração
+- [x] Testes de unidade, widget, golden e integração
 - [x] Leitura de código de barras on-device (ML Kit)
 - [x] Movimentação online: entrada, saída e transferência, com leitura do código do produto e do endereço
 - [x] Consulta de saldo por produto e por endereço

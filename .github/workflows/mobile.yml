@@ -46,9 +46,47 @@ jobs:
             exit 1
           fi
       - name: Lint (format)
-        run: dart format --output=none --set-exit-if-changed lib test
+        run: dart format --output=none --set-exit-if-changed lib test integration_test
       - run: flutter analyze
       - run: flutter test
+
+  # Teste de integração (integration_test) num emulador Android: o app real, com API, cofre e preferências em memória.
+  integracao:
+    needs: analyze-test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v5
+
+      # Aceleração de hardware (KVM) para o emulador x86_64.
+      - name: Ligar o KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.44.1
+          cache: true
+
+      - run: flutter pub get
+
+      - uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 34
+          arch: x86_64
+          target: google_apis
+          disable-animations: true
+          working-directory: mobile
+          script: flutter test integration_test --flavor dev
 
   # APK de demonstração (flavor prod, release assinado com a chave de debug; ADR-0008). A URL da API vem da variável
   # do repositório STOWISE_API_URL (Settings > Secrets and variables > Actions > Variables).

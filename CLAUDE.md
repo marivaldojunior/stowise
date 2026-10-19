@@ -49,7 +49,8 @@ npx shadcn@4.21.1 add <componente>   # novo componente do shadcn/ui em src/compo
 # requisição sem handler falha o teste.
 
 # Mobile (em mobile/); arquitetura no ADR-0008
-dart format --output=none --set-exit-if-changed lib test && flutter analyze && flutter test
+dart format --output=none --set-exit-if-changed lib test integration_test && flutter analyze && flutter test
+flutter test integration_test -d flutter-tester   # fluxo do operador (no CI, num emulador Android)
 flutter run --flavor dev -t lib/main_dev.dart   # API local em http://10.0.2.2:5073 (emulador)
 flutter test --update-goldens                    # regrava os goldens depois de mudança visual intencional
 tool/gerar_cliente.sh                            # regera o cliente da API (packages/stowise_api) do contrato; precisa de Java
