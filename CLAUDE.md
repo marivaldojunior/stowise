@@ -41,6 +41,7 @@ dotnet ef migrations add <Nome> -p src/Stowise.Infrastructure -s src/Stowise.Inf
 # Web (em web/): o Vite repassa /api, /health e /hubs para a API (padrão http://localhost:5073;
 # com docker compose, STOWISE_API_URL=http://localhost:8080 npm run dev)
 npm run lint && npm run typecheck && npm test && npm run build
+npm run dev:demo    # painel sem a API: o MSW responde no navegador com dados de exemplo (src/demo); só no servidor de desenvolvimento
 npm run e2e         # Playwright (e2e/*.e2e.ts) contra a API real: suba antes o docker compose; no CI, workflow e2e
 npm run api:gerar   # regera o cliente (orval) em src/api/gerado depois de mudar api/openapi/v1.json
 npx shadcn@4.21.1 add <componente>   # novo componente do shadcn/ui em src/components/ui (a CLI não fica nas dependências)

@@ -1,8 +1,27 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import react from '@vitejs/plugin-react'
-import { loadEnv } from 'vite'
+import { loadEnv, type Plugin } from 'vite'
 import { defineConfig } from 'vitest/config'
+
+/**
+ * Modo demonstração (`npm run dev:demo`): o MSW responde no navegador, sem a API. O service worker do MSW vem do
+ * pacote instalado e só é servido aqui, no servidor de desenvolvimento: ele nunca entra no build de produção.
+ */
+function demonstracao(): Plugin {
+  const worker = path.resolve(import.meta.dirname, 'node_modules/msw/lib/mockServiceWorker.js')
+  return {
+    name: 'stowise-demonstracao',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/mockServiceWorker.js', (_req, res) => {
+        res.setHeader('Content-Type', 'text/javascript')
+        res.end(readFileSync(worker))
+      })
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
@@ -11,7 +30,7 @@ export default defineConfig(({ mode }) => {
   const api = loadEnv(mode, process.cwd(), '').STOWISE_API_URL ?? 'http://localhost:5073'
 
   return {
-    plugins: [react(), tailwindcss()],
+    plugins: [react(), tailwindcss(), ...(mode === 'demo' ? [demonstracao()] : [])],
     resolve: {
       alias: { '@': path.resolve(import.meta.dirname, './src') },
     },
