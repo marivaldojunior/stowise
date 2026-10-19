@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../app/tema.dart';
+import '../../../app/widgets/identidade.dart';
 import '../../../core/api/erros.dart';
 import 'sessao_controller.dart';
 
@@ -11,7 +13,16 @@ class CarregandoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      body: Center(child: CircularProgressIndicator(semanticsLabel: 'Verificando a sessão')),
+      body: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            MarcaStowise(tamanho: 26),
+            SizedBox(height: 28),
+            CircularProgressIndicator(semanticsLabel: 'Verificando a sessão'),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -31,13 +42,28 @@ class SemConexaoPage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.cloud_off_outlined, size: 48, color: tema.colorScheme.onSurfaceVariant),
+              Center(
+                child: Container(
+                  width: 76,
+                  height: 76,
+                  decoration: BoxDecoration(
+                    gradient: context.cores.gradienteSinal,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: context.cores.brilho(context.cores.sinal),
+                  ),
+                  child: const Icon(Icons.cloud_off_outlined, size: 38, color: Colors.white),
+                ),
+              ),
               const SizedBox(height: 16),
-              Text('Sem conexão', style: tema.textTheme.headlineSmall, textAlign: TextAlign.center),
+              Text(
+                'Sem conexão',
+                style: tema.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w700),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 8),
               const Text(mensagemSemConexao, textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              FilledButton(
+              BotaoGradiente(
                 onPressed: () => ref.read(sessaoProvider.notifier).tentarDeNovo(),
                 child: const Text('Tentar de novo'),
               ),

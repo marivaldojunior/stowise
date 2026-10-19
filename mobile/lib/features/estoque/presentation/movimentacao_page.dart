@@ -7,6 +7,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../app/tema.dart';
 import '../../../app/widgets/aviso.dart';
+import '../../../app/widgets/identidade.dart';
 import '../../../core/armazenamento/preferencias.dart';
 import '../../leitura/presentation/campo_codigo.dart';
 import '../data/estoque_repository.dart';
@@ -264,7 +265,7 @@ class _MovimentacaoPageState extends ConsumerState<MovimentacaoPage> {
     final produto = _produto;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Movimentar estoque')),
+      appBar: const BarraStowise(titulo: 'Movimentar estoque'),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -318,7 +319,7 @@ class _MovimentacaoPageState extends ConsumerState<MovimentacaoPage> {
                         color: endereco.bloqueado ? tema.colorScheme.error : context.cores.sucesso,
                       ),
                       const SizedBox(width: 8),
-                      Text(endereco.codigo, style: tema.textTheme.titleSmall),
+                      Etiqueta(endereco.codigo, grande: true),
                       if (endereco.bloqueado) ...[
                         const SizedBox(width: 8),
                         Text('bloqueado', style: TextStyle(color: tema.colorScheme.error)),
@@ -386,10 +387,13 @@ class _MovimentacaoPageState extends ConsumerState<MovimentacaoPage> {
             ),
             if (_erro != null) ...[const SizedBox(height: 16), Aviso(texto: _erro!, tom: TomAviso.erro)],
             const SizedBox(height: 24),
-            FilledButton(
+            BotaoGradiente(
               onPressed: _enviando ? null : _registrar,
               child: _enviando
-                  ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                  ? const SizedBox.square(
+                      dimension: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
                   : Text(_tipo.acao),
             ),
           ],
@@ -412,12 +416,63 @@ class _CartaoProduto extends StatelessWidget {
       if (!produto.embalagemBase) produto.unidadeDaQuantidade,
       if (produto.controlaLote) 'controla lote',
     ];
-    return Card(
-      margin: const EdgeInsets.only(top: 8),
-      child: ListTile(
-        leading: Icon(produto.embalagemBase ? Icons.inventory_2_outlined : Icons.all_inbox_outlined),
-        title: Text(produto.descricao),
-        subtitle: Text(detalhes.join(' · '), style: tema.textTheme.bodySmall),
+    final cores = context.cores;
+    return Container(
+      margin: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        color: tema.cardTheme.color,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: cores.sombraCartao,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Borda âmbar da etiqueta de palete.
+            Container(width: 5, color: cores.sinal),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        gradient: cores.gradienteMarca(tema.colorScheme.primary),
+                        borderRadius: BorderRadius.circular(13),
+                        boxShadow: cores.brilho(tema.colorScheme.primary),
+                      ),
+                      child: Icon(
+                        produto.embalagemBase ? Icons.inventory_2_outlined : Icons.all_inbox_outlined,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            produto.descricao,
+                            style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(detalhes.join(' · '), style: tema.textTheme.bodySmall),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ExcludeSemantics(
+                      child: CodigoDeBarras(cor: tema.colorScheme.onSurfaceVariant, largura: 40, altura: 28),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

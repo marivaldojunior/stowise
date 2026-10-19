@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import '../../../app/tema.dart';
+import '../../../app/widgets/identidade.dart';
 
 /// Formatos lidos no armazém: códigos de produto (EAN/GTIN, UPC), etiquetas de endereço e de lote (Code 128, Code 39)
 /// e QR/DataMatrix. Limitar os formatos deixa a leitura mais rápida e evita leituras falsas.
@@ -55,11 +57,10 @@ class _LeituraPageState extends State<LeituraPage> {
 
   @override
   Widget build(BuildContext context) {
-    final tema = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.titulo),
-        actions: [
+      appBar: BarraStowise(
+        titulo: widget.titulo,
+        acoes: [
           ValueListenableBuilder(
             valueListenable: _camera,
             builder: (context, estado, _) => IconButton(
@@ -84,9 +85,11 @@ class _LeituraPageState extends State<LeituraPage> {
               child: Container(
                 width: 280,
                 height: 180,
+                // Âmbar da fita de segurança, com brilho, para ver bem sobre qualquer imagem.
                 decoration: BoxDecoration(
-                  border: Border.all(color: tema.colorScheme.primary, width: 3),
-                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: context.cores.sinal, width: 3),
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [BoxShadow(color: context.cores.sinal.withValues(alpha: 0.45), blurRadius: 24)],
                 ),
               ),
             ),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../app/tema.dart';
 import '../../../app/widgets/aviso.dart';
+import '../../../app/widgets/identidade.dart';
 import '../../leitura/presentation/campo_codigo.dart';
 import '../data/estoque_repository.dart';
 import '../domain/estoque.dart';
@@ -89,7 +90,7 @@ class _SaldoPageState extends ConsumerState<SaldoPage> {
   Widget build(BuildContext context) {
     final resultado = _resultado;
     return Scaffold(
-      appBar: AppBar(title: const Text('Consultar saldo')),
+      appBar: const BarraStowise(titulo: 'Consultar saldo'),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
@@ -147,55 +148,109 @@ class _CartaoResumo extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tema = Theme.of(context);
-    Widget valor(String rotulo, double numero, {Color? cor}) => Expanded(
+    final cores = context.cores;
+    // Sobre a tinta, os sentidos usam os tons claros (os mesmos do tema escuro).
+    Widget valor(String rotulo, double numero, {Color cor = Colors.white}) => Expanded(
       child: Column(
         children: [
           Text(
             '${formatarQuantidade(numero)} ${resumo.unidade}',
-            style: tema.textTheme.titleLarge?.copyWith(color: cor, fontWeight: FontWeight.w600),
+            style: tema.textTheme.titleLarge?.copyWith(color: cor, fontWeight: FontWeight.w700),
           ),
-          Text(rotulo, style: tema.textTheme.labelSmall),
+          Text(rotulo, style: tema.textTheme.labelSmall?.copyWith(color: Colors.white.withValues(alpha: 0.7))),
         ],
       ),
     );
 
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(resumo.descricao, style: tema.textTheme.titleMedium),
-            Text('${resumo.sku} · ${resumo.enderecos} endereço(s)', style: tema.textTheme.bodySmall),
-            const SizedBox(height: 16),
-            Row(
+    return Container(
+      decoration: BoxDecoration(
+        gradient: cores.gradienteTinta,
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: cores.sombraCartao,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: CustomPaint(painter: PlantaPainter(cor: Colors.white.withValues(alpha: 0.05))),
+          ),
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            child: Container(height: 3, decoration: BoxDecoration(gradient: cores.faixa(tema.colorScheme.primary))),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 20, 18, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                valor('Em estoque', resumo.quantidade),
-                valor('Reservado', resumo.reservada, cor: context.cores.aviso),
-                valor('Disponível', resumo.disponivel, cor: context.cores.sucesso),
-              ],
-            ),
-            if (resumo.lotes.any((lote) => lote.numero != null)) ...[
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final lote in resumo.lotes)
-                    Chip(
-                      label: Text(
-                        [
-                          lote.numero ?? 'Sem lote',
-                          formatarQuantidade(lote.quantidade),
-                          if (lote.validade != null) 'val. ${_data(context, lote.validade!)}',
-                        ].join(' · '),
+                Text(
+                  resumo.descricao,
+                  style: tema.textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(color: cores.sinal, shape: BoxShape.circle),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${resumo.sku} · ${resumo.enderecos} endereço(s)',
+                        style: tema.textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.75)),
                       ),
                     ),
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.07),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+                  ),
+                  child: Row(
+                    children: [
+                      valor('Em estoque', resumo.quantidade),
+                      valor('Reservado', resumo.reservada, cor: CoresStowise.escuro.sinal),
+                      valor('Disponível', resumo.disponivel, cor: CoresStowise.escuro.sucesso),
+                    ],
+                  ),
+                ),
+                if (resumo.lotes.any((lote) => lote.numero != null)) ...[
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final lote in resumo.lotes)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            [
+                              lote.numero ?? 'Sem lote',
+                              formatarQuantidade(lote.quantidade),
+                              if (lote.validade != null) 'val. ${_data(context, lote.validade!)}',
+                            ].join(' · '),
+                            style: tema.textTheme.labelMedium?.copyWith(color: Colors.white),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
-              ),
-            ],
-          ],
-        ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -217,14 +272,33 @@ class _LinhaSaldo extends StatelessWidget {
       if (saldo.validade != null) 'val. ${_data(context, saldo.validade!)}',
       if (saldo.reservada > 0) 'reservado ${formatarQuantidade(saldo.reservada)}',
     ];
-    return Card(
+    final tema = Theme.of(context);
+    final cores = context.cores;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      decoration: BoxDecoration(
+        color: tema.cardTheme.color,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: cores.sombraCartao,
+      ),
       child: ListTile(
-        leading: Icon(porProduto ? Icons.place_outlined : Icons.inventory_2_outlined),
-        title: Text(porProduto ? saldo.enderecoCodigo : saldo.descricao),
+        contentPadding: const EdgeInsets.fromLTRB(12, 6, 16, 6),
+        leading: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            gradient: porProduto ? cores.gradienteSinal : cores.gradienteMarca(tema.colorScheme.primary),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(porProduto ? Icons.place_outlined : Icons.inventory_2_outlined, color: Colors.white, size: 22),
+        ),
+        title: porProduto
+            ? Align(alignment: Alignment.centerLeft, child: Etiqueta(saldo.enderecoCodigo, grande: true))
+            : Text(saldo.descricao),
         subtitle: detalhes.isEmpty ? null : Text(detalhes.join(' · ')),
         trailing: Text(
           '${formatarQuantidade(saldo.disponivel)} ${saldo.unidade}',
-          style: Theme.of(context).textTheme.titleMedium,
+          style: tema.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700, color: tema.colorScheme.primary),
         ),
       ),
     );
