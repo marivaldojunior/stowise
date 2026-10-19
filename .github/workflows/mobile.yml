@@ -39,7 +39,7 @@ jobs:
       # O cliente gerado (openapi-generator, dart-dio) tem de bater com o contrato versionado da API (ADR-0008).
       - name: Cliente da API igual ao contrato
         run: |
-          tool/gerar_cliente.sh
+          bash tool/gerar_cliente.sh
           if [ -n "$(git status --porcelain -- packages/stowise_api)" ]; then
             git status --porcelain -- packages/stowise_api
             echo "::error::packages/stowise_api não bate com api/openapi/v1.json. Rode 'tool/gerar_cliente.sh' em mobile/ e faça o commit."
