@@ -50,8 +50,23 @@ Element.prototype.releasePointerCapture ??= () => {}
 Element.prototype.scrollIntoView ??= () => {}
 
 // A rede dos testes é o MSW: requisição sem handler falha o teste, e cada teste começa só com os handlers padrão.
-beforeAll(() => server.listen({ onUnhandledRequest: 'error' }))
+// O 'error' do MSW só faz a chamada falhar dentro do app, e a tela pode tratar o erro sem o teste perceber. Por isso,
+// as requisições sem handler ficam numa lista, e o teste falha no fim se ela não estiver vazia.
+const naoTratadas: string[] = []
+beforeAll(() =>
+  server.listen({
+    onUnhandledRequest: (request, print) => {
+      naoTratadas.push(`${request.method} ${new URL(request.url).pathname}`)
+      print.error()
+    },
+  }),
+)
 afterEach(() => {
+  const lista = naoTratadas.splice(0)
+  if (lista.length > 0) {
+    throw new Error(`Requisições sem handler no MSW: ${[...new Set(lista)].join(', ')}`)
+  }
+
   server.resetHandlers()
   server.events.removeAllListeners()
   // A sessão fica num módulo (memória do navegador). Cada teste começa sem sessão.

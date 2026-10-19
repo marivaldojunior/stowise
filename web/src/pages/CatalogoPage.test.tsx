@@ -68,6 +68,20 @@ function apiDoCatalogo(iniciais: ProdutoDetalhe[], perfis = ['Gestor']) {
       )
       return HttpResponse.json({ itens, pagina: 1, tamanhoPagina: 20, total: itens.length })
     }),
+    http.get('/api/v1/saldos/produtos/:id', ({ params }) => {
+      const alvo = buscar(params.id)
+      return HttpResponse.json({
+        produtoId: params.id,
+        sku: alvo?.sku ?? '',
+        descricao: alvo?.descricao ?? '',
+        unidadeBase: alvo?.unidadeBase ?? 'UN',
+        quantidade: 0,
+        quantidadeReservada: 0,
+        quantidadeDisponivel: 0,
+        enderecos: 0,
+        lotes: [],
+      })
+    }),
     http.get('/api/v1/produtos/:id', ({ params }) => {
       const alvo = buscar(params.id)
       return alvo ? HttpResponse.json(alvo) : problema(404, 'Produto não encontrado.')

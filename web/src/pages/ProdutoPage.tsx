@@ -21,6 +21,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { PERFIS_GESTAO, useAuth } from '@/features/auth/contexto'
 import { Embalagens } from '@/features/catalogo/Embalagens'
 import { FormularioProduto } from '@/features/catalogo/FormularioProduto'
+import { ResumoEstoqueProduto } from '@/features/estoque/ResumoEstoqueProduto'
 
 function Voltar() {
   return (
@@ -165,6 +166,8 @@ export function ProdutoPage() {
           }
         }}
       />
+
+      <ResumoEstoqueProduto produtoId={atual.id} />
 
       <Embalagens produto={atual} somenteLeitura={somenteLeitura} onProduto={guardar} />
     </section>
