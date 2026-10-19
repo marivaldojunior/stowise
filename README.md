@@ -75,7 +75,7 @@ flowchart LR
 
 ## Decisões técnicas
 
-Cada decisão tem um ADR em [`docs/adr/`](docs/adr) com o contexto e as alternativas. Em uma linha, o que cada uma custa:
+Cada decisão tem um ADR em [`docs/adr/`](docs/adr) com o contexto e as alternativas. Para estudar o projeto, com perguntas de revisão e um roteiro de leitura do código, veja o [guia de estudo](docs/guia-de-estudo.md). Em uma linha, o que cada uma custa:
 
 | ADR | Decisão | Trade-off |
 | --- | --- | --- |
