@@ -323,7 +323,7 @@ Regras de ordem:
 - [x] README com diagrama de arquitetura, como rodar localmente, links para os ADRs e badges de CI
 - [x] Seção "Decisões técnicas" no README, com os trade-offs de cada ADR em uma linha
 - [x] GIF curto de cada cliente (Web e App) no README
-- [ ] Tag `v0.1.0` com notas de release
+- [x] Tag `v0.1.0` com notas de release ([notas](releases/v0.1.0.md))
 - [ ] Repositório fixado no perfil do GitHub
 
 ### Marco 2 — NF-e, recebimento e armazenagem inteligente
