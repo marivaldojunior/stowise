@@ -34,6 +34,7 @@ void main() {
     testWidgets('mostra as ações do operador e o ambiente de desenvolvimento', (tester) async {
       await montarApp(tester);
 
+      expect(find.text('Olá, Carla'), findsOneWidget);
       expect(find.text('O que você quer fazer?'), findsOneWidget);
       expect(find.text('Movimentar estoque'), findsOneWidget);
       expect(find.text('Consultar saldo'), findsOneWidget);

@@ -16,6 +16,7 @@ dependencies:
   built_value: 8.13.0
   dio: 5.11.1
   flutter_riverpod: 3.4.3
+  flutter_secure_storage: 11.2.0
   go_router: 18.0.2
   # Cliente da API gerado do contrato (tool/gerar_cliente.sh, ADR-0008).
   stowise_api:
