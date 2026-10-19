@@ -21,6 +21,10 @@ APK de demonstração:
 flutter build apk --flavor prod -t lib/main_prod.dart --dart-define=STOWISE_API_URL=https://sua-api
 ```
 
+## APK de demonstração no CI
+
+O workflow `mobile` gera o APK `prod` (um por arquitetura) a cada push na `main` e o publica como artefato `stowise-apk` (30 dias). A URL da API vem da variável do repositório `STOWISE_API_URL`. Instale o `stowise-<commit>-arm64-v8a.apk` na maioria dos celulares atuais.
+
 ## Verificar
 
 ```bash

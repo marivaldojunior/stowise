@@ -315,7 +315,7 @@ Regras de ordem:
 - [ ] Leitura de código de barras on-device (ML Kit)
 - [ ] Movimentação online: entrada, saída e transferência, com leitura do código do produto e do endereço
 - [ ] Consulta de saldo por produto e por endereço
-- [ ] APK de demonstração gerado pelo CI como artefato
+- [x] APK de demonstração gerado pelo CI como artefato
 
 **1.7 Entrega**
 
