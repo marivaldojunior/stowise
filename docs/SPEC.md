@@ -337,7 +337,8 @@ Regras de ordem:
 
 **2.2 API — NF-e**
 
-- [ ] Parser do XML 4.00 com validação de XSD e dígito da chave de acesso
+- [x] Parser do XML 4.00 e dígito da chave de acesso (inclui CNPJ alfanumérico e proteção contra XXE)
+- [ ] Validação do XML pelos XSD oficiais da NF-e 4.00 (pacote de liberação da SEFAZ)
 - [ ] Job de embeddings de produtos e busca de similares
 - [ ] Casamento de itens: de-para, depois GTIN, depois similaridade
 - [ ] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`)
