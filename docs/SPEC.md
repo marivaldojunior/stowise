@@ -8,7 +8,7 @@ Stowise é um sistema de inventário e armazenagem com app Flutter, dashboard Re
 
 | Parte | Responsabilidade |
 | --- | --- |
-| Flutter (app de campo) | Contagem offline-first, leitura de código de barras on-device, conferência de recebimento, confirmação de endereço, cadastro de produto por foto; plugin Kotlin para coletores Zebra/Honeywell |
+| Flutter (app de campo) | Contagem offline-first, leitura de código de barras on-device, conferência de recebimento, confirmação de endereço, cadastro de produto por foto. Celular primeiro (câmera); coletores de vários fabricantes depois, por plugins |
 | .NET 10 (API) | Catálogo, estoque, recebimento, importação, motor de armazenagem, patrimônio, camada de IA isolada e plugável |
 | React + TypeScript (gestão) | Revisão de importações, divergências, aprovação de ajustes, mapa de ocupação, configuração de regras, conciliação do inventário patrimonial, gestão de usuários, consultas em linguagem natural |
 
@@ -221,6 +221,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 12. **Idempotência e concorrência no estoque**: chave do cliente única no livro-razão e `xmin` no Saldo e no Endereco, com nova tentativa ([ADR-0006](adr/0006-idempotencia-e-concorrencia.md))
 13. **Jobs em background com Hangfire** no mesmo PostgreSQL: fila durável, nova tentativa só para falha transitória e jobs idempotentes ([ADR-0007](adr/0007-jobs-em-background.md))
 14. **Etiquetas RFID em SGTIN-96 (GS1)**: o RFID conta unidades da embalagem do GTIN, sem rastrear cada unidade; série única pela sequência do banco; leitor atrás da porta `LeitorRfid` no app ([ADR-0010](adr/0010-etiquetas-rfid.md))
+15. **Celular primeiro no app**: toda funcionalidade do app funciona num celular comum, com a câmera como leitor; leitor físico (modo teclado), RFID UHF e SDKs de coletores são extras opcionais, nunca obrigatórios
 
 ## Plano de tarefas
 
@@ -359,8 +360,7 @@ Regras de ordem:
 
 **2.5 App — Recebimento e armazenagem**
 
-- [ ] Plugin Kotlin para coletores Zebra (DataWedge) via platform channel
-- [ ] Conferência de recebimento: bipagem, quantidade, lote, validade e captura de medidas
+- [ ] Conferência de recebimento no celular: bipagem pela câmera, quantidade, lote, validade e captura de medidas
 - [ ] Armazenagem: recebe a sugestão, bipa o endereço e registra divergência com motivo
 
 **2.6 Entrega**
@@ -516,7 +516,9 @@ Etiquetas UHF no padrão GS1 (EPC SGTIN-96), conforme o [ADR-0010](adr/0010-etiq
 
 **R.2 App — Leitor RFID**
 
-- [ ] Plugin Kotlin para o SDK RFID da Zebra (platform channel), com leitura em massa e gravação
+Depende dos coletores (bloco C.1): celulares comuns não leem RFID UHF.
+
+- [ ] Plugin do SDK RFID de cada fabricante (platform channel), com leitura em massa e gravação
 - [ ] Tela de gravação de etiquetas: escolhe a embalagem, pede os EPCs à API, grava e confere a leitura
 - [ ] Tela de leitura em massa: contagem ao vivo por produto, controle de potência e envio do lote
 
@@ -526,4 +528,14 @@ Etiquetas UHF no padrão GS1 (EPC SGTIN-96), conforme o [ADR-0010](adr/0010-etiq
 - [ ] Conferência de recebimento por leitura em massa (Marco 2)
 - [ ] Plaquetas RFID no inventário patrimonial, com GIAI-96 (Marco 5)
 - [ ] Tabela de tamanhos de prefixo GS1, para codificar GTINs de outros fornecedores sem configuração
+
+### Extensão — Coletores de dados
+
+O app funciona primeiro no celular (decisão 15). Os coletores entram depois, um fabricante por vez, sem mudar as telas.
+
+**C.1 App — Leitores de coletores**
+
+- [ ] Porta de leitor de código no app (câmera do celular por padrão; leitor físico como alternativa)
+- [ ] Plugin Kotlin para coletores Zebra (DataWedge) via platform channel
+- [ ] Plugins para outros fabricantes (Honeywell, Chainway, Datalogic), conforme a demanda
 
