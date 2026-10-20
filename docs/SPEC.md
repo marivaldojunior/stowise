@@ -220,6 +220,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 11. **Autenticação com ASP.NET Core Identity e JWT próprio**, com refresh token rotativo e detecção de reuso ([ADR-0005](adr/0005-autenticacao.md))
 12. **Idempotência e concorrência no estoque**: chave do cliente única no livro-razão e `xmin` no Saldo e no Endereco, com nova tentativa ([ADR-0006](adr/0006-idempotencia-e-concorrencia.md))
 13. **Jobs em background com Hangfire** no mesmo PostgreSQL: fila durável, nova tentativa só para falha transitória e jobs idempotentes ([ADR-0007](adr/0007-jobs-em-background.md))
+14. **Etiquetas RFID em SGTIN-96 (GS1)**: o RFID conta unidades da embalagem do GTIN, sem rastrear cada unidade; série única pela sequência do banco; leitor atrás da porta `LeitorRfid` no app ([ADR-0010](adr/0010-etiquetas-rfid.md))
 
 ## Plano de tarefas
 
@@ -499,3 +500,30 @@ Reaproveita a camada de IA, os jobs em background, o pgvector e o chat de consul
 
 - [ ] README e demonstração atualizados com o fluxo de perguntas sobre documentos
 - [ ] Tag `v1.2.0` com notas de release
+
+### Extensão — Etiquetas RFID
+
+Etiquetas UHF no padrão GS1 (EPC SGTIN-96), conforme o [ADR-0010](adr/0010-etiquetas-rfid.md). O RFID conta unidades; rastrear cada unidade exige um novo ADR.
+
+**R.1 Preparação (API e App)**
+
+- [x] ADR de RFID: padrão da etiqueta, contagem sem rastrear unidade, série única e porta do leitor no app
+- [ ] Codificação e decodificação SGTIN-96 no domínio (EPC hexadecimal e URI), com testes
+- [ ] Busca de produto por código aceita o EPC (coletor RFID em modo teclado funciona no app atual)
+- [ ] `POST /rfid/leituras`: lote de EPCs → produtos, embalagens e quantidades
+- [ ] `POST /rfid/etiquetas`: EPCs para uma embalagem com GTIN, com série da sequência `rfid_serial`
+- [ ] App: porta `LeitorRfid` (ler em massa, parar, gravar), implementação indisponível por padrão e repositório dos endpoints
+
+**R.2 App — Leitor RFID**
+
+- [ ] Plugin Kotlin para o SDK RFID da Zebra (platform channel), com leitura em massa e gravação
+- [ ] Tela de gravação de etiquetas: escolhe a embalagem, pede os EPCs à API, grava e confere a leitura
+- [ ] Tela de leitura em massa: contagem ao vivo por produto, controle de potência e envio do lote
+
+**R.3 Uso no fluxo**
+
+- [ ] Contagem de inventário com origem RFID (Marco 3)
+- [ ] Conferência de recebimento por leitura em massa (Marco 2)
+- [ ] Plaquetas RFID no inventário patrimonial, com GIAI-96 (Marco 5)
+- [ ] Tabela de tamanhos de prefixo GS1, para codificar GTINs de outros fornecedores sem configuração
+
