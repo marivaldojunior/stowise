@@ -31,7 +31,9 @@ import type {
   AlterarLimitesCotaIa,
   ArmazemDetalhe,
   ArmazemResumo,
+  AtualizarFornecedor,
   AtualizarProduto,
+  AtualizarProdutoFornecedor,
   AtualizarUsuarioRequest,
   AuthResponse,
   BloquearEndereco,
@@ -42,7 +44,9 @@ import type {
   CotaIaDetalhe,
   CriarArmazem,
   CriarEndereco,
+  CriarFornecedor,
   CriarProduto,
+  CriarProdutoFornecedor,
   CriarReserva,
   CriarUsuarioRequest,
   DimensoesEnderecoComando,
@@ -50,6 +54,7 @@ import type {
   EmbalagemMedidas,
   EnderecoDetalhe,
   EtiquetasRfidGeradas,
+  FornecedorDetalhe,
   GeracaoEnderecosResultado,
   GerarEnderecos,
   GerarEtiquetasRfid,
@@ -59,8 +64,10 @@ import type {
   LeiturasRfidResolvidas,
   ListarChamadasIaParams,
   ListarEnderecosParams,
+  ListarFornecedoresParams,
   ListarImportacoesParams,
   ListarLinhasImportacaoParams,
+  ListarProdutosDoFornecedorParams,
   ListarProdutosParams,
   ListarReservasParams,
   ListarSaldosParams,
@@ -74,8 +81,10 @@ import type {
   PagedResultOfChamadaIaDetalhe,
   PagedResultOfEnderecoDetalhe,
   PagedResultOfExtratoItem,
+  PagedResultOfFornecedorResumo,
   PagedResultOfImportacaoLinhaDetalhe,
   PagedResultOfImportacaoResumo,
+  PagedResultOfProdutoFornecedorDetalhe,
   PagedResultOfProdutoResumo,
   PagedResultOfReservaDetalhe,
   PagedResultOfSaldoItem,
@@ -84,6 +93,7 @@ import type {
   PagedResultOfUsuarioDetalhe,
   ProblemDetails,
   ProdutoDetalhe,
+  ProdutoFornecedorDetalhe,
   ProdutoPorCodigo,
   RedefinirSenhaRequest,
   RefreshRequest,
@@ -2709,6 +2719,935 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getRemoverEmbalagemMutationOptions(options), queryClient);
+    }
+
+export const getListarFornecedoresUrl = (params?: ListarFornecedoresParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/fornecedores?${stringifiedParams}` : `/api/v1/fornecedores`
+}
+
+/**
+ * @summary Busca por parte do CNPJ (com ou sem máscara), da razão social ou do nome fantasia.
+ */
+export const listarFornecedores = async (params?: ListarFornecedoresParams, options?: Parameters<typeof apiFetch>[1]): Promise<PagedResultOfFornecedorResumo> => {
+
+  return apiFetch<PagedResultOfFornecedorResumo>(getListarFornecedoresUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListarFornecedoresQueryKey = (params?: ListarFornecedoresParams,) => {
+    return [
+    `/api/v1/fornecedores`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListarFornecedoresQueryOptions = <TData = Awaited<ReturnType<typeof listarFornecedores>>, TError = ErrorType<ProblemDetails>>(params?: ListarFornecedoresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarFornecedores>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListarFornecedoresQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listarFornecedores>>> = ({ signal }) => listarFornecedores(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listarFornecedores>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListarFornecedoresQueryResult = NonNullable<Awaited<ReturnType<typeof listarFornecedores>>>
+export type ListarFornecedoresQueryError = ErrorType<ProblemDetails>
+
+
+export function useListarFornecedores<TData = Awaited<ReturnType<typeof listarFornecedores>>, TError = ErrorType<ProblemDetails>>(
+ params: undefined |  ListarFornecedoresParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarFornecedores>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarFornecedores>>,
+          TError,
+          Awaited<ReturnType<typeof listarFornecedores>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarFornecedores<TData = Awaited<ReturnType<typeof listarFornecedores>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarFornecedoresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarFornecedores>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarFornecedores>>,
+          TError,
+          Awaited<ReturnType<typeof listarFornecedores>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarFornecedores<TData = Awaited<ReturnType<typeof listarFornecedores>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarFornecedoresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarFornecedores>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Busca por parte do CNPJ (com ou sem máscara), da razão social ou do nome fantasia.
+ */
+
+export function useListarFornecedores<TData = Awaited<ReturnType<typeof listarFornecedores>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarFornecedoresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarFornecedores>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListarFornecedoresQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCriarFornecedorUrl = () => {
+
+
+
+
+  return `/api/v1/fornecedores`
+}
+
+/**
+ * @summary CNPJ numérico ou alfanumérico, com ou sem máscara. CNPJ repetido: 409.
+ */
+export const criarFornecedor = async (criarFornecedorBody: CriarFornecedor, options?: Parameters<typeof apiFetch>[1]): Promise<FornecedorDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<FornecedorDetalhe>(getCriarFornecedorUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(criarFornecedorBody)
+  }
+);}
+
+
+
+
+
+export const getCriarFornecedorMutationKey = () => ['criarFornecedor'] as const;
+
+export const getCriarFornecedorMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof criarFornecedor>>, TError,CriarFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof criarFornecedor>>, TError,CriarFornecedorMutationVariables, TContext> => {
+
+const mutationKey = getCriarFornecedorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof criarFornecedor>>, CriarFornecedorMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  criarFornecedor(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CriarFornecedorMutationResult = NonNullable<Awaited<ReturnType<typeof criarFornecedor>>>
+    export type CriarFornecedorMutationBody = BodyType<CriarFornecedor>
+    export type CriarFornecedorMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type CriarFornecedorMutationVariables = {data: BodyType<CriarFornecedor>}
+
+    /**
+ * @summary CNPJ numérico ou alfanumérico, com ou sem máscara. CNPJ repetido: 409.
+ */
+export const useCriarFornecedor = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof criarFornecedor>>, TError,CriarFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof criarFornecedor>>,
+        TError,
+        CriarFornecedorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getCriarFornecedorMutationOptions(options), queryClient);
+    }
+
+export const getObterFornecedorUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}`
+}
+
+export const obterFornecedor = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<FornecedorDetalhe> => {
+
+  return apiFetch<FornecedorDetalhe>(getObterFornecedorUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getObterFornecedorQueryKey = (id: string,) => {
+    return [
+    `/api/v1/fornecedores/${id}`
+    ] as const;
+    }
+
+
+export const getObterFornecedorQueryOptions = <TData = Awaited<ReturnType<typeof obterFornecedor>>, TError = ErrorType<ProblemDetails>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterFornecedor>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getObterFornecedorQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof obterFornecedor>>> = ({ signal }) => obterFornecedor(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof obterFornecedor>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ObterFornecedorQueryResult = NonNullable<Awaited<ReturnType<typeof obterFornecedor>>>
+export type ObterFornecedorQueryError = ErrorType<ProblemDetails>
+
+
+export function useObterFornecedor<TData = Awaited<ReturnType<typeof obterFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterFornecedor>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterFornecedor>>,
+          TError,
+          Awaited<ReturnType<typeof obterFornecedor>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterFornecedor<TData = Awaited<ReturnType<typeof obterFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterFornecedor>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterFornecedor>>,
+          TError,
+          Awaited<ReturnType<typeof obterFornecedor>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterFornecedor<TData = Awaited<ReturnType<typeof obterFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterFornecedor>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useObterFornecedor<TData = Awaited<ReturnType<typeof obterFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterFornecedor>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getObterFornecedorQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAtualizarFornecedorUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}`
+}
+
+/**
+ * @summary Exige a versão lida. O CNPJ não muda. Se o fornecedor mudou desde então, responde 409.
+ */
+export const atualizarFornecedor = async (id: string,
+    atualizarFornecedorBody: AtualizarFornecedor, options?: Parameters<typeof apiFetch>[1]): Promise<FornecedorDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<FornecedorDetalhe>(getAtualizarFornecedorUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(atualizarFornecedorBody)
+  }
+);}
+
+
+
+
+
+export const getAtualizarFornecedorMutationKey = () => ['atualizarFornecedor'] as const;
+
+export const getAtualizarFornecedorMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof atualizarFornecedor>>, TError,AtualizarFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof atualizarFornecedor>>, TError,AtualizarFornecedorMutationVariables, TContext> => {
+
+const mutationKey = getAtualizarFornecedorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof atualizarFornecedor>>, AtualizarFornecedorMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  atualizarFornecedor(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AtualizarFornecedorMutationResult = NonNullable<Awaited<ReturnType<typeof atualizarFornecedor>>>
+    export type AtualizarFornecedorMutationBody = BodyType<AtualizarFornecedor>
+    export type AtualizarFornecedorMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type AtualizarFornecedorMutationVariables = {id: string;data: BodyType<AtualizarFornecedor>}
+
+    /**
+ * @summary Exige a versão lida. O CNPJ não muda. Se o fornecedor mudou desde então, responde 409.
+ */
+export const useAtualizarFornecedor = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof atualizarFornecedor>>, TError,AtualizarFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof atualizarFornecedor>>,
+        TError,
+        AtualizarFornecedorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAtualizarFornecedorMutationOptions(options), queryClient);
+    }
+
+export const getExcluirFornecedorUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}`
+}
+
+/**
+ * @summary Só exclui fornecedor sem produtos vinculados (senão, 422).
+ */
+export const excluirFornecedor = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getExcluirFornecedorUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getExcluirFornecedorMutationKey = () => ['excluirFornecedor'] as const;
+
+export const getExcluirFornecedorMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof excluirFornecedor>>, TError,ExcluirFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof excluirFornecedor>>, TError,ExcluirFornecedorMutationVariables, TContext> => {
+
+const mutationKey = getExcluirFornecedorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof excluirFornecedor>>, ExcluirFornecedorMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  excluirFornecedor(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ExcluirFornecedorMutationResult = NonNullable<Awaited<ReturnType<typeof excluirFornecedor>>>
+
+    export type ExcluirFornecedorMutationError = ErrorType<ProblemDetails>
+    export type ExcluirFornecedorMutationVariables = {id: string}
+
+    /**
+ * @summary Só exclui fornecedor sem produtos vinculados (senão, 422).
+ */
+export const useExcluirFornecedor = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof excluirFornecedor>>, TError,ExcluirFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof excluirFornecedor>>,
+        TError,
+        ExcluirFornecedorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getExcluirFornecedorMutationOptions(options), queryClient);
+    }
+
+export const getListarProdutosDoFornecedorUrl = (id: string,
+    params?: ListarProdutosDoFornecedorParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/fornecedores/${id}/produtos?${stringifiedParams}` : `/api/v1/fornecedores/${id}/produtos`
+}
+
+/**
+ * @summary De-para do fornecedor. Busca por parte do código do fornecedor, do SKU ou da descrição.
+ */
+export const listarProdutosDoFornecedor = async (id: string,
+    params?: ListarProdutosDoFornecedorParams, options?: Parameters<typeof apiFetch>[1]): Promise<PagedResultOfProdutoFornecedorDetalhe> => {
+
+  return apiFetch<PagedResultOfProdutoFornecedorDetalhe>(getListarProdutosDoFornecedorUrl(id,params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListarProdutosDoFornecedorQueryKey = (id: string,
+    params?: ListarProdutosDoFornecedorParams,) => {
+    return [
+    `/api/v1/fornecedores/${id}/produtos`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListarProdutosDoFornecedorQueryOptions = <TData = Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError = ErrorType<ProblemDetails>>(id: string,
+    params?: ListarProdutosDoFornecedorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListarProdutosDoFornecedorQueryKey(id,params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>> = ({ signal }) => listarProdutosDoFornecedor(id,params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListarProdutosDoFornecedorQueryResult = NonNullable<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>>
+export type ListarProdutosDoFornecedorQueryError = ErrorType<ProblemDetails>
+
+
+export function useListarProdutosDoFornecedor<TData = Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    params: undefined |  ListarProdutosDoFornecedorParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarProdutosDoFornecedor>>,
+          TError,
+          Awaited<ReturnType<typeof listarProdutosDoFornecedor>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarProdutosDoFornecedor<TData = Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    params?: ListarProdutosDoFornecedorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarProdutosDoFornecedor>>,
+          TError,
+          Awaited<ReturnType<typeof listarProdutosDoFornecedor>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarProdutosDoFornecedor<TData = Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    params?: ListarProdutosDoFornecedorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary De-para do fornecedor. Busca por parte do código do fornecedor, do SKU ou da descrição.
+ */
+
+export function useListarProdutosDoFornecedor<TData = Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    params?: ListarProdutosDoFornecedorParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarProdutosDoFornecedor>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListarProdutosDoFornecedorQueryOptions(id,params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getVincularProdutoAoFornecedorUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}/produtos`
+}
+
+/**
+ * @summary Confirma o de-para do código do fornecedor para um produto e uma embalagem. Sem fator, vale o da embalagem.
+ */
+export const vincularProdutoAoFornecedor = async (id: string,
+    criarProdutoFornecedor: CriarProdutoFornecedor, options?: Parameters<typeof apiFetch>[1]): Promise<ProdutoFornecedorDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<ProdutoFornecedorDetalhe>(getVincularProdutoAoFornecedorUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(criarProdutoFornecedor)
+  }
+);}
+
+
+
+
+
+export const getVincularProdutoAoFornecedorMutationKey = () => ['vincularProdutoAoFornecedor'] as const;
+
+export const getVincularProdutoAoFornecedorMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof vincularProdutoAoFornecedor>>, TError,VincularProdutoAoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof vincularProdutoAoFornecedor>>, TError,VincularProdutoAoFornecedorMutationVariables, TContext> => {
+
+const mutationKey = getVincularProdutoAoFornecedorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof vincularProdutoAoFornecedor>>, VincularProdutoAoFornecedorMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  vincularProdutoAoFornecedor(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type VincularProdutoAoFornecedorMutationResult = NonNullable<Awaited<ReturnType<typeof vincularProdutoAoFornecedor>>>
+    export type VincularProdutoAoFornecedorMutationBody = BodyType<CriarProdutoFornecedor>
+    export type VincularProdutoAoFornecedorMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type VincularProdutoAoFornecedorMutationVariables = {id: string;data: BodyType<CriarProdutoFornecedor>}
+
+    /**
+ * @summary Confirma o de-para do código do fornecedor para um produto e uma embalagem. Sem fator, vale o da embalagem.
+ */
+export const useVincularProdutoAoFornecedor = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof vincularProdutoAoFornecedor>>, TError,VincularProdutoAoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof vincularProdutoAoFornecedor>>,
+        TError,
+        VincularProdutoAoFornecedorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getVincularProdutoAoFornecedorMutationOptions(options), queryClient);
+    }
+
+export const getObterProdutoDoFornecedorPorCodigoUrl = (id: string,
+    codigo: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}/produtos/codigo/${codigo}`
+}
+
+/**
+ * @summary Produto do catálogo vinculado ao código do fornecedor (cProd da NF-e).
+ */
+export const obterProdutoDoFornecedorPorCodigo = async (id: string,
+    codigo: string, options?: Parameters<typeof apiFetch>[1]): Promise<ProdutoFornecedorDetalhe> => {
+
+  return apiFetch<ProdutoFornecedorDetalhe>(getObterProdutoDoFornecedorPorCodigoUrl(id,codigo),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getObterProdutoDoFornecedorPorCodigoQueryKey = (id: string,
+    codigo: string,) => {
+    return [
+    `/api/v1/fornecedores/${id}/produtos/codigo/${codigo}`
+    ] as const;
+    }
+
+
+export const getObterProdutoDoFornecedorPorCodigoQueryOptions = <TData = Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError = ErrorType<ProblemDetails>>(id: string,
+    codigo: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getObterProdutoDoFornecedorPorCodigoQueryKey(id,codigo);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>> = ({ signal }) => obterProdutoDoFornecedorPorCodigo(id,codigo, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined && codigo !== null && codigo !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ObterProdutoDoFornecedorPorCodigoQueryResult = NonNullable<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>>
+export type ObterProdutoDoFornecedorPorCodigoQueryError = ErrorType<ProblemDetails>
+
+
+export function useObterProdutoDoFornecedorPorCodigo<TData = Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    codigo: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>,
+          TError,
+          Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterProdutoDoFornecedorPorCodigo<TData = Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    codigo: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>,
+          TError,
+          Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterProdutoDoFornecedorPorCodigo<TData = Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    codigo: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Produto do catálogo vinculado ao código do fornecedor (cProd da NF-e).
+ */
+
+export function useObterProdutoDoFornecedorPorCodigo<TData = Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError = ErrorType<ProblemDetails>>(
+ id: string,
+    codigo: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterProdutoDoFornecedorPorCodigo>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getObterProdutoDoFornecedorPorCodigoQueryOptions(id,codigo,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAtualizarProdutoDoFornecedorUrl = (id: string,
+    vinculoId: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}/produtos/${vinculoId}`
+}
+
+/**
+ * @summary Exige a versão lida. A nova confirmação fica com o usuário logado.
+ */
+export const atualizarProdutoDoFornecedor = async (id: string,
+    vinculoId: string,
+    atualizarProdutoFornecedor: AtualizarProdutoFornecedor, options?: Parameters<typeof apiFetch>[1]): Promise<ProdutoFornecedorDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<ProdutoFornecedorDetalhe>(getAtualizarProdutoDoFornecedorUrl(id,vinculoId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(atualizarProdutoFornecedor)
+  }
+);}
+
+
+
+
+
+export const getAtualizarProdutoDoFornecedorMutationKey = () => ['atualizarProdutoDoFornecedor'] as const;
+
+export const getAtualizarProdutoDoFornecedorMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof atualizarProdutoDoFornecedor>>, TError,AtualizarProdutoDoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof atualizarProdutoDoFornecedor>>, TError,AtualizarProdutoDoFornecedorMutationVariables, TContext> => {
+
+const mutationKey = getAtualizarProdutoDoFornecedorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof atualizarProdutoDoFornecedor>>, AtualizarProdutoDoFornecedorMutationVariables> = (props) => {
+          const {id,vinculoId,data} = props ?? {};
+
+          return  atualizarProdutoDoFornecedor(id,vinculoId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AtualizarProdutoDoFornecedorMutationResult = NonNullable<Awaited<ReturnType<typeof atualizarProdutoDoFornecedor>>>
+    export type AtualizarProdutoDoFornecedorMutationBody = BodyType<AtualizarProdutoFornecedor>
+    export type AtualizarProdutoDoFornecedorMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type AtualizarProdutoDoFornecedorMutationVariables = {id: string;vinculoId: string;data: BodyType<AtualizarProdutoFornecedor>}
+
+    /**
+ * @summary Exige a versão lida. A nova confirmação fica com o usuário logado.
+ */
+export const useAtualizarProdutoDoFornecedor = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof atualizarProdutoDoFornecedor>>, TError,AtualizarProdutoDoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof atualizarProdutoDoFornecedor>>,
+        TError,
+        AtualizarProdutoDoFornecedorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAtualizarProdutoDoFornecedorMutationOptions(options), queryClient);
+    }
+
+export const getDesvincularProdutoDoFornecedorUrl = (id: string,
+    vinculoId: string,) => {
+
+
+
+
+  return `/api/v1/fornecedores/${id}/produtos/${vinculoId}`
+}
+
+export const desvincularProdutoDoFornecedor = async (id: string,
+    vinculoId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getDesvincularProdutoDoFornecedorUrl(id,vinculoId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDesvincularProdutoDoFornecedorMutationKey = () => ['desvincularProdutoDoFornecedor'] as const;
+
+export const getDesvincularProdutoDoFornecedorMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>, TError,DesvincularProdutoDoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>, TError,DesvincularProdutoDoFornecedorMutationVariables, TContext> => {
+
+const mutationKey = getDesvincularProdutoDoFornecedorMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>, DesvincularProdutoDoFornecedorMutationVariables> = (props) => {
+          const {id,vinculoId} = props ?? {};
+
+          return  desvincularProdutoDoFornecedor(id,vinculoId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DesvincularProdutoDoFornecedorMutationResult = NonNullable<Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>>
+
+    export type DesvincularProdutoDoFornecedorMutationError = ErrorType<ProblemDetails>
+    export type DesvincularProdutoDoFornecedorMutationVariables = {id: string;vinculoId: string}
+
+    export const useDesvincularProdutoDoFornecedor = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>, TError,DesvincularProdutoDoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>,
+        TError,
+        DesvincularProdutoDoFornecedorMutationVariables,
+        TContext
+      > => {
+      return useMutation(getDesvincularProdutoDoFornecedorMutationOptions(options), queryClient);
     }
 
 export const getListarArmazensUrl = () => {

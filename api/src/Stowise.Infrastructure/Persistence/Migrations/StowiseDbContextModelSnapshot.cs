@@ -754,6 +754,110 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("zonas", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Fornecedores.Fornecedor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("Cnpj")
+                        .IsRequired()
+                        .HasMaxLength(14)
+                        .HasColumnType("character varying(14)")
+                        .HasColumnName("cnpj");
+
+                    b.Property<string>("NomeFantasia")
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("nome_fantasia");
+
+                    b.Property<string>("RazaoSocial")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)")
+                        .HasColumnName("razao_social");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_fornecedores");
+
+                    b.HasIndex("Cnpj")
+                        .IsUnique()
+                        .HasDatabaseName("ix_fornecedores_cnpj");
+
+                    b.ToTable("fornecedores", (string)null);
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Fornecedores.ProdutoFornecedor", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CodigoFornecedor")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("codigo_fornecedor");
+
+                    b.Property<DateTimeOffset>("ConfirmadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmado_em");
+
+                    b.Property<Guid>("ConfirmadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("confirmado_por");
+
+                    b.Property<Guid>("EmbalagemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("embalagem_id");
+
+                    b.Property<decimal>("FatorConversao")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("fator_conversao");
+
+                    b.Property<Guid>("FornecedorId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("fornecedor_id");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<string>("UnidadeFornecedor")
+                        .IsRequired()
+                        .HasMaxLength(6)
+                        .HasColumnType("character varying(6)")
+                        .HasColumnName("unidade_fornecedor");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_produto_fornecedores");
+
+                    b.HasIndex("EmbalagemId")
+                        .HasDatabaseName("ix_produto_fornecedores_embalagem_id");
+
+                    b.HasIndex("ProdutoId")
+                        .HasDatabaseName("ix_produto_fornecedores_produto_id");
+
+                    b.HasIndex("FornecedorId", "CodigoFornecedor")
+                        .IsUnique()
+                        .HasDatabaseName("ix_produto_fornecedores_fornecedor_id_codigo_fornecedor");
+
+                    b.ToTable("produto_fornecedores", (string)null);
+                });
+
             modelBuilder.Entity("Stowise.Domain.Ia.ChamadaIa", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1714,6 +1818,30 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_zonas_armazens_armazem_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Fornecedores.ProdutoFornecedor", b =>
+                {
+                    b.HasOne("Stowise.Domain.Catalogo.ProdutoEmbalagem", null)
+                        .WithMany()
+                        .HasForeignKey("EmbalagemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_produto_fornecedores_produto_embalagens_embalagem_id");
+
+                    b.HasOne("Stowise.Domain.Fornecedores.Fornecedor", null)
+                        .WithMany()
+                        .HasForeignKey("FornecedorId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_produto_fornecedores_fornecedores_fornecedor_id");
+
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_produto_fornecedores_produtos_produto_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Ia.ChamadaIa", b =>

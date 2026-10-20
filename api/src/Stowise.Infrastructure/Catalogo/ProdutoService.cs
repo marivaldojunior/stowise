@@ -218,6 +218,12 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
             return produto is null ? NotFound() : EmbalagemNotFound();
         }
 
+        var vinculos = await db.ProdutoFornecedores.CountAsync(v => v.EmbalagemId == embalagemId, cancellationToken);
+        if (vinculos > 0)
+        {
+            return AppError.BusinessRule($"A embalagem está vinculada a {vinculos} código(s) de fornecedor. Troque a embalagem desses vínculos antes de remover.");
+        }
+
         produto.RemoveEmbalagem(embalagemId);
         return await SaveAsync(produto, cancellationToken);
     }

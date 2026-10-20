@@ -19,7 +19,9 @@ import 'package:stowise_api/src/model/adicionar_embalagem.dart';
 import 'package:stowise_api/src/model/alterar_limites_cota_ia.dart';
 import 'package:stowise_api/src/model/armazem_detalhe.dart';
 import 'package:stowise_api/src/model/armazem_resumo.dart';
+import 'package:stowise_api/src/model/atualizar_fornecedor.dart';
 import 'package:stowise_api/src/model/atualizar_produto.dart';
+import 'package:stowise_api/src/model/atualizar_produto_fornecedor.dart';
 import 'package:stowise_api/src/model/atualizar_usuario_request.dart';
 import 'package:stowise_api/src/model/auth_response.dart';
 import 'package:stowise_api/src/model/bloquear_endereco.dart';
@@ -35,7 +37,9 @@ import 'package:stowise_api/src/model/contagem_rfid.dart';
 import 'package:stowise_api/src/model/cota_ia_detalhe.dart';
 import 'package:stowise_api/src/model/criar_armazem.dart';
 import 'package:stowise_api/src/model/criar_endereco.dart';
+import 'package:stowise_api/src/model/criar_fornecedor.dart';
 import 'package:stowise_api/src/model/criar_produto.dart';
+import 'package:stowise_api/src/model/criar_produto_fornecedor.dart';
 import 'package:stowise_api/src/model/criar_reserva.dart';
 import 'package:stowise_api/src/model/criar_usuario_request.dart';
 import 'package:stowise_api/src/model/dimensoes_endereco_comando.dart';
@@ -48,6 +52,8 @@ import 'package:stowise_api/src/model/etiqueta_rfid.dart';
 import 'package:stowise_api/src/model/etiquetas_rfid_geradas.dart';
 import 'package:stowise_api/src/model/extrato_item.dart';
 import 'package:stowise_api/src/model/formato_arquivo.dart';
+import 'package:stowise_api/src/model/fornecedor_detalhe.dart';
+import 'package:stowise_api/src/model/fornecedor_resumo.dart';
 import 'package:stowise_api/src/model/funcionalidade_ia.dart';
 import 'package:stowise_api/src/model/geracao_enderecos_resultado.dart';
 import 'package:stowise_api/src/model/gerar_enderecos.dart';
@@ -67,8 +73,10 @@ import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_chamada_ia_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_endereco_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_extrato_item.dart';
+import 'package:stowise_api/src/model/paged_result_of_fornecedor_resumo.dart';
 import 'package:stowise_api/src/model/paged_result_of_importacao_linha_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_importacao_resumo.dart';
+import 'package:stowise_api/src/model/paged_result_of_produto_fornecedor_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_produto_resumo.dart';
 import 'package:stowise_api/src/model/paged_result_of_reserva_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_item.dart';
@@ -77,6 +85,7 @@ import 'package:stowise_api/src/model/paged_result_of_template_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_usuario_detalhe.dart';
 import 'package:stowise_api/src/model/problem_details.dart';
 import 'package:stowise_api/src/model/produto_detalhe.dart';
+import 'package:stowise_api/src/model/produto_fornecedor_detalhe.dart';
 import 'package:stowise_api/src/model/produto_por_codigo.dart';
 import 'package:stowise_api/src/model/produto_resumo.dart';
 import 'package:stowise_api/src/model/redefinir_senha_request.dart';
@@ -122,7 +131,9 @@ part 'serializers.g.dart';
   AlterarLimitesCotaIa,
   ArmazemDetalhe,
   ArmazemResumo,
+  AtualizarFornecedor,
   AtualizarProduto,
+  AtualizarProdutoFornecedor,
   AtualizarUsuarioRequest,
   AuthResponse,
   BloquearEndereco,
@@ -138,7 +149,9 @@ part 'serializers.g.dart';
   CotaIaDetalhe,
   CriarArmazem,
   CriarEndereco,
+  CriarFornecedor,
   CriarProduto,
+  CriarProdutoFornecedor,
   CriarReserva,
   CriarUsuarioRequest,
   DimensoesEnderecoComando,
@@ -151,6 +164,8 @@ part 'serializers.g.dart';
   EtiquetasRfidGeradas,
   ExtratoItem,
   FormatoArquivo,
+  FornecedorDetalhe,
+  FornecedorResumo,
   FuncionalidadeIa,
   GeracaoEnderecosResultado,
   GerarEnderecos,
@@ -170,8 +185,10 @@ part 'serializers.g.dart';
   PagedResultOfChamadaIaDetalhe,
   PagedResultOfEnderecoDetalhe,
   PagedResultOfExtratoItem,
+  PagedResultOfFornecedorResumo,
   PagedResultOfImportacaoLinhaDetalhe,
   PagedResultOfImportacaoResumo,
+  PagedResultOfProdutoFornecedorDetalhe,
   PagedResultOfProdutoResumo,
   PagedResultOfReservaDetalhe,
   PagedResultOfSaldoItem,
@@ -180,6 +197,7 @@ part 'serializers.g.dart';
   PagedResultOfUsuarioDetalhe,
   ProblemDetails,
   ProdutoDetalhe,
+  ProdutoFornecedorDetalhe,
   ProdutoPorCodigo,
   ProdutoResumo,
   RedefinirSenhaRequest,

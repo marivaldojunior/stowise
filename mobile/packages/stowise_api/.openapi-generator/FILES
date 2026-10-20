@@ -7,7 +7,9 @@ doc/AdicionarEmbalagem.md
 doc/AlterarLimitesCotaIa.md
 doc/ArmazemDetalhe.md
 doc/ArmazemResumo.md
+doc/AtualizarFornecedor.md
 doc/AtualizarProduto.md
+doc/AtualizarProdutoFornecedor.md
 doc/AtualizarUsuarioRequest.md
 doc/AutenticaoApi.md
 doc/AuthResponse.md
@@ -25,7 +27,9 @@ doc/ContagemRfid.md
 doc/CotaIaDetalhe.md
 doc/CriarArmazem.md
 doc/CriarEndereco.md
+doc/CriarFornecedor.md
 doc/CriarProduto.md
+doc/CriarProdutoFornecedor.md
 doc/CriarReserva.md
 doc/CriarUsuarioRequest.md
 doc/DimensoesEnderecoComando.md
@@ -40,6 +44,9 @@ doc/EtiquetaRfid.md
 doc/EtiquetasRfidGeradas.md
 doc/ExtratoItem.md
 doc/FormatoArquivo.md
+doc/FornecedorDetalhe.md
+doc/FornecedorResumo.md
+doc/FornecedoresApi.md
 doc/FuncionalidadeIa.md
 doc/GeracaoEnderecosResultado.md
 doc/GerarEnderecos.md
@@ -61,8 +68,10 @@ doc/MovimentacaoDetalhe.md
 doc/PagedResultOfChamadaIaDetalhe.md
 doc/PagedResultOfEnderecoDetalhe.md
 doc/PagedResultOfExtratoItem.md
+doc/PagedResultOfFornecedorResumo.md
 doc/PagedResultOfImportacaoLinhaDetalhe.md
 doc/PagedResultOfImportacaoResumo.md
+doc/PagedResultOfProdutoFornecedorDetalhe.md
 doc/PagedResultOfProdutoResumo.md
 doc/PagedResultOfReservaDetalhe.md
 doc/PagedResultOfSaldoItem.md
@@ -71,6 +80,7 @@ doc/PagedResultOfTemplateDetalhe.md
 doc/PagedResultOfUsuarioDetalhe.md
 doc/ProblemDetails.md
 doc/ProdutoDetalhe.md
+doc/ProdutoFornecedorDetalhe.md
 doc/ProdutoPorCodigo.md
 doc/ProdutoResumo.md
 doc/RFIDApi.md
@@ -114,6 +124,7 @@ lib/src/api/autenticao_api.dart
 lib/src/api/catlogo_api.dart
 lib/src/api/estoque_api.dart
 lib/src/api/estrutura_fsica_api.dart
+lib/src/api/fornecedores_api.dart
 lib/src/api/ia_api.dart
 lib/src/api/importao_api.dart
 lib/src/api/rfid_api.dart
@@ -130,7 +141,9 @@ lib/src/model/adicionar_embalagem.dart
 lib/src/model/alterar_limites_cota_ia.dart
 lib/src/model/armazem_detalhe.dart
 lib/src/model/armazem_resumo.dart
+lib/src/model/atualizar_fornecedor.dart
 lib/src/model/atualizar_produto.dart
+lib/src/model/atualizar_produto_fornecedor.dart
 lib/src/model/atualizar_usuario_request.dart
 lib/src/model/auth_response.dart
 lib/src/model/bloquear_endereco.dart
@@ -146,7 +159,9 @@ lib/src/model/contagem_rfid.dart
 lib/src/model/cota_ia_detalhe.dart
 lib/src/model/criar_armazem.dart
 lib/src/model/criar_endereco.dart
+lib/src/model/criar_fornecedor.dart
 lib/src/model/criar_produto.dart
+lib/src/model/criar_produto_fornecedor.dart
 lib/src/model/criar_reserva.dart
 lib/src/model/criar_usuario_request.dart
 lib/src/model/date.dart
@@ -160,6 +175,8 @@ lib/src/model/etiqueta_rfid.dart
 lib/src/model/etiquetas_rfid_geradas.dart
 lib/src/model/extrato_item.dart
 lib/src/model/formato_arquivo.dart
+lib/src/model/fornecedor_detalhe.dart
+lib/src/model/fornecedor_resumo.dart
 lib/src/model/funcionalidade_ia.dart
 lib/src/model/geracao_enderecos_resultado.dart
 lib/src/model/gerar_enderecos.dart
@@ -179,8 +196,10 @@ lib/src/model/movimentacao_detalhe.dart
 lib/src/model/paged_result_of_chamada_ia_detalhe.dart
 lib/src/model/paged_result_of_endereco_detalhe.dart
 lib/src/model/paged_result_of_extrato_item.dart
+lib/src/model/paged_result_of_fornecedor_resumo.dart
 lib/src/model/paged_result_of_importacao_linha_detalhe.dart
 lib/src/model/paged_result_of_importacao_resumo.dart
+lib/src/model/paged_result_of_produto_fornecedor_detalhe.dart
 lib/src/model/paged_result_of_produto_resumo.dart
 lib/src/model/paged_result_of_reserva_detalhe.dart
 lib/src/model/paged_result_of_saldo_item.dart
@@ -189,6 +208,7 @@ lib/src/model/paged_result_of_template_detalhe.dart
 lib/src/model/paged_result_of_usuario_detalhe.dart
 lib/src/model/problem_details.dart
 lib/src/model/produto_detalhe.dart
+lib/src/model/produto_fornecedor_detalhe.dart
 lib/src/model/produto_por_codigo.dart
 lib/src/model/produto_resumo.dart
 lib/src/model/redefinir_senha_request.dart
@@ -233,6 +253,8 @@ test/adicionar_embalagem_test.dart
 test/alterar_limites_cota_ia_test.dart
 test/armazem_detalhe_test.dart
 test/armazem_resumo_test.dart
+test/atualizar_fornecedor_test.dart
+test/atualizar_produto_fornecedor_test.dart
 test/atualizar_produto_test.dart
 test/atualizar_usuario_request_test.dart
 test/autenticao_api_test.dart
@@ -251,6 +273,8 @@ test/contagem_rfid_test.dart
 test/cota_ia_detalhe_test.dart
 test/criar_armazem_test.dart
 test/criar_endereco_test.dart
+test/criar_fornecedor_test.dart
+test/criar_produto_fornecedor_test.dart
 test/criar_produto_test.dart
 test/criar_reserva_test.dart
 test/criar_usuario_request_test.dart
@@ -266,6 +290,9 @@ test/etiqueta_rfid_test.dart
 test/etiquetas_rfid_geradas_test.dart
 test/extrato_item_test.dart
 test/formato_arquivo_test.dart
+test/fornecedor_detalhe_test.dart
+test/fornecedor_resumo_test.dart
+test/fornecedores_api_test.dart
 test/funcionalidade_ia_test.dart
 test/geracao_enderecos_resultado_test.dart
 test/gerar_enderecos_test.dart
@@ -287,8 +314,10 @@ test/movimentacao_detalhe_test.dart
 test/paged_result_of_chamada_ia_detalhe_test.dart
 test/paged_result_of_endereco_detalhe_test.dart
 test/paged_result_of_extrato_item_test.dart
+test/paged_result_of_fornecedor_resumo_test.dart
 test/paged_result_of_importacao_linha_detalhe_test.dart
 test/paged_result_of_importacao_resumo_test.dart
+test/paged_result_of_produto_fornecedor_detalhe_test.dart
 test/paged_result_of_produto_resumo_test.dart
 test/paged_result_of_reserva_detalhe_test.dart
 test/paged_result_of_saldo_item_test.dart
@@ -297,6 +326,7 @@ test/paged_result_of_template_detalhe_test.dart
 test/paged_result_of_usuario_detalhe_test.dart
 test/problem_details_test.dart
 test/produto_detalhe_test.dart
+test/produto_fornecedor_detalhe_test.dart
 test/produto_por_codigo_test.dart
 test/produto_resumo_test.dart
 test/redefinir_senha_request_test.dart

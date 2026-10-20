@@ -4,6 +4,7 @@ using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
 using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
+using Stowise.Domain.Fornecedores;
 using Stowise.Domain.Ia;
 using Stowise.Domain.Importacoes;
 using Stowise.Domain.Rfid;
@@ -27,6 +28,10 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
     public DbSet<Produto> Produtos => Set<Produto>();
 
     public DbSet<ProdutoEmbalagem> ProdutoEmbalagens => Set<ProdutoEmbalagem>();
+
+    public DbSet<Fornecedor> Fornecedores => Set<Fornecedor>();
+
+    public DbSet<ProdutoFornecedor> ProdutoFornecedores => Set<ProdutoFornecedor>();
 
     public DbSet<Lote> Lotes => Set<Lote>();
 

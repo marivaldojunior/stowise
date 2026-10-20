@@ -117,6 +117,16 @@ Class | Method | HTTP request | Description
 [*EstruturaFsicaApi*](doc/EstruturaFsicaApi.md) | [**obterEnderecoPorCodigo**](doc/EstruturaFsicaApi.md#obterenderecoporcodigo) | **GET** /api/v1/armazens/{id}/enderecos/codigo/{codigo} | Busca pelo código lido no app (ex.: A-03-02-1), dentro do armazém.
 [*EstruturaFsicaApi*](doc/EstruturaFsicaApi.md) | [**removerZona**](doc/EstruturaFsicaApi.md#removerzona) | **DELETE** /api/v1/armazens/{id}/zonas/{zonaId} | 
 [*EstruturaFsicaApi*](doc/EstruturaFsicaApi.md) | [**renomearArmazem**](doc/EstruturaFsicaApi.md#renomeararmazem) | **PUT** /api/v1/armazens/{id} | 
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**atualizarFornecedor**](doc/FornecedoresApi.md#atualizarfornecedor) | **PUT** /api/v1/fornecedores/{id} | Exige a versão lida. O CNPJ não muda. Se o fornecedor mudou desde então, responde 409.
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**atualizarProdutoDoFornecedor**](doc/FornecedoresApi.md#atualizarprodutodofornecedor) | **PUT** /api/v1/fornecedores/{id}/produtos/{vinculoId} | Exige a versão lida. A nova confirmação fica com o usuário logado.
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**criarFornecedor**](doc/FornecedoresApi.md#criarfornecedor) | **POST** /api/v1/fornecedores | CNPJ numérico ou alfanumérico, com ou sem máscara. CNPJ repetido: 409.
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**desvincularProdutoDoFornecedor**](doc/FornecedoresApi.md#desvincularprodutodofornecedor) | **DELETE** /api/v1/fornecedores/{id}/produtos/{vinculoId} | 
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**excluirFornecedor**](doc/FornecedoresApi.md#excluirfornecedor) | **DELETE** /api/v1/fornecedores/{id} | Só exclui fornecedor sem produtos vinculados (senão, 422).
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**listarFornecedores**](doc/FornecedoresApi.md#listarfornecedores) | **GET** /api/v1/fornecedores | Busca por parte do CNPJ (com ou sem máscara), da razão social ou do nome fantasia.
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**listarProdutosDoFornecedor**](doc/FornecedoresApi.md#listarprodutosdofornecedor) | **GET** /api/v1/fornecedores/{id}/produtos | De-para do fornecedor. Busca por parte do código do fornecedor, do SKU ou da descrição.
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**obterFornecedor**](doc/FornecedoresApi.md#obterfornecedor) | **GET** /api/v1/fornecedores/{id} | 
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**obterProdutoDoFornecedorPorCodigo**](doc/FornecedoresApi.md#obterprodutodofornecedorporcodigo) | **GET** /api/v1/fornecedores/{id}/produtos/codigo/{codigo} | Produto do catálogo vinculado ao código do fornecedor (cProd da NF-e).
+[*FornecedoresApi*](doc/FornecedoresApi.md) | [**vincularProdutoAoFornecedor**](doc/FornecedoresApi.md#vincularprodutoaofornecedor) | **POST** /api/v1/fornecedores/{id}/produtos | Confirma o de-para do código do fornecedor para um produto e uma embalagem. Sem fator, vale o da embalagem.
 [*IAApi*](doc/IAApi.md) | [**alterarLimitesCotaIa**](doc/IAApi.md#alterarlimitescotaia) | **PUT** /api/v1/ia/cotas/{id} | 
 [*IAApi*](doc/IAApi.md) | [**criarCotaIa**](doc/IAApi.md#criarcotaia) | **POST** /api/v1/ia/cotas | 
 [*IAApi*](doc/IAApi.md) | [**excluirCotaIa**](doc/IAApi.md#excluircotaia) | **DELETE** /api/v1/ia/cotas/{id} | 
@@ -155,7 +165,9 @@ Class | Method | HTTP request | Description
  - [AlterarLimitesCotaIa](doc/AlterarLimitesCotaIa.md)
  - [ArmazemDetalhe](doc/ArmazemDetalhe.md)
  - [ArmazemResumo](doc/ArmazemResumo.md)
+ - [AtualizarFornecedor](doc/AtualizarFornecedor.md)
  - [AtualizarProduto](doc/AtualizarProduto.md)
+ - [AtualizarProdutoFornecedor](doc/AtualizarProdutoFornecedor.md)
  - [AtualizarUsuarioRequest](doc/AtualizarUsuarioRequest.md)
  - [AuthResponse](doc/AuthResponse.md)
  - [BloquearEndereco](doc/BloquearEndereco.md)
@@ -171,7 +183,9 @@ Class | Method | HTTP request | Description
  - [CotaIaDetalhe](doc/CotaIaDetalhe.md)
  - [CriarArmazem](doc/CriarArmazem.md)
  - [CriarEndereco](doc/CriarEndereco.md)
+ - [CriarFornecedor](doc/CriarFornecedor.md)
  - [CriarProduto](doc/CriarProduto.md)
+ - [CriarProdutoFornecedor](doc/CriarProdutoFornecedor.md)
  - [CriarReserva](doc/CriarReserva.md)
  - [CriarUsuarioRequest](doc/CriarUsuarioRequest.md)
  - [DimensoesEnderecoComando](doc/DimensoesEnderecoComando.md)
@@ -184,6 +198,8 @@ Class | Method | HTTP request | Description
  - [EtiquetasRfidGeradas](doc/EtiquetasRfidGeradas.md)
  - [ExtratoItem](doc/ExtratoItem.md)
  - [FormatoArquivo](doc/FormatoArquivo.md)
+ - [FornecedorDetalhe](doc/FornecedorDetalhe.md)
+ - [FornecedorResumo](doc/FornecedorResumo.md)
  - [FuncionalidadeIa](doc/FuncionalidadeIa.md)
  - [GeracaoEnderecosResultado](doc/GeracaoEnderecosResultado.md)
  - [GerarEnderecos](doc/GerarEnderecos.md)
@@ -203,8 +219,10 @@ Class | Method | HTTP request | Description
  - [PagedResultOfChamadaIaDetalhe](doc/PagedResultOfChamadaIaDetalhe.md)
  - [PagedResultOfEnderecoDetalhe](doc/PagedResultOfEnderecoDetalhe.md)
  - [PagedResultOfExtratoItem](doc/PagedResultOfExtratoItem.md)
+ - [PagedResultOfFornecedorResumo](doc/PagedResultOfFornecedorResumo.md)
  - [PagedResultOfImportacaoLinhaDetalhe](doc/PagedResultOfImportacaoLinhaDetalhe.md)
  - [PagedResultOfImportacaoResumo](doc/PagedResultOfImportacaoResumo.md)
+ - [PagedResultOfProdutoFornecedorDetalhe](doc/PagedResultOfProdutoFornecedorDetalhe.md)
  - [PagedResultOfProdutoResumo](doc/PagedResultOfProdutoResumo.md)
  - [PagedResultOfReservaDetalhe](doc/PagedResultOfReservaDetalhe.md)
  - [PagedResultOfSaldoItem](doc/PagedResultOfSaldoItem.md)
@@ -213,6 +231,7 @@ Class | Method | HTTP request | Description
  - [PagedResultOfUsuarioDetalhe](doc/PagedResultOfUsuarioDetalhe.md)
  - [ProblemDetails](doc/ProblemDetails.md)
  - [ProdutoDetalhe](doc/ProdutoDetalhe.md)
+ - [ProdutoFornecedorDetalhe](doc/ProdutoFornecedorDetalhe.md)
  - [ProdutoPorCodigo](doc/ProdutoPorCodigo.md)
  - [ProdutoResumo](doc/ProdutoResumo.md)
  - [RedefinirSenhaRequest](doc/RedefinirSenhaRequest.md)

@@ -2104,6 +2104,792 @@
         ]
       }
     },
+    "/api/v1/fornecedores": {
+      "get": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Busca por parte do CNPJ (com ou sem máscara), da razão social ou do nome fantasia.",
+        "operationId": "ListarFornecedores",
+        "parameters": [
+          {
+            "name": "busca",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfFornecedorResumo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "CNPJ numérico ou alfanumérico, com ou sem máscara. CNPJ repetido: 409.",
+        "operationId": "CriarFornecedor",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarFornecedor"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fornecedores/{id}": {
+      "get": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "operationId": "ObterFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Exige a versão lida. O CNPJ não muda. Se o fornecedor mudou desde então, responde 409.",
+        "operationId": "AtualizarFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtualizarFornecedor"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Só exclui fornecedor sem produtos vinculados (senão, 422).",
+        "operationId": "ExcluirFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fornecedores/{id}/produtos": {
+      "get": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "De-para do fornecedor. Busca por parte do código do fornecedor, do SKU ou da descrição.",
+        "operationId": "ListarProdutosDoFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "busca",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfProdutoFornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Confirma o de-para do código do fornecedor para um produto e uma embalagem. Sem fator, vale o da embalagem.",
+        "operationId": "VincularProdutoAoFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CriarProdutoFornecedor"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProdutoFornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fornecedores/{id}/produtos/codigo/{codigo}": {
+      "get": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Produto do catálogo vinculado ao código do fornecedor (cProd da NF-e).",
+        "operationId": "ObterProdutoDoFornecedorPorCodigo",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProdutoFornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/fornecedores/{id}/produtos/{vinculoId}": {
+      "put": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "summary": "Exige a versão lida. A nova confirmação fica com o usuário logado.",
+        "operationId": "AtualizarProdutoDoFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vinculoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AtualizarProdutoFornecedor"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProdutoFornecedorDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "Fornecedores"
+        ],
+        "operationId": "DesvincularProdutoDoFornecedor",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "vinculoId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/armazens": {
       "get": {
         "tags": [
@@ -6100,6 +6886,35 @@
           }
         }
       },
+      "AtualizarFornecedor": {
+        "required": [
+          "razaoSocial",
+          "nomeFantasia",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "razaoSocial": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nomeFantasia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "versao": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
       "AtualizarProduto": {
         "required": [
           "descricao",
@@ -6160,6 +6975,52 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "versao": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
+      "AtualizarProdutoFornecedor": {
+        "required": [
+          "produtoId",
+          "embalagemId",
+          "unidadeFornecedor",
+          "fatorConversao",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "unidadeFornecedor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fatorConversao": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           },
           "versao": {
             "type": [
@@ -6739,6 +7600,34 @@
           }
         }
       },
+      "CriarFornecedor": {
+        "required": [
+          "cnpj",
+          "razaoSocial",
+          "nomeFantasia"
+        ],
+        "type": "object",
+        "properties": {
+          "cnpj": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "razaoSocial": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nomeFantasia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "CriarProduto": {
         "required": [
           "sku",
@@ -6816,6 +7705,51 @@
                 "$ref": "#/components/schemas/EmbalagemMedidas"
               }
             ]
+          }
+        }
+      },
+      "CriarProdutoFornecedor": {
+        "required": [
+          "codigoFornecedor",
+          "produtoId",
+          "embalagemId",
+          "unidadeFornecedor",
+          "fatorConversao"
+        ],
+        "type": "object",
+        "properties": {
+          "codigoFornecedor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "unidadeFornecedor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fatorConversao": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
           }
         }
       },
@@ -7321,6 +8255,75 @@
           "Excel",
           "NFeXml"
         ]
+      },
+      "FornecedorDetalhe": {
+        "required": [
+          "id",
+          "cnpj",
+          "razaoSocial",
+          "nomeFantasia",
+          "produtosVinculados",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cnpj": {
+            "type": "string"
+          },
+          "razaoSocial": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "produtosVinculados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "versao": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
+      "FornecedorResumo": {
+        "required": [
+          "id",
+          "cnpj",
+          "razaoSocial",
+          "nomeFantasia",
+          "produtosVinculados"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cnpj": {
+            "type": "string"
+          },
+          "razaoSocial": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "produtosVinculados": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
       },
       "FuncionalidadeIa": {
         "enum": [
@@ -8288,6 +9291,39 @@
           }
         }
       },
+      "PagedResultOfFornecedorResumo": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FornecedorResumo"
+            }
+          },
+          "pagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResultOfImportacaoLinhaDetalhe": {
         "required": [
           "itens",
@@ -8334,6 +9370,39 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ImportacaoResumo"
+            }
+          },
+          "pagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PagedResultOfProdutoFornecedorDetalhe": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProdutoFornecedorDetalhe"
             }
           },
           "pagina": {
@@ -8659,6 +9728,77 @@
             "items": {
               "$ref": "#/components/schemas/EmbalagemDetalhe"
             }
+          }
+        }
+      },
+      "ProdutoFornecedorDetalhe": {
+        "required": [
+          "id",
+          "fornecedorId",
+          "codigoFornecedor",
+          "produtoId",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "embalagemId",
+          "tipoEmbalagem",
+          "unidadeFornecedor",
+          "fatorConversao",
+          "confirmadoPor",
+          "confirmadoEm",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fornecedorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigoFornecedor": {
+            "type": "string"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoEmbalagem": {
+            "$ref": "#/components/schemas/TipoEmbalagem"
+          },
+          "unidadeFornecedor": {
+            "type": "string"
+          },
+          "fatorConversao": {
+            "type": "number",
+            "format": "double"
+          },
+          "confirmadoPor": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirmadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "versao": {
+            "type": "integer",
+            "format": "uint32"
           }
         }
       },
@@ -9983,6 +11123,9 @@
     },
     {
       "name": "Catálogo"
+    },
+    {
+      "name": "Fornecedores"
     },
     {
       "name": "Estrutura física"

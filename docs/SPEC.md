@@ -332,7 +332,7 @@ Regras de ordem:
 
 **2.1 API — Fornecedores e cadastros incompletos**
 
-- [ ] CRUD de Fornecedor e do de-para ProdutoFornecedor
+- [x] CRUD de Fornecedor e do de-para ProdutoFornecedor
 - [ ] `StatusCadastro` e endpoint da fila de cadastros incompletos
 
 **2.2 API — NF-e**

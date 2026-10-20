@@ -61,6 +61,7 @@ v1.MapAuthEndpoints();
 v1.MapUsuariosEndpoints();
 v1.MapCategoriasEndpoints();
 v1.MapProdutosEndpoints();
+v1.MapFornecedoresEndpoints();
 v1.MapEstruturaEndpoints();
 v1.MapMovimentacoesEndpoints();
 v1.MapReservasEndpoints();

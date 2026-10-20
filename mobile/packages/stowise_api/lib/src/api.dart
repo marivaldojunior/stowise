@@ -13,6 +13,7 @@ import 'package:stowise_api/src/api/autenticao_api.dart';
 import 'package:stowise_api/src/api/catlogo_api.dart';
 import 'package:stowise_api/src/api/estoque_api.dart';
 import 'package:stowise_api/src/api/estrutura_fsica_api.dart';
+import 'package:stowise_api/src/api/fornecedores_api.dart';
 import 'package:stowise_api/src/api/ia_api.dart';
 import 'package:stowise_api/src/api/importao_api.dart';
 import 'package:stowise_api/src/api/rfid_api.dart';
@@ -97,6 +98,12 @@ class StowiseApi {
   /// by doing that all interceptors will not be executed
   EstruturaFsicaApi getEstruturaFsicaApi() {
     return EstruturaFsicaApi(dio, serializers);
+  }
+
+  /// Get FornecedoresApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  FornecedoresApi getFornecedoresApi() {
+    return FornecedoresApi(dio, serializers);
   }
 
   /// Get IAApi instance, base route and serializer can be overridden by a given but be careful,
