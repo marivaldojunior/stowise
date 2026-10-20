@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using Stowise.Application.Common;
@@ -131,20 +132,9 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
         }
 
         var (pagina, tamanhoPagina) = Paging.Normalize(filtro.Pagina, filtro.TamanhoPagina);
-        var query = Detalhes().Where(v => v.FornecedorId == fornecedorId);
-        if (!string.IsNullOrWhiteSpace(filtro.Busca))
-        {
-            var pattern = $"%{LikePattern.Escape(filtro.Busca.Trim())}%";
-            query = query.Where(v =>
-                EF.Functions.ILike(v.CodigoFornecedor, pattern, LikePattern.EscapeCharacter)
-                || EF.Functions.ILike(v.Sku, pattern, LikePattern.EscapeCharacter)
-                || EF.Functions.ILike(v.Descricao, pattern, LikePattern.EscapeCharacter));
-        }
-
+        var query = Detalhes(v => v.FornecedorId == fornecedorId, filtro.Busca);
         var total = await query.CountAsync(cancellationToken);
         var itens = await query
-            .OrderBy(v => v.CodigoFornecedor)
-            .ThenBy(v => v.Id)
             .Skip((pagina - 1) * tamanhoPagina)
             .Take(tamanhoPagina)
             .ToListAsync(cancellationToken);
@@ -163,7 +153,7 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
             return AppError.Validation("codigo", "Informe o código do produto no fornecedor.");
         }
 
-        var vinculo = await Detalhes().FirstOrDefaultAsync(v => v.FornecedorId == fornecedorId && v.CodigoFornecedor == valor, cancellationToken);
+        var vinculo = await Detalhes(v => v.FornecedorId == fornecedorId && v.CodigoFornecedor == valor).FirstOrDefaultAsync(cancellationToken);
         return vinculo is null ? AppError.NotFound($"O código {valor} não está vinculado a um produto deste fornecedor.") : vinculo;
     }
 
@@ -211,7 +201,7 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
             return CodigoRepetido(codigo);
         }
 
-        return await Detalhes().FirstAsync(v => v.Id == vinculo.Id, cancellationToken);
+        return await Detalhes(v => v.Id == vinculo.Id).FirstAsync(cancellationToken);
     }
 
     public async Task<Result<ProdutoFornecedorDetalhe>> UpdateProdutoAsync(
@@ -254,7 +244,7 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
             clock.GetUtcNow());
         await db.SaveChangesAsync(cancellationToken);
 
-        return await Detalhes().FirstAsync(v => v.Id == vinculoId, cancellationToken);
+        return await Detalhes(v => v.Id == vinculoId).FirstAsync(cancellationToken);
     }
 
     public async Task<Result> DeleteProdutoAsync(Guid fornecedorId, Guid vinculoId, CancellationToken cancellationToken = default)
@@ -287,25 +277,45 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
         return embalagem.FatorConversao;
     }
 
-    private IQueryable<ProdutoFornecedorDetalhe> Detalhes() =>
-        from v in db.ProdutoFornecedores.AsNoTracking()
-        join p in db.Produtos on v.ProdutoId equals p.Id
-        join e in db.ProdutoEmbalagens on v.EmbalagemId equals e.Id
-        select new ProdutoFornecedorDetalhe(
-            v.Id,
-            v.FornecedorId,
-            v.CodigoFornecedor,
-            v.ProdutoId,
-            p.Sku,
-            p.Descricao,
-            p.UnidadeBase,
-            v.EmbalagemId,
-            e.Tipo,
-            v.UnidadeFornecedor,
-            v.FatorConversao,
-            v.ConfirmadoPor,
-            v.ConfirmadoEm,
-            v.Versao);
+    /// <summary>
+    /// Vínculos com o produto e a embalagem, em ordem de código. Filtro, busca e ordem ficam antes da projeção: o EF não
+    /// traduz o acesso a propriedades de um record criado pelo construtor.
+    /// </summary>
+    private IQueryable<ProdutoFornecedorDetalhe> Detalhes(Expression<Func<ProdutoFornecedor, bool>> filtro, string? busca = null)
+    {
+        var query =
+            from v in db.ProdutoFornecedores.AsNoTracking().Where(filtro)
+            join p in db.Produtos on v.ProdutoId equals p.Id
+            join e in db.ProdutoEmbalagens on v.EmbalagemId equals e.Id
+            select new { v, p, e };
+        if (!string.IsNullOrWhiteSpace(busca))
+        {
+            var pattern = $"%{LikePattern.Escape(busca.Trim())}%";
+            query = query.Where(x =>
+                EF.Functions.ILike(x.v.CodigoFornecedor, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(x.p.Sku, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(x.p.Descricao, pattern, LikePattern.EscapeCharacter));
+        }
+
+        return query
+            .OrderBy(x => x.v.CodigoFornecedor)
+            .ThenBy(x => x.v.Id)
+            .Select(x => new ProdutoFornecedorDetalhe(
+                x.v.Id,
+                x.v.FornecedorId,
+                x.v.CodigoFornecedor,
+                x.v.ProdutoId,
+                x.p.Sku,
+                x.p.Descricao,
+                x.p.UnidadeBase,
+                x.v.EmbalagemId,
+                x.e.Tipo,
+                x.v.UnidadeFornecedor,
+                x.v.FatorConversao,
+                x.v.ConfirmadoPor,
+                x.v.ConfirmadoEm,
+                x.v.Versao));
+    }
 
     private Task<FornecedorDetalhe?> LoadDetalheAsync(Guid id, CancellationToken cancellationToken) =>
         db.Fornecedores.AsNoTracking()
