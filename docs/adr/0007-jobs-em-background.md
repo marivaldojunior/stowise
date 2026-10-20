@@ -41,7 +41,7 @@ Os requisitos são:
 - **Mais fácil:** staging, efetivação e chamadas de IA saem da requisição. A resposta do `PUT /mapeamento` passa a ser imediata (`202`), e o progresso fica consultável. Um restart no meio do processamento não perde trabalho.
 - **Semântica pelo menos uma vez:** todo job novo precisa ser idempotente, e os testes devem cobrir a repetição.
 - **Testes:** os testes de integração sobem o servidor do Hangfire contra o banco do Testcontainers e esperam o status mudar, com um limite de tempo. Os jobs são classes comuns, testáveis também sem o Hangfire.
-- **Dependências:** Hangfire.Core e Hangfire.PostgreSql usam a licença LGPL-3.0. O uso como biblioteca (link dinâmico, sem alterar o código deles) é compatível com a Apache 2.0 do projeto. O Hangfire.PostgreSql é mantido pela comunidade, não pela equipe do Hangfire. O Hangfire traz o Newtonsoft.Json para serializar os argumentos.
+- **Dependências:** Hangfire.Core e Hangfire.PostgreSql usam a licença LGPL-3.0. O uso como biblioteca (link dinâmico, sem alterar o código deles) é compatível com a licença do projeto (PolyForm Strict 1.0.0; Apache 2.0 até a v0.1.0). O Hangfire.PostgreSql é mantido pela comunidade, não pela equipe do Hangfire. O Hangfire traz o Newtonsoft.Json para serializar os argumentos.
 - **Banco:** o schema `hangfire` cresce com o histórico de jobs. O Hangfire expira os jobs concluídos (padrão de 1 dia); o mesmo vale para os falhos depois de inspecionados.
 - **Fica para depois:** health check do servidor de jobs (tag `ready`) e métricas de fila no OpenTelemetry.
 

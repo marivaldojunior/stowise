@@ -141,4 +141,8 @@ Veja [`CONTRIBUTING.md`](CONTRIBUTING.md): uma tarefa do plano por vez, testes o
 
 ## Licença
 
-Distribuído sob a licença Apache 2.0. Veja [`LICENSE`](LICENSE).
+Copyright (c) 2026 Marivaldo Junior. Distribuído sob a [PolyForm Strict 1.0.0](LICENSE): o código pode ser lido, estudado e executado para fins não comerciais, mas não pode ser modificado, redistribuído nem usado em trabalhos derivados ou para fins comerciais sem autorização por escrito do autor.
+
+- As versões publicadas antes desta troca (incluindo a tag `v0.1.0`) continuam sob a Apache 2.0 para quem obteve uma cópia delas.
+- As dependências e os componentes de terceiros mantêm as próprias licenças.
+- Para outro uso, abra uma issue ou fale com o autor.

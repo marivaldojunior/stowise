@@ -1,5 +1,7 @@
 # Contribuindo
 
+> **Licença:** o projeto usa a [PolyForm Strict 1.0.0](LICENSE). Ao enviar um PR, você concorda que o autor pode usar, modificar e licenciar a sua contribuição sob qualquer licença. Sugestões e relatos de bug por issue são bem-vindos.
+
 ## Fluxo por tarefa
 
 1. Escolha a próxima tarefa aberta do plano em [`docs/SPEC.md`](docs/SPEC.md), respeitando a ordem dos marcos.
