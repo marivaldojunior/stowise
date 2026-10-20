@@ -1,6 +1,6 @@
 # Schemas da NF-e 4.00
 
-Arquivos oficiais do Portal Nacional da NF-e (Esquemas XML, versões em uso), sem alteração:
+Arquivos oficiais do Portal Nacional da NF-e (Esquemas XML, versões em uso), sem alteração de conteúdo (o Git só normaliza o fim de linha):
 
 - **Pacote:** Schemas XML NF-e - Pacote de Liberação nº 010f (pasta `PL_010f_v1.04`), NT 2025.002 v.1.50 e NT 2026.007 v.1.00, publicado em 31/08/2026.
 - **Origem:** https://www.nfe.fazenda.gov.br/portal/listaConteudo.aspx?tipoConteudo=BMPFMBoln3w= (baixado em 20/10/2026).
