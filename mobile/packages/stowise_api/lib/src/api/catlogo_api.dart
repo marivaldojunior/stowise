@@ -16,11 +16,13 @@ import 'package:stowise_api/src/model/categoria_detalhe.dart';
 import 'package:stowise_api/src/model/criar_produto.dart';
 import 'package:stowise_api/src/model/embalagem_medidas.dart';
 import 'package:stowise_api/src/model/http_validation_problem_details.dart';
+import 'package:stowise_api/src/model/paged_result_of_cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/paged_result_of_produto_resumo.dart';
 import 'package:stowise_api/src/model/problem_details.dart';
 import 'package:stowise_api/src/model/produto_detalhe.dart';
 import 'package:stowise_api/src/model/produto_por_codigo.dart';
 import 'package:stowise_api/src/model/salvar_categoria.dart';
+import 'package:stowise_api/src/model/status_cadastro.dart';
 
 class CatlogoApi {
   final Dio _dio;
@@ -759,6 +761,103 @@ class CatlogoApi {
     return _response;
   }
 
+  /// Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.
+  ///
+  ///
+  /// Parameters:
+  /// * [busca]
+  /// * [categoriaId]
+  /// * [pagina]
+  /// * [tamanhoPagina]
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [PagedResultOfCadastroIncompleto] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<PagedResultOfCadastroIncompleto>> listarCadastrosIncompletos({
+    String? busca,
+    String? categoriaId,
+    int? pagina,
+    int? tamanhoPagina,
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/produtos/cadastros-incompletos';
+    final _options = Options(
+      method: r'GET',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'Bearer',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _queryParameters = <String, dynamic>{
+      if (busca != null) r'busca': encodeQueryParameter(_serializers, busca, const FullType(String)),
+      if (categoriaId != null) r'categoriaId': encodeQueryParameter(_serializers, categoriaId, const FullType(String)),
+      if (pagina != null) r'pagina': encodeQueryParameter(_serializers, pagina, const FullType(int)),
+      if (tamanhoPagina != null)
+        r'tamanhoPagina': encodeQueryParameter(_serializers, tamanhoPagina, const FullType(int)),
+    };
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      queryParameters: _queryParameters,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    PagedResultOfCadastroIncompleto? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(PagedResultOfCadastroIncompleto),
+            ) as PagedResultOfCadastroIncompleto;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<PagedResultOfCadastroIncompleto>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
   /// listarCategorias
   ///
   ///
@@ -846,6 +945,7 @@ class CatlogoApi {
   /// * [busca]
   /// * [categoriaId]
   /// * [ativo]
+  /// * [statusCadastro]
   /// * [pagina]
   /// * [tamanhoPagina]
   /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
@@ -861,6 +961,7 @@ class CatlogoApi {
     String? busca,
     String? categoriaId,
     bool? ativo,
+    StatusCadastro? statusCadastro,
     int? pagina,
     int? tamanhoPagina,
     CancelToken? cancelToken,
@@ -893,6 +994,8 @@ class CatlogoApi {
       if (busca != null) r'busca': encodeQueryParameter(_serializers, busca, const FullType(String)),
       if (categoriaId != null) r'categoriaId': encodeQueryParameter(_serializers, categoriaId, const FullType(String)),
       if (ativo != null) r'ativo': encodeQueryParameter(_serializers, ativo, const FullType(bool)),
+      if (statusCadastro != null)
+        r'statusCadastro': encodeQueryParameter(_serializers, statusCadastro, const FullType(StatusCadastro)),
       if (pagina != null) r'pagina': encodeQueryParameter(_serializers, pagina, const FullType(int)),
       if (tamanhoPagina != null)
         r'tamanhoPagina': encodeQueryParameter(_serializers, tamanhoPagina, const FullType(int)),

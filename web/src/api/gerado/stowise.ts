@@ -62,6 +62,7 @@ import type {
   ImportacaoDetalhe,
   ImportarProdutosBody,
   LeiturasRfidResolvidas,
+  ListarCadastrosIncompletosParams,
   ListarChamadasIaParams,
   ListarEnderecosParams,
   ListarFornecedoresParams,
@@ -78,6 +79,7 @@ import type {
   ObterExtratoParams,
   ObterMinhaCotaIaParams,
   ObterSaldoNaDataParams,
+  PagedResultOfCadastroIncompleto,
   PagedResultOfChamadaIaDetalhe,
   PagedResultOfEnderecoDetalhe,
   PagedResultOfExtratoItem,
@@ -2061,6 +2063,114 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
       > => {
       return useMutation(getCriarProdutoMutationOptions(options), queryClient);
     }
+
+export const getListarCadastrosIncompletosUrl = (params?: ListarCadastrosIncompletosParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/produtos/cadastros-incompletos?${stringifiedParams}` : `/api/v1/produtos/cadastros-incompletos`
+}
+
+/**
+ * @summary Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.
+ */
+export const listarCadastrosIncompletos = async (params?: ListarCadastrosIncompletosParams, options?: Parameters<typeof apiFetch>[1]): Promise<PagedResultOfCadastroIncompleto> => {
+
+  return apiFetch<PagedResultOfCadastroIncompleto>(getListarCadastrosIncompletosUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListarCadastrosIncompletosQueryKey = (params?: ListarCadastrosIncompletosParams,) => {
+    return [
+    `/api/v1/produtos/cadastros-incompletos`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListarCadastrosIncompletosQueryOptions = <TData = Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError = ErrorType<ProblemDetails>>(params?: ListarCadastrosIncompletosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListarCadastrosIncompletosQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listarCadastrosIncompletos>>> = ({ signal }) => listarCadastrosIncompletos(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListarCadastrosIncompletosQueryResult = NonNullable<Awaited<ReturnType<typeof listarCadastrosIncompletos>>>
+export type ListarCadastrosIncompletosQueryError = ErrorType<ProblemDetails>
+
+
+export function useListarCadastrosIncompletos<TData = Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError = ErrorType<ProblemDetails>>(
+ params: undefined |  ListarCadastrosIncompletosParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarCadastrosIncompletos>>,
+          TError,
+          Awaited<ReturnType<typeof listarCadastrosIncompletos>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarCadastrosIncompletos<TData = Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarCadastrosIncompletosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarCadastrosIncompletos>>,
+          TError,
+          Awaited<ReturnType<typeof listarCadastrosIncompletos>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarCadastrosIncompletos<TData = Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarCadastrosIncompletosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.
+ */
+
+export function useListarCadastrosIncompletos<TData = Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarCadastrosIncompletosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarCadastrosIncompletos>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListarCadastrosIncompletosQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getObterProdutoUrl = (id: string,) => {
 

@@ -4,6 +4,7 @@
 
 // ignore_for_file: unused_element
 import 'package:built_collection/built_collection.dart';
+import 'package:stowise_api/src/model/status_cadastro.dart';
 import 'package:stowise_api/src/model/classe_armazenagem.dart';
 import 'package:stowise_api/src/model/embalagem_detalhe.dart';
 import 'package:built_value/built_value.dart';
@@ -25,6 +26,7 @@ part 'produto_detalhe.g.dart';
 /// * [cest]
 /// * [categoriaId]
 /// * [ativo]
+/// * [statusCadastro]
 /// * [versao]
 /// * [embalagens]
 @BuiltValue()
@@ -62,6 +64,10 @@ abstract class ProdutoDetalhe implements Built<ProdutoDetalhe, ProdutoDetalheBui
 
   @BuiltValueField(wireName: r'ativo')
   bool get ativo;
+
+  @BuiltValueField(wireName: r'statusCadastro')
+  StatusCadastro get statusCadastro;
+  // enum statusCadastroEnum {  Incompleto,  Completo,  };
 
   @BuiltValueField(wireName: r'versao')
   int get versao;
@@ -152,6 +158,11 @@ class _$ProdutoDetalheSerializer implements PrimitiveSerializer<ProdutoDetalhe> 
     yield serializers.serialize(
       object.ativo,
       specifiedType: const FullType(bool),
+    );
+    yield r'statusCadastro';
+    yield serializers.serialize(
+      object.statusCadastro,
+      specifiedType: const FullType(StatusCadastro),
     );
     yield r'versao';
     yield serializers.serialize(
@@ -265,6 +276,13 @@ class _$ProdutoDetalheSerializer implements PrimitiveSerializer<ProdutoDetalhe> 
             specifiedType: const FullType(bool),
           ) as bool;
           result.ativo = valueDes;
+          break;
+        case r'statusCadastro':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(StatusCadastro),
+          ) as StatusCadastro;
+          result.statusCadastro = valueDes;
           break;
         case r'versao':
           final valueDes = serializers.deserialize(

@@ -21,6 +21,8 @@ class _$ProdutoResumo extends ProdutoResumo {
   final String? categoriaId;
   @override
   final bool ativo;
+  @override
+  final StatusCadastro statusCadastro;
 
   factory _$ProdutoResumo([void Function(ProdutoResumoBuilder)? updates]) =>
       (ProdutoResumoBuilder()..update(updates))._build();
@@ -32,7 +34,8 @@ class _$ProdutoResumo extends ProdutoResumo {
       required this.unidadeBase,
       required this.classeArmazenagem,
       this.categoriaId,
-      required this.ativo})
+      required this.ativo,
+      required this.statusCadastro})
       : super._();
   @override
   ProdutoResumo rebuild(void Function(ProdutoResumoBuilder) updates) => (toBuilder()..update(updates)).build();
@@ -50,7 +53,8 @@ class _$ProdutoResumo extends ProdutoResumo {
         unidadeBase == other.unidadeBase &&
         classeArmazenagem == other.classeArmazenagem &&
         categoriaId == other.categoriaId &&
-        ativo == other.ativo;
+        ativo == other.ativo &&
+        statusCadastro == other.statusCadastro;
   }
 
   @override
@@ -63,6 +67,7 @@ class _$ProdutoResumo extends ProdutoResumo {
     _$hash = $jc(_$hash, classeArmazenagem.hashCode);
     _$hash = $jc(_$hash, categoriaId.hashCode);
     _$hash = $jc(_$hash, ativo.hashCode);
+    _$hash = $jc(_$hash, statusCadastro.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -76,7 +81,8 @@ class _$ProdutoResumo extends ProdutoResumo {
           ..add('unidadeBase', unidadeBase)
           ..add('classeArmazenagem', classeArmazenagem)
           ..add('categoriaId', categoriaId)
-          ..add('ativo', ativo))
+          ..add('ativo', ativo)
+          ..add('statusCadastro', statusCadastro))
         .toString();
   }
 }
@@ -112,6 +118,10 @@ class ProdutoResumoBuilder implements Builder<ProdutoResumo, ProdutoResumoBuilde
   bool? get ativo => _$this._ativo;
   set ativo(bool? ativo) => _$this._ativo = ativo;
 
+  StatusCadastro? _statusCadastro;
+  StatusCadastro? get statusCadastro => _$this._statusCadastro;
+  set statusCadastro(StatusCadastro? statusCadastro) => _$this._statusCadastro = statusCadastro;
+
   ProdutoResumoBuilder() {
     ProdutoResumo._defaults(this);
   }
@@ -126,6 +136,7 @@ class ProdutoResumoBuilder implements Builder<ProdutoResumo, ProdutoResumoBuilde
       _classeArmazenagem = $v.classeArmazenagem;
       _categoriaId = $v.categoriaId;
       _ativo = $v.ativo;
+      _statusCadastro = $v.statusCadastro;
       _$v = null;
     }
     return this;
@@ -155,6 +166,7 @@ class ProdutoResumoBuilder implements Builder<ProdutoResumo, ProdutoResumoBuilde
               BuiltValueNullFieldError.checkNotNull(classeArmazenagem, r'ProdutoResumo', 'classeArmazenagem'),
           categoriaId: categoriaId,
           ativo: BuiltValueNullFieldError.checkNotNull(ativo, r'ProdutoResumo', 'ativo'),
+          statusCadastro: BuiltValueNullFieldError.checkNotNull(statusCadastro, r'ProdutoResumo', 'statusCadastro'),
         );
     replace(_$result);
     return _$result;

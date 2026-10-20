@@ -8,6 +8,7 @@
  * OpenAPI spec version: 1.0
  */
 import type { ClasseArmazenagem } from './classeArmazenagem';
+import type { StatusCadastro } from './statusCadastro';
 
 export interface ProdutoResumo {
   id: string;
@@ -18,4 +19,5 @@ export interface ProdutoResumo {
   /** @nullable */
   categoriaId: string | null;
   ativo: boolean;
+  statusCadastro: StatusCadastro;
 }

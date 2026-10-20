@@ -34,6 +34,9 @@ internal sealed class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         builder.HasIndex(p => p.Sku).IsUnique();
         builder.HasIndex(p => p.CategoriaId);
 
+        // Fila de cadastros incompletos (SPEC, 2.1).
+        builder.HasIndex(p => new { p.StatusCadastro, p.Ativo });
+
         // Concorrência otimista pela coluna de sistema xmin (SPEC, decisão 4). Nome explícito por causa do snake_case.
         builder.Property(p => p.Versao).IsRowVersion().HasColumnName("xmin");
 
@@ -61,5 +64,6 @@ internal sealed class ProdutoEmbalagemConfiguration : IEntityTypeConfiguration<P
         builder.HasIndex(e => e.Gtin).IsUnique();
         builder.HasIndex(e => new { e.ProdutoId, e.Tipo, e.FatorConversao }).IsUnique();
         builder.Ignore(e => e.TemMedidasCompletas);
+        builder.Ignore(e => e.MedidasFaltando);
     }
 }

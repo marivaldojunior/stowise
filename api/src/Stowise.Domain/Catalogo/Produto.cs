@@ -48,6 +48,9 @@ public sealed class Produto : Entity
 
     public bool Ativo { get; private set; }
 
+    /// <summary>Recalculado a cada mudança das embalagens: completo quando todas têm peso e as três medidas.</summary>
+    public StatusCadastro StatusCadastro { get; private set; }
+
     /// <summary>Versão para concorrência otimista (<c>xmin</c> do PostgreSQL).</summary>
     public uint Versao { get; private set; }
 
@@ -64,6 +67,7 @@ public sealed class Produto : Entity
         var produto = new Produto { Sku = NormalizeSku(sku), Ativo = true };
         produto.Update(dados);
         produto._embalagens.Add(new ProdutoEmbalagem(produto.Id, TipoEmbalagem.Unidade, 1m, unidadeBase: true, unidadeBase));
+        produto.RefreshStatusCadastro();
         return produto;
     }
 
@@ -120,6 +124,7 @@ public sealed class Produto : Entity
         var embalagem = new ProdutoEmbalagem(Id, tipo, fatorConversao, unidadeBase: false, dados);
         EnsureGtinNotRepeated(embalagem.Gtin, except: null);
         _embalagens.Add(embalagem);
+        RefreshStatusCadastro();
         return embalagem;
     }
 
@@ -129,6 +134,7 @@ public sealed class Produto : Entity
         var gtin = string.IsNullOrWhiteSpace(dados.Gtin) ? null : dados.Gtin.Trim();
         EnsureGtinNotRepeated(gtin, except: embalagem);
         embalagem.Apply(dados);
+        RefreshStatusCadastro();
     }
 
     public void RemoveEmbalagem(Guid embalagemId)
@@ -140,7 +146,11 @@ public sealed class Produto : Entity
         }
 
         _embalagens.Remove(embalagem);
+        RefreshStatusCadastro();
     }
+
+    private void RefreshStatusCadastro() =>
+        StatusCadastro = _embalagens.TrueForAll(e => e.TemMedidasCompletas) ? StatusCadastro.Completo : StatusCadastro.Incompleto;
 
     public void Deactivate() => Ativo = false;
 

@@ -38,6 +38,7 @@ function produto(id: string, sku: string, descricao: string, extra: Partial<Prod
     cest: null,
     categoriaId: null,
     ativo: true,
+    statusCadastro: 'Incompleto',
     versao: 1,
     embalagens: [embalagemBase()],
     ...extra,

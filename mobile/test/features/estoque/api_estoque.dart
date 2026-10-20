@@ -24,6 +24,7 @@ Map<String, Object?> produtoPorCodigo({
     'cest': null,
     'categoriaId': null,
     'ativo': true,
+    'statusCadastro': 'Completo',
     'versao': 1,
     'embalagens': [
       {

@@ -9,6 +9,7 @@
  */
 import type { ClasseArmazenagem } from './classeArmazenagem';
 import type { EmbalagemDetalhe } from './embalagemDetalhe';
+import type { StatusCadastro } from './statusCadastro';
 
 export interface ProdutoDetalhe {
   id: string;
@@ -25,6 +26,7 @@ export interface ProdutoDetalhe {
   /** @nullable */
   categoriaId: string | null;
   ativo: boolean;
+  statusCadastro: StatusCadastro;
   versao: number;
   embalagens: EmbalagemDetalhe[];
 }

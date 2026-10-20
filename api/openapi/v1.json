@@ -1357,6 +1357,13 @@
             }
           },
           {
+            "name": "statusCadastro",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StatusCadastro"
+            }
+          },
+          {
             "name": "pagina",
             "in": "query",
             "schema": {
@@ -1463,6 +1470,75 @@
               "application/problem+json": {
                 "schema": {
                   "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/produtos/cadastros-incompletos": {
+      "get": {
+        "tags": [
+          "Catálogo"
+        ],
+        "summary": "Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.",
+        "operationId": "ListarCadastrosIncompletos",
+        "parameters": [
+          {
+            "name": "busca",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoriaId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfCadastroIncompleto"
                 }
               }
             }
@@ -7101,6 +7177,45 @@
           }
         }
       },
+      "CadastroIncompleto": {
+        "required": [
+          "id",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "categoriaId",
+          "pendencias"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "categoriaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "pendencias": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PendenciaEmbalagem"
+            }
+          }
+        }
+      },
       "CampoImportacao": {
         "required": [
           "nome",
@@ -9192,6 +9307,39 @@
           }
         }
       },
+      "PagedResultOfCadastroIncompleto": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CadastroIncompleto"
+            }
+          },
+          "pagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResultOfChamadaIaDetalhe": {
         "required": [
           "itens",
@@ -9621,6 +9769,41 @@
           }
         }
       },
+      "PendenciaEmbalagem": {
+        "required": [
+          "embalagemId",
+          "tipo",
+          "fatorConversao",
+          "gtin",
+          "faltando"
+        ],
+        "type": "object",
+        "properties": {
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoEmbalagem"
+          },
+          "fatorConversao": {
+            "type": "number",
+            "format": "double"
+          },
+          "gtin": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "faltando": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -9670,6 +9853,7 @@
           "cest",
           "categoriaId",
           "ativo",
+          "statusCadastro",
           "versao",
           "embalagens"
         ],
@@ -9718,6 +9902,9 @@
           },
           "ativo": {
             "type": "boolean"
+          },
+          "statusCadastro": {
+            "$ref": "#/components/schemas/StatusCadastro"
           },
           "versao": {
             "type": "integer",
@@ -9826,7 +10013,8 @@
           "unidadeBase",
           "classeArmazenagem",
           "categoriaId",
-          "ativo"
+          "ativo",
+          "statusCadastro"
         ],
         "type": "object",
         "properties": {
@@ -9855,6 +10043,9 @@
           },
           "ativo": {
             "type": "boolean"
+          },
+          "statusCadastro": {
+            "$ref": "#/components/schemas/StatusCadastro"
           }
         }
       },
@@ -10755,6 +10946,12 @@
             ]
           }
         }
+      },
+      "StatusCadastro": {
+        "enum": [
+          "Incompleto",
+          "Completo"
+        ]
       },
       "StatusEndereco": {
         "enum": [

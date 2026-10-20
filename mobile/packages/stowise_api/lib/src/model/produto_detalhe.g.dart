@@ -30,6 +30,8 @@ class _$ProdutoDetalhe extends ProdutoDetalhe {
   @override
   final bool ativo;
   @override
+  final StatusCadastro statusCadastro;
+  @override
   final int versao;
   @override
   final BuiltList<EmbalagemDetalhe> embalagens;
@@ -49,6 +51,7 @@ class _$ProdutoDetalhe extends ProdutoDetalhe {
       this.cest,
       this.categoriaId,
       required this.ativo,
+      required this.statusCadastro,
       required this.versao,
       required this.embalagens})
       : super._();
@@ -73,6 +76,7 @@ class _$ProdutoDetalhe extends ProdutoDetalhe {
         cest == other.cest &&
         categoriaId == other.categoriaId &&
         ativo == other.ativo &&
+        statusCadastro == other.statusCadastro &&
         versao == other.versao &&
         embalagens == other.embalagens;
   }
@@ -91,6 +95,7 @@ class _$ProdutoDetalhe extends ProdutoDetalhe {
     _$hash = $jc(_$hash, cest.hashCode);
     _$hash = $jc(_$hash, categoriaId.hashCode);
     _$hash = $jc(_$hash, ativo.hashCode);
+    _$hash = $jc(_$hash, statusCadastro.hashCode);
     _$hash = $jc(_$hash, versao.hashCode);
     _$hash = $jc(_$hash, embalagens.hashCode);
     _$hash = $jf(_$hash);
@@ -111,6 +116,7 @@ class _$ProdutoDetalhe extends ProdutoDetalhe {
           ..add('cest', cest)
           ..add('categoriaId', categoriaId)
           ..add('ativo', ativo)
+          ..add('statusCadastro', statusCadastro)
           ..add('versao', versao)
           ..add('embalagens', embalagens))
         .toString();
@@ -164,6 +170,10 @@ class ProdutoDetalheBuilder implements Builder<ProdutoDetalhe, ProdutoDetalheBui
   bool? get ativo => _$this._ativo;
   set ativo(bool? ativo) => _$this._ativo = ativo;
 
+  StatusCadastro? _statusCadastro;
+  StatusCadastro? get statusCadastro => _$this._statusCadastro;
+  set statusCadastro(StatusCadastro? statusCadastro) => _$this._statusCadastro = statusCadastro;
+
   int? _versao;
   int? get versao => _$this._versao;
   set versao(int? versao) => _$this._versao = versao;
@@ -190,6 +200,7 @@ class ProdutoDetalheBuilder implements Builder<ProdutoDetalhe, ProdutoDetalheBui
       _cest = $v.cest;
       _categoriaId = $v.categoriaId;
       _ativo = $v.ativo;
+      _statusCadastro = $v.statusCadastro;
       _versao = $v.versao;
       _embalagens = $v.embalagens.toBuilder();
       _$v = null;
@@ -228,6 +239,7 @@ class ProdutoDetalheBuilder implements Builder<ProdutoDetalhe, ProdutoDetalheBui
             cest: cest,
             categoriaId: categoriaId,
             ativo: BuiltValueNullFieldError.checkNotNull(ativo, r'ProdutoDetalhe', 'ativo'),
+            statusCadastro: BuiltValueNullFieldError.checkNotNull(statusCadastro, r'ProdutoDetalhe', 'statusCadastro'),
             versao: BuiltValueNullFieldError.checkNotNull(versao, r'ProdutoDetalhe', 'versao'),
             embalagens: embalagens.build(),
           );

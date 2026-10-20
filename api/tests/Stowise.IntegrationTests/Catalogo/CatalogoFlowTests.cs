@@ -153,6 +153,43 @@ public sealed class CatalogoFlowTests : IDisposable
     }
 
     [DockerFact]
+    public async Task Incomplete_products_stay_in_the_queue_until_every_package_has_measures()
+    {
+        var token = await LoginAsync();
+        var completo = await CreateProdutoAsync(token, "COLA-2L", null, GtinUnidade);
+        Assert.Equal(StatusCadastro.Completo, completo.StatusCadastro);
+
+        // Como um produto criado a partir da NF-e: só o GTIN.
+        var response = await SendAsync(token, HttpMethod.Post, "/api/v1/produtos", new
+        {
+            sku = "AGUA-500",
+            descricao = "Água mineral 500ml",
+            unidadeBase = "UN",
+            classeArmazenagem = "Normal",
+            embalagemBase = new { gtin = "7891000100103", pesoKg = 0.52 },
+        });
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var incompleto = (await response.Content.ReadFromJsonAsync<ProdutoDetalhe>(Json))!;
+        Assert.Equal(StatusCadastro.Incompleto, incompleto.StatusCadastro);
+
+        var fila = await GetAsync<PagedResult<CadastroIncompleto>>(token, "/api/v1/produtos/cadastros-incompletos");
+        var item = Assert.Single(fila.Itens);
+        Assert.Equal(incompleto.Id, item.Id);
+        var pendencia = Assert.Single(item.Pendencias);
+        Assert.Equal(["alturaCm", "larguraCm", "comprimentoCm"], pendencia.Faltando);
+
+        var filtrados = await GetAsync<PagedResult<ProdutoResumo>>(token, "/api/v1/produtos?statusCadastro=Incompleto");
+        Assert.Equal(incompleto.Id, Assert.Single(filtrados.Itens).Id);
+
+        var completar = await SendAsync(token, HttpMethod.Put, $"/api/v1/produtos/{incompleto.Id}/embalagens/{pendencia.EmbalagemId}",
+            new { gtin = "7891000100103", pesoKg = 0.52, alturaCm = 21, larguraCm = 6.5, comprimentoCm = 6.5 });
+        Assert.Equal(HttpStatusCode.OK, completar.StatusCode);
+        Assert.Equal(StatusCadastro.Completo, (await completar.Content.ReadFromJsonAsync<ProdutoDetalhe>(Json))!.StatusCadastro);
+
+        Assert.Empty((await GetAsync<PagedResult<CadastroIncompleto>>(token, "/api/v1/produtos/cadastros-incompletos")).Itens);
+    }
+
+    [DockerFact]
     public async Task Deactivated_product_still_resolves_but_is_filtered_by_ativo()
     {
         var token = await LoginAsync();

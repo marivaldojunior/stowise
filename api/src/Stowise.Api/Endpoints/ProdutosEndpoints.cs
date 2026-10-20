@@ -2,6 +2,7 @@ using Stowise.Api.Common;
 using Stowise.Application.Auth;
 using Stowise.Application.Catalogo;
 using Stowise.Application.Common;
+using Stowise.Domain.Catalogo;
 
 namespace Stowise.Api.Endpoints;
 
@@ -18,6 +19,11 @@ public static class ProdutosEndpoints
         group.MapGet("/", ListAsync)
             .WithName("ListarProdutos")
             .Produces<PagedResult<ProdutoResumo>>();
+
+        group.MapGet("/cadastros-incompletos", ListIncompletosAsync)
+            .WithName("ListarCadastrosIncompletos")
+            .WithSummary("Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.")
+            .Produces<PagedResult<CadastroIncompleto>>();
 
         group.MapGet("/{id:guid}", GetAsync)
             .WithName(ObterProdutoRoute)
@@ -88,10 +94,20 @@ public static class ProdutosEndpoints
         string? busca,
         Guid? categoriaId,
         bool? ativo,
+        StatusCadastro? statusCadastro,
         int? pagina,
         int? tamanhoPagina,
         CancellationToken ct) =>
-        TypedResults.Ok(await produtos.ListAsync(new ProdutoFiltro(busca, categoriaId, ativo, pagina, tamanhoPagina), ct));
+        TypedResults.Ok(await produtos.ListAsync(new ProdutoFiltro(busca, categoriaId, ativo, pagina, tamanhoPagina, statusCadastro), ct));
+
+    private static async Task<IResult> ListIncompletosAsync(
+        IProdutoService produtos,
+        string? busca,
+        Guid? categoriaId,
+        int? pagina,
+        int? tamanhoPagina,
+        CancellationToken ct) =>
+        TypedResults.Ok(await produtos.ListIncompletosAsync(new CadastroIncompletoFiltro(busca, categoriaId, pagina, tamanhoPagina), ct));
 
     private static async Task<IResult> GetAsync(Guid id, IProdutoService produtos, CancellationToken ct) =>
         (await produtos.GetAsync(id, ct)).ToHttpResult(TypedResults.Ok);

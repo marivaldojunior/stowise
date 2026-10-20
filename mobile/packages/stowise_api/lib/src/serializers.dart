@@ -25,6 +25,7 @@ import 'package:stowise_api/src/model/atualizar_produto_fornecedor.dart';
 import 'package:stowise_api/src/model/atualizar_usuario_request.dart';
 import 'package:stowise_api/src/model/auth_response.dart';
 import 'package:stowise_api/src/model/bloquear_endereco.dart';
+import 'package:stowise_api/src/model/cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/campo_importacao.dart';
 import 'package:stowise_api/src/model/categoria_detalhe.dart';
 import 'package:stowise_api/src/model/chamada_ia_detalhe.dart';
@@ -70,6 +71,7 @@ import 'package:stowise_api/src/model/login_request.dart';
 import 'package:stowise_api/src/model/lote_informado.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
+import 'package:stowise_api/src/model/paged_result_of_cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/paged_result_of_chamada_ia_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_endereco_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_extrato_item.dart';
@@ -83,6 +85,7 @@ import 'package:stowise_api/src/model/paged_result_of_saldo_item.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_na_data.dart';
 import 'package:stowise_api/src/model/paged_result_of_template_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_usuario_detalhe.dart';
+import 'package:stowise_api/src/model/pendencia_embalagem.dart';
 import 'package:stowise_api/src/model/problem_details.dart';
 import 'package:stowise_api/src/model/produto_detalhe.dart';
 import 'package:stowise_api/src/model/produto_fornecedor_detalhe.dart';
@@ -107,6 +110,7 @@ import 'package:stowise_api/src/model/saldo_na_data.dart';
 import 'package:stowise_api/src/model/salvar_categoria.dart';
 import 'package:stowise_api/src/model/salvar_cota_ia.dart';
 import 'package:stowise_api/src/model/salvar_zona.dart';
+import 'package:stowise_api/src/model/status_cadastro.dart';
 import 'package:stowise_api/src/model/status_endereco.dart';
 import 'package:stowise_api/src/model/status_importacao.dart';
 import 'package:stowise_api/src/model/status_linha.dart';
@@ -137,6 +141,7 @@ part 'serializers.g.dart';
   AtualizarUsuarioRequest,
   AuthResponse,
   BloquearEndereco,
+  CadastroIncompleto,
   CampoImportacao,
   CategoriaDetalhe,
   ChamadaIaDetalhe,
@@ -182,6 +187,7 @@ part 'serializers.g.dart';
   LoteInformado,
   MapeamentoColuna,
   MovimentacaoDetalhe,
+  PagedResultOfCadastroIncompleto,
   PagedResultOfChamadaIaDetalhe,
   PagedResultOfEnderecoDetalhe,
   PagedResultOfExtratoItem,
@@ -195,6 +201,7 @@ part 'serializers.g.dart';
   PagedResultOfSaldoNaData,
   PagedResultOfTemplateDetalhe,
   PagedResultOfUsuarioDetalhe,
+  PendenciaEmbalagem,
   ProblemDetails,
   ProdutoDetalhe,
   ProdutoFornecedorDetalhe,
@@ -219,6 +226,7 @@ part 'serializers.g.dart';
   SalvarCategoria,
   SalvarCotaIa,
   SalvarZona,
+  StatusCadastro,
   StatusEndereco,
   StatusImportacao,
   StatusLinha,

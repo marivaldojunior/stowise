@@ -234,6 +234,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(40)")
                         .HasColumnName("sku");
 
+                    b.Property<string>("StatusCadastro")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status_cadastro");
+
                     b.Property<string>("UnidadeBase")
                         .IsRequired()
                         .HasMaxLength(6)
@@ -255,6 +261,9 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.HasIndex("Sku")
                         .IsUnique()
                         .HasDatabaseName("ix_produtos_sku");
+
+                    b.HasIndex("StatusCadastro", "Ativo")
+                        .HasDatabaseName("ix_produtos_status_cadastro_ativo");
 
                     b.ToTable("produtos", (string)null);
                 });

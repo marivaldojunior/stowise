@@ -14,6 +14,7 @@ doc/AtualizarUsuarioRequest.md
 doc/AutenticaoApi.md
 doc/AuthResponse.md
 doc/BloquearEndereco.md
+doc/CadastroIncompleto.md
 doc/CampoImportacao.md
 doc/CategoriaDetalhe.md
 doc/CatlogoApi.md
@@ -65,6 +66,7 @@ doc/LoginRequest.md
 doc/LoteInformado.md
 doc/MapeamentoColuna.md
 doc/MovimentacaoDetalhe.md
+doc/PagedResultOfCadastroIncompleto.md
 doc/PagedResultOfChamadaIaDetalhe.md
 doc/PagedResultOfEnderecoDetalhe.md
 doc/PagedResultOfExtratoItem.md
@@ -78,6 +80,7 @@ doc/PagedResultOfSaldoItem.md
 doc/PagedResultOfSaldoNaData.md
 doc/PagedResultOfTemplateDetalhe.md
 doc/PagedResultOfUsuarioDetalhe.md
+doc/PendenciaEmbalagem.md
 doc/ProblemDetails.md
 doc/ProdutoDetalhe.md
 doc/ProdutoFornecedorDetalhe.md
@@ -103,6 +106,7 @@ doc/SaldoNaData.md
 doc/SalvarCategoria.md
 doc/SalvarCotaIa.md
 doc/SalvarZona.md
+doc/StatusCadastro.md
 doc/StatusEndereco.md
 doc/StatusImportacao.md
 doc/StatusLinha.md
@@ -147,6 +151,7 @@ lib/src/model/atualizar_produto_fornecedor.dart
 lib/src/model/atualizar_usuario_request.dart
 lib/src/model/auth_response.dart
 lib/src/model/bloquear_endereco.dart
+lib/src/model/cadastro_incompleto.dart
 lib/src/model/campo_importacao.dart
 lib/src/model/categoria_detalhe.dart
 lib/src/model/chamada_ia_detalhe.dart
@@ -193,6 +198,7 @@ lib/src/model/login_request.dart
 lib/src/model/lote_informado.dart
 lib/src/model/mapeamento_coluna.dart
 lib/src/model/movimentacao_detalhe.dart
+lib/src/model/paged_result_of_cadastro_incompleto.dart
 lib/src/model/paged_result_of_chamada_ia_detalhe.dart
 lib/src/model/paged_result_of_endereco_detalhe.dart
 lib/src/model/paged_result_of_extrato_item.dart
@@ -206,6 +212,7 @@ lib/src/model/paged_result_of_saldo_item.dart
 lib/src/model/paged_result_of_saldo_na_data.dart
 lib/src/model/paged_result_of_template_detalhe.dart
 lib/src/model/paged_result_of_usuario_detalhe.dart
+lib/src/model/pendencia_embalagem.dart
 lib/src/model/problem_details.dart
 lib/src/model/produto_detalhe.dart
 lib/src/model/produto_fornecedor_detalhe.dart
@@ -230,6 +237,7 @@ lib/src/model/saldo_na_data.dart
 lib/src/model/salvar_categoria.dart
 lib/src/model/salvar_cota_ia.dart
 lib/src/model/salvar_zona.dart
+lib/src/model/status_cadastro.dart
 lib/src/model/status_endereco.dart
 lib/src/model/status_importacao.dart
 lib/src/model/status_linha.dart
@@ -260,6 +268,7 @@ test/atualizar_usuario_request_test.dart
 test/autenticao_api_test.dart
 test/auth_response_test.dart
 test/bloquear_endereco_test.dart
+test/cadastro_incompleto_test.dart
 test/campo_importacao_test.dart
 test/categoria_detalhe_test.dart
 test/catlogo_api_test.dart
@@ -311,6 +320,7 @@ test/login_request_test.dart
 test/lote_informado_test.dart
 test/mapeamento_coluna_test.dart
 test/movimentacao_detalhe_test.dart
+test/paged_result_of_cadastro_incompleto_test.dart
 test/paged_result_of_chamada_ia_detalhe_test.dart
 test/paged_result_of_endereco_detalhe_test.dart
 test/paged_result_of_extrato_item_test.dart
@@ -324,6 +334,7 @@ test/paged_result_of_saldo_item_test.dart
 test/paged_result_of_saldo_na_data_test.dart
 test/paged_result_of_template_detalhe_test.dart
 test/paged_result_of_usuario_detalhe_test.dart
+test/pendencia_embalagem_test.dart
 test/problem_details_test.dart
 test/produto_detalhe_test.dart
 test/produto_fornecedor_detalhe_test.dart
@@ -349,6 +360,7 @@ test/saldo_na_data_test.dart
 test/salvar_categoria_test.dart
 test/salvar_cota_ia_test.dart
 test/salvar_zona_test.dart
+test/status_cadastro_test.dart
 test/status_endereco_test.dart
 test/status_importacao_test.dart
 test/status_linha_test.dart

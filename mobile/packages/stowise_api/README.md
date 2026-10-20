@@ -79,6 +79,7 @@ Class | Method | HTTP request | Description
 [*CatlogoApi*](doc/CatlogoApi.md) | [**criarProduto**](doc/CatlogoApi.md#criarproduto) | **POST** /api/v1/produtos | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**desativarProduto**](doc/CatlogoApi.md#desativarproduto) | **POST** /api/v1/produtos/{id}/desativar | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**excluirCategoria**](doc/CatlogoApi.md#excluircategoria) | **DELETE** /api/v1/categorias/{id} | 
+[*CatlogoApi*](doc/CatlogoApi.md) | [**listarCadastrosIncompletos**](doc/CatlogoApi.md#listarcadastrosincompletos) | **GET** /api/v1/produtos/cadastros-incompletos | Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.
 [*CatlogoApi*](doc/CatlogoApi.md) | [**listarCategorias**](doc/CatlogoApi.md#listarcategorias) | **GET** /api/v1/categorias | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**listarProdutos**](doc/CatlogoApi.md#listarprodutos) | **GET** /api/v1/produtos | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**obterCategoria**](doc/CatlogoApi.md#obtercategoria) | **GET** /api/v1/categorias/{id} | 
@@ -171,6 +172,7 @@ Class | Method | HTTP request | Description
  - [AtualizarUsuarioRequest](doc/AtualizarUsuarioRequest.md)
  - [AuthResponse](doc/AuthResponse.md)
  - [BloquearEndereco](doc/BloquearEndereco.md)
+ - [CadastroIncompleto](doc/CadastroIncompleto.md)
  - [CampoImportacao](doc/CampoImportacao.md)
  - [CategoriaDetalhe](doc/CategoriaDetalhe.md)
  - [ChamadaIaDetalhe](doc/ChamadaIaDetalhe.md)
@@ -216,6 +218,7 @@ Class | Method | HTTP request | Description
  - [LoteInformado](doc/LoteInformado.md)
  - [MapeamentoColuna](doc/MapeamentoColuna.md)
  - [MovimentacaoDetalhe](doc/MovimentacaoDetalhe.md)
+ - [PagedResultOfCadastroIncompleto](doc/PagedResultOfCadastroIncompleto.md)
  - [PagedResultOfChamadaIaDetalhe](doc/PagedResultOfChamadaIaDetalhe.md)
  - [PagedResultOfEnderecoDetalhe](doc/PagedResultOfEnderecoDetalhe.md)
  - [PagedResultOfExtratoItem](doc/PagedResultOfExtratoItem.md)
@@ -229,6 +232,7 @@ Class | Method | HTTP request | Description
  - [PagedResultOfSaldoNaData](doc/PagedResultOfSaldoNaData.md)
  - [PagedResultOfTemplateDetalhe](doc/PagedResultOfTemplateDetalhe.md)
  - [PagedResultOfUsuarioDetalhe](doc/PagedResultOfUsuarioDetalhe.md)
+ - [PendenciaEmbalagem](doc/PendenciaEmbalagem.md)
  - [ProblemDetails](doc/ProblemDetails.md)
  - [ProdutoDetalhe](doc/ProdutoDetalhe.md)
  - [ProdutoFornecedorDetalhe](doc/ProdutoFornecedorDetalhe.md)
@@ -253,6 +257,7 @@ Class | Method | HTTP request | Description
  - [SalvarCategoria](doc/SalvarCategoria.md)
  - [SalvarCotaIa](doc/SalvarCotaIa.md)
  - [SalvarZona](doc/SalvarZona.md)
+ - [StatusCadastro](doc/StatusCadastro.md)
  - [StatusEndereco](doc/StatusEndereco.md)
  - [StatusImportacao](doc/StatusImportacao.md)
  - [StatusLinha](doc/StatusLinha.md)

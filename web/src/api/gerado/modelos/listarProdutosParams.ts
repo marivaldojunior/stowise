@@ -7,11 +7,13 @@
  * Erros seguem o padrão ProblemDetails (RFC 9457) e sempre trazem `traceId`.
  * OpenAPI spec version: 1.0
  */
+import type { StatusCadastro } from './statusCadastro';
 
 export type ListarProdutosParams = {
 busca?: string;
 categoriaId?: string;
 ativo?: boolean;
+statusCadastro?: StatusCadastro;
 pagina?: number;
 tamanhoPagina?: number;
 };

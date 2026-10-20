@@ -74,7 +74,7 @@ Peso, dimensões e GTIN ficam na embalagem, não no produto: uma caixa e um pale
 
 | Entidade | Campos principais | Observações |
 | --- | --- | --- |
-| Produto | `Id`, `Sku` (único), `Descricao`, `Ncm`, `Cest`, `CategoriaId`, `UnidadeBase`, `ControlaLote`, `ControlaValidade`, `ClasseArmazenagem`, `ClasseAbc`, `StatusCadastro`, `Ativo`, `RowVersion` | `ClasseArmazenagem`: Normal, Refrigerado, Inflamável, Frágil. `ClasseAbc` recalculada por job. `StatusCadastro`: Incompleto ou Ativo |
+| Produto | `Id`, `Sku` (único), `Descricao`, `Ncm`, `Cest`, `CategoriaId`, `UnidadeBase`, `ControlaLote`, `ControlaValidade`, `ClasseArmazenagem`, `ClasseAbc`, `StatusCadastro`, `Ativo`, `RowVersion` | `ClasseArmazenagem`: Normal, Refrigerado, Inflamável, Frágil. `ClasseAbc` recalculada por job. `StatusCadastro`: Incompleto ou Completo (o "Ativo" já é outro campo), recalculado a cada mudança das embalagens: completo quando todas têm peso e as três medidas |
 | ProdutoEmbalagem | `Id`, `ProdutoId`, `Tipo`, `Gtin` (único), `FatorConversao`, `PesoKg`, `AlturaCm`, `LarguraCm`, `ComprimentoCm` | `Tipo`: UN, CX, PALETE. Fator em relação à unidade base |
 | Categoria | `Id`, `Nome`, `ParentId` | Hierarquia |
 | ProdutoEmbedding | `ProdutoId`, `Vetor`, `Modelo`, `GeradoEm` | Tabela separada para regenerar ao trocar de modelo |
@@ -333,7 +333,7 @@ Regras de ordem:
 **2.1 API — Fornecedores e cadastros incompletos**
 
 - [x] CRUD de Fornecedor e do de-para ProdutoFornecedor
-- [ ] `StatusCadastro` e endpoint da fila de cadastros incompletos
+- [x] `StatusCadastro` e endpoint da fila de cadastros incompletos
 
 **2.2 API — NF-e**
 

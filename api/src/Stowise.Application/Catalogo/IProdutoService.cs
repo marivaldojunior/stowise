@@ -13,6 +13,9 @@ public interface IProdutoService
     /// <summary>Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.</summary>
     Task<Result<ProdutoPorCodigo>> FindByCodigoAsync(string? codigo, CancellationToken cancellationToken = default);
 
+    /// <summary>Produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.</summary>
+    Task<PagedResult<CadastroIncompleto>> ListIncompletosAsync(CadastroIncompletoFiltro filtro, CancellationToken cancellationToken = default);
+
     Task<Result<ProdutoDetalhe>> CreateAsync(CriarProduto comando, CancellationToken cancellationToken = default);
 
     /// <summary>Exige a <see cref="ProdutoDetalhe.Versao"/> lida; se o produto mudou desde então, devolve conflito.</summary>
@@ -33,7 +36,28 @@ public interface IProdutoService
     Task<Result<ProdutoDetalhe>> RemoveEmbalagemAsync(Guid produtoId, Guid embalagemId, CancellationToken cancellationToken = default);
 }
 
-public sealed record ProdutoFiltro(string? Busca, Guid? CategoriaId, bool? Ativo, int? Pagina, int? TamanhoPagina);
+public sealed record ProdutoFiltro(
+    string? Busca,
+    Guid? CategoriaId,
+    bool? Ativo,
+    int? Pagina,
+    int? TamanhoPagina,
+    StatusCadastro? StatusCadastro = null);
+
+/// <param name="Busca">Parte do SKU ou da descrição.</param>
+public sealed record CadastroIncompletoFiltro(string? Busca, Guid? CategoriaId, int? Pagina, int? TamanhoPagina);
+
+/// <param name="Pendencias">Embalagens com medida faltando.</param>
+public sealed record CadastroIncompleto(
+    Guid Id,
+    string Sku,
+    string Descricao,
+    string UnidadeBase,
+    Guid? CategoriaId,
+    IReadOnlyList<PendenciaEmbalagem> Pendencias);
+
+/// <param name="Faltando">Campos sem valor: pesoKg, alturaCm, larguraCm, comprimentoCm.</param>
+public sealed record PendenciaEmbalagem(Guid EmbalagemId, TipoEmbalagem Tipo, decimal FatorConversao, string? Gtin, IReadOnlyList<string> Faltando);
 
 public sealed record ProdutoResumo(
     Guid Id,
@@ -42,7 +66,8 @@ public sealed record ProdutoResumo(
     string UnidadeBase,
     ClasseArmazenagem ClasseArmazenagem,
     Guid? CategoriaId,
-    bool Ativo);
+    bool Ativo,
+    StatusCadastro StatusCadastro);
 
 public sealed record ProdutoDetalhe(
     Guid Id,
@@ -56,6 +81,7 @@ public sealed record ProdutoDetalhe(
     string? Cest,
     Guid? CategoriaId,
     bool Ativo,
+    StatusCadastro StatusCadastro,
     uint Versao,
     IReadOnlyList<EmbalagemDetalhe> Embalagens);
 

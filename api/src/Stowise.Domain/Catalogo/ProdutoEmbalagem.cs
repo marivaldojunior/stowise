@@ -48,7 +48,16 @@ public sealed class ProdutoEmbalagem : Entity
 
     public decimal? ComprimentoCm { get; private set; }
 
-    public bool TemMedidasCompletas => PesoKg is not null && AlturaCm is not null && LarguraCm is not null && ComprimentoCm is not null;
+    public bool TemMedidasCompletas => MedidasFaltando.Count == 0;
+
+    /// <summary>Medidas sem valor, pelo nome do campo na API (pesoKg, alturaCm, larguraCm, comprimentoCm).</summary>
+    public IReadOnlyList<string> MedidasFaltando =>
+    [
+        .. PesoKg is null ? ["pesoKg"] : Array.Empty<string>(),
+        .. AlturaCm is null ? ["alturaCm"] : Array.Empty<string>(),
+        .. LarguraCm is null ? ["larguraCm"] : Array.Empty<string>(),
+        .. ComprimentoCm is null ? ["comprimentoCm"] : Array.Empty<string>(),
+    ];
 
     internal void Apply(DadosEmbalagem dados)
     {

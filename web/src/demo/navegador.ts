@@ -17,6 +17,7 @@ import {
   movimentacoes,
   produtos,
   saldos,
+  statusDoCadastro,
   usuarios,
 } from './dados'
 
@@ -86,6 +87,7 @@ function buscarImportacao(valor: unknown) {
 }
 
 function salvo(produto: ProdutoDetalhe) {
+  produto.statusCadastro = statusDoCadastro(produto.embalagens)
   produto.versao += 1
   return HttpResponse.json(produto)
 }
@@ -129,13 +131,36 @@ const handlers = [
     const busca = url.searchParams.get('busca')
     const categoriaId = url.searchParams.get('categoriaId')
     const ativo = url.searchParams.get('ativo')
+    const statusCadastro = url.searchParams.get('statusCadastro')
     return pagina(
       produtos.filter(
         (p) =>
           (contem(p.sku, busca) || contem(p.descricao, busca)) &&
           (!categoriaId || p.categoriaId === categoriaId) &&
-          (ativo === null || String(p.ativo) === ativo),
+          (ativo === null || String(p.ativo) === ativo) &&
+          (!statusCadastro || p.statusCadastro === statusCadastro),
       ),
+      url,
+    )
+  }),
+  http.get('/api/v1/produtos/cadastros-incompletos', ({ request }) => {
+    const url = new URL(request.url)
+    const busca = url.searchParams.get('busca')
+    const faltando = (e: ProdutoDetalhe['embalagens'][number]) =>
+      (['pesoKg', 'alturaCm', 'larguraCm', 'comprimentoCm'] as const).filter((campo) => e[campo] == null)
+    return pagina(
+      produtos
+        .filter((p) => p.ativo && p.statusCadastro === 'Incompleto' && (contem(p.sku, busca) || contem(p.descricao, busca)))
+        .map((p) => ({
+          id: p.id,
+          sku: p.sku,
+          descricao: p.descricao,
+          unidadeBase: p.unidadeBase,
+          categoriaId: p.categoriaId,
+          pendencias: p.embalagens
+            .filter((e) => faltando(e).length > 0)
+            .map((e) => ({ embalagemId: e.id, tipo: e.tipo, fatorConversao: e.fatorConversao, gtin: e.gtin, faltando: faltando(e) })),
+        })),
       url,
     )
   }),
@@ -161,6 +186,7 @@ const handlers = [
       cest: corpo.cest,
       categoriaId: corpo.categoriaId,
       ativo: true,
+      statusCadastro: 'Incompleto',
       versao: 1,
       embalagens: [
         {
@@ -176,6 +202,7 @@ const handlers = [
         },
       ],
     }
+    novo.statusCadastro = statusDoCadastro(novo.embalagens)
     produtos.unshift(novo)
     return HttpResponse.json(novo, { status: 201 })
   }),

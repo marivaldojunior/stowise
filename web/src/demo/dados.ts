@@ -5,8 +5,10 @@ import type {
   ExtratoItem,
   ImportacaoDetalhe,
   ImportacaoLinhaDetalhe,
+  EmbalagemDetalhe,
   ProdutoDetalhe,
   SaldoItem,
+  StatusCadastro,
   StatusEndereco,
   UsuarioDetalhe,
 } from '@/api/gerado/modelos'
@@ -15,6 +17,13 @@ import type {
  * Dados de exemplo do modo demonstração. São gerados de forma determinística (sem Math.random), para as telas e os
  * GIFs ficarem iguais a cada vez.
  */
+
+/** Mesma regra da API: completo quando todas as embalagens têm peso e as três medidas. */
+export function statusDoCadastro(embalagens: EmbalagemDetalhe[]): StatusCadastro {
+  return embalagens.every((e) => e.pesoKg != null && e.alturaCm != null && e.larguraCm != null && e.comprimentoCm != null)
+    ? 'Completo'
+    : 'Incompleto'
+}
 
 function id(prefixo: string, n: number) {
   return `${prefixo}-${String(n).padStart(4, '0')}`
@@ -64,7 +73,11 @@ const CATALOGO: [string, string, string, string, ProdutoDetalhe['classeArmazenag
   ['LEI-INT-1L', 'Leite integral 1L', 'UN', 'cat-alim', 'Normal', 1.04],
 ]
 
-export const produtos: ProdutoDetalhe[] = CATALOGO.map(([sku, descricao, unidade, categoriaId, classe, peso], i) => ({
+function comStatus(produto: Omit<ProdutoDetalhe, 'statusCadastro'>): ProdutoDetalhe {
+  return { ...produto, statusCadastro: statusDoCadastro(produto.embalagens) }
+}
+
+export const produtos: ProdutoDetalhe[] = CATALOGO.map(([sku, descricao, unidade, categoriaId, classe, peso], i) => comStatus({
   id: id('prod', i + 1),
   sku,
   descricao,

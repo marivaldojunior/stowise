@@ -36,13 +36,18 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
             query = query.Where(p => p.Ativo == ativo);
         }
 
+        if (filtro.StatusCadastro is { } status)
+        {
+            query = query.Where(p => p.StatusCadastro == status);
+        }
+
         var total = await query.CountAsync(cancellationToken);
         var itens = await query
             .OrderBy(p => p.Descricao)
             .ThenBy(p => p.Id)
             .Skip((pagina - 1) * tamanhoPagina)
             .Take(tamanhoPagina)
-            .Select(p => new ProdutoResumo(p.Id, p.Sku, p.Descricao, p.UnidadeBase, p.ClasseArmazenagem, p.CategoriaId, p.Ativo))
+            .Select(p => new ProdutoResumo(p.Id, p.Sku, p.Descricao, p.UnidadeBase, p.ClasseArmazenagem, p.CategoriaId, p.Ativo, p.StatusCadastro))
             .ToListAsync(cancellationToken);
 
         return new PagedResult<ProdutoResumo>(itens, pagina, tamanhoPagina, total);
@@ -85,6 +90,55 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
         }
 
         return new ProdutoPorCodigo(ToDetalhe(porSku), porSku.EmbalagemBase.Id);
+    }
+
+    public async Task<PagedResult<CadastroIncompleto>> ListIncompletosAsync(
+        CadastroIncompletoFiltro filtro,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(filtro);
+        var (pagina, tamanhoPagina) = Paging.Normalize(filtro.Pagina, filtro.TamanhoPagina);
+
+        var query = db.Produtos.AsNoTracking().Where(p => p.Ativo && p.StatusCadastro == StatusCadastro.Incompleto);
+        if (!string.IsNullOrWhiteSpace(filtro.Busca))
+        {
+            var pattern = $"%{LikePattern.Escape(filtro.Busca.Trim())}%";
+            query = query.Where(p =>
+                EF.Functions.ILike(p.Sku, pattern, LikePattern.EscapeCharacter)
+                || EF.Functions.ILike(p.Descricao, pattern, LikePattern.EscapeCharacter));
+        }
+
+        if (filtro.CategoriaId is { } categoriaId)
+        {
+            query = query.Where(p => p.CategoriaId == categoriaId);
+        }
+
+        var total = await query.CountAsync(cancellationToken);
+
+        // Ids em Guid v7 seguem a ordem de criação: a fila começa pelos cadastros mais antigos.
+        var produtos = await query
+            .Include(p => p.Embalagens)
+            .OrderBy(p => p.Id)
+            .Skip((pagina - 1) * tamanhoPagina)
+            .Take(tamanhoPagina)
+            .ToListAsync(cancellationToken);
+
+        var itens = produtos
+            .Select(p => new CadastroIncompleto(
+                p.Id,
+                p.Sku,
+                p.Descricao,
+                p.UnidadeBase,
+                p.CategoriaId,
+                [.. p.Embalagens
+                    .Where(e => !e.TemMedidasCompletas)
+                    .OrderByDescending(e => e.UnidadeBase)
+                    .ThenBy(e => e.Tipo)
+                    .ThenBy(e => e.FatorConversao)
+                    .Select(e => new PendenciaEmbalagem(e.Id, e.Tipo, e.FatorConversao, e.Gtin, e.MedidasFaltando))]))
+            .ToList();
+
+        return new PagedResult<CadastroIncompleto>(itens, pagina, tamanhoPagina, total);
     }
 
     public async Task<Result<ProdutoDetalhe>> CreateAsync(CriarProduto comando, CancellationToken cancellationToken = default)
@@ -323,6 +377,7 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
             p.Cest,
             p.CategoriaId,
             p.Ativo,
+            p.StatusCadastro,
             p.Versao,
             [.. p.Embalagens
                 .OrderByDescending(e => e.UnidadeBase)
