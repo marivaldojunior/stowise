@@ -16,6 +16,7 @@ import 'package:stowise_api/src/api/estrutura_fsica_api.dart';
 import 'package:stowise_api/src/api/fornecedores_api.dart';
 import 'package:stowise_api/src/api/ia_api.dart';
 import 'package:stowise_api/src/api/importao_api.dart';
+import 'package:stowise_api/src/api/notas_fiscais_api.dart';
 import 'package:stowise_api/src/api/rfid_api.dart';
 import 'package:stowise_api/src/api/usurios_api.dart';
 
@@ -116,6 +117,12 @@ class StowiseApi {
   /// by doing that all interceptors will not be executed
   ImportaoApi getImportaoApi() {
     return ImportaoApi(dio, serializers);
+  }
+
+  /// Get NotasFiscaisApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  NotasFiscaisApi getNotasFiscaisApi() {
+    return NotasFiscaisApi(dio, serializers);
   }
 
   /// Get RFIDApi instance, base route and serializer can be overridden by a given but be careful,

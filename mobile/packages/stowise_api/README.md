@@ -148,6 +148,7 @@ Class | Method | HTTP request | Description
 [*ImportaoApi*](doc/ImportaoApi.md) | [**obterTemplateImportacao**](doc/ImportaoApi.md#obtertemplateimportacao) | **GET** /api/v1/importacoes/templates/{id} | 
 [*ImportaoApi*](doc/ImportaoApi.md) | [**renomearTemplateImportacao**](doc/ImportaoApi.md#renomeartemplateimportacao) | **PUT** /api/v1/importacoes/templates/{id} | 
 [*ImportaoApi*](doc/ImportaoApi.md) | [**sugerirMapeamentoImportacao**](doc/ImportaoApi.md#sugerirmapeamentoimportacao) | **POST** /api/v1/importacoes/{id}/sugestao | Pede à IA a sugestão de mapeamento e de regras de normalização (a partir do cabeçalho e da amostra). A sugestão é só uma proposta: confirme em PUT /mapeamento. Sem IA ou com cota atingida, o mapeamento segue manual.
+[*NotasFiscaisApi*](doc/NotasFiscaisApi.md) | [**analisarNotaFiscal**](doc/NotasFiscaisApi.md#analisarnotafiscal) | **POST** /api/v1/notas-fiscais/analise | Lê o XML da NF-e 4.00 (schema, chave e protocolo) e casa cada item: de-para do fornecedor, GTIN e similaridade da descrição. Não grava nada.
 [*RFIDApi*](doc/RFIDApi.md) | [**gerarEtiquetasRfid**](doc/RFIDApi.md#geraretiquetasrfid) | **POST** /api/v1/rfid/etiquetas | Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.
 [*RFIDApi*](doc/RFIDApi.md) | [**resolverLeiturasRfid**](doc/RFIDApi.md#resolverleiturasrfid) | **POST** /api/v1/rfid/leituras | Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.
 [*UsuriosApi*](doc/UsuriosApi.md) | [**atualizarUsuario**](doc/UsuriosApi.md#atualizarusuario) | **PUT** /api/v1/usuarios/{id} | 
@@ -165,6 +166,7 @@ Class | Method | HTTP request | Description
  - [AcaoLinha](doc/AcaoLinha.md)
  - [AdicionarEmbalagem](doc/AdicionarEmbalagem.md)
  - [AlterarLimitesCotaIa](doc/AlterarLimitesCotaIa.md)
+ - [AnaliseNotaFiscal](doc/AnaliseNotaFiscal.md)
  - [ArmazemDetalhe](doc/ArmazemDetalhe.md)
  - [ArmazemResumo](doc/ArmazemResumo.md)
  - [AtualizarFornecedor](doc/AtualizarFornecedor.md)
@@ -175,6 +177,7 @@ Class | Method | HTTP request | Description
  - [BloquearEndereco](doc/BloquearEndereco.md)
  - [CadastroIncompleto](doc/CadastroIncompleto.md)
  - [CampoImportacao](doc/CampoImportacao.md)
+ - [CasamentoItem](doc/CasamentoItem.md)
  - [CategoriaDetalhe](doc/CategoriaDetalhe.md)
  - [ChamadaIaDetalhe](doc/ChamadaIaDetalhe.md)
  - [ClasseArmazenagem](doc/ClasseArmazenagem.md)
@@ -201,6 +204,7 @@ Class | Method | HTTP request | Description
  - [EtiquetasRfidGeradas](doc/EtiquetasRfidGeradas.md)
  - [ExtratoItem](doc/ExtratoItem.md)
  - [FormatoArquivo](doc/FormatoArquivo.md)
+ - [FornecedorDaNota](doc/FornecedorDaNota.md)
  - [FornecedorDetalhe](doc/FornecedorDetalhe.md)
  - [FornecedorResumo](doc/FornecedorResumo.md)
  - [FuncionalidadeIa](doc/FuncionalidadeIa.md)
@@ -212,14 +216,18 @@ Class | Method | HTTP request | Description
  - [ImportacaoLinhaDetalhe](doc/ImportacaoLinhaDetalhe.md)
  - [ImportacaoResumo](doc/ImportacaoResumo.md)
  - [ImportarProdutosRequest](doc/ImportarProdutosRequest.md)
+ - [ItemAnalisado](doc/ItemAnalisado.md)
+ - [ItemNota](doc/ItemNota.md)
  - [LayoutArquivo](doc/LayoutArquivo.md)
  - [LeituraRfid](doc/LeituraRfid.md)
  - [LeiturasRfidResolvidas](doc/LeiturasRfidResolvidas.md)
  - [LoginRequest](doc/LoginRequest.md)
  - [LoteInformado](doc/LoteInformado.md)
+ - [LoteNota](doc/LoteNota.md)
  - [MapeamentoColuna](doc/MapeamentoColuna.md)
  - [MetodoSimilaridade](doc/MetodoSimilaridade.md)
  - [MovimentacaoDetalhe](doc/MovimentacaoDetalhe.md)
+ - [OrigemCasamento](doc/OrigemCasamento.md)
  - [PagedResultOfCadastroIncompleto](doc/PagedResultOfCadastroIncompleto.md)
  - [PagedResultOfChamadaIaDetalhe](doc/PagedResultOfChamadaIaDetalhe.md)
  - [PagedResultOfEnderecoDetalhe](doc/PagedResultOfEnderecoDetalhe.md)

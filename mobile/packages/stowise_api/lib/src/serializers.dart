@@ -17,6 +17,7 @@ import 'package:stowise_api/src/model/date.dart';
 import 'package:stowise_api/src/model/acao_linha.dart';
 import 'package:stowise_api/src/model/adicionar_embalagem.dart';
 import 'package:stowise_api/src/model/alterar_limites_cota_ia.dart';
+import 'package:stowise_api/src/model/analise_nota_fiscal.dart';
 import 'package:stowise_api/src/model/armazem_detalhe.dart';
 import 'package:stowise_api/src/model/armazem_resumo.dart';
 import 'package:stowise_api/src/model/atualizar_fornecedor.dart';
@@ -27,6 +28,7 @@ import 'package:stowise_api/src/model/auth_response.dart';
 import 'package:stowise_api/src/model/bloquear_endereco.dart';
 import 'package:stowise_api/src/model/cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/campo_importacao.dart';
+import 'package:stowise_api/src/model/casamento_item.dart';
 import 'package:stowise_api/src/model/categoria_detalhe.dart';
 import 'package:stowise_api/src/model/chamada_ia_detalhe.dart';
 import 'package:stowise_api/src/model/classe_armazenagem.dart';
@@ -53,6 +55,7 @@ import 'package:stowise_api/src/model/etiqueta_rfid.dart';
 import 'package:stowise_api/src/model/etiquetas_rfid_geradas.dart';
 import 'package:stowise_api/src/model/extrato_item.dart';
 import 'package:stowise_api/src/model/formato_arquivo.dart';
+import 'package:stowise_api/src/model/fornecedor_da_nota.dart';
 import 'package:stowise_api/src/model/fornecedor_detalhe.dart';
 import 'package:stowise_api/src/model/fornecedor_resumo.dart';
 import 'package:stowise_api/src/model/funcionalidade_ia.dart';
@@ -64,14 +67,18 @@ import 'package:stowise_api/src/model/importacao_detalhe.dart';
 import 'package:stowise_api/src/model/importacao_linha_detalhe.dart';
 import 'package:stowise_api/src/model/importacao_resumo.dart';
 import 'package:stowise_api/src/model/importar_produtos_request.dart';
+import 'package:stowise_api/src/model/item_analisado.dart';
+import 'package:stowise_api/src/model/item_nota.dart';
 import 'package:stowise_api/src/model/layout_arquivo.dart';
 import 'package:stowise_api/src/model/leitura_rfid.dart';
 import 'package:stowise_api/src/model/leituras_rfid_resolvidas.dart';
 import 'package:stowise_api/src/model/login_request.dart';
 import 'package:stowise_api/src/model/lote_informado.dart';
+import 'package:stowise_api/src/model/lote_nota.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
 import 'package:stowise_api/src/model/metodo_similaridade.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
+import 'package:stowise_api/src/model/origem_casamento.dart';
 import 'package:stowise_api/src/model/paged_result_of_cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/paged_result_of_chamada_ia_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_endereco_detalhe.dart';
@@ -136,6 +143,7 @@ part 'serializers.g.dart';
   AcaoLinha,
   AdicionarEmbalagem,
   AlterarLimitesCotaIa,
+  AnaliseNotaFiscal,
   ArmazemDetalhe,
   ArmazemResumo,
   AtualizarFornecedor,
@@ -146,6 +154,7 @@ part 'serializers.g.dart';
   BloquearEndereco,
   CadastroIncompleto,
   CampoImportacao,
+  CasamentoItem,
   CategoriaDetalhe,
   ChamadaIaDetalhe,
   ClasseArmazenagem,
@@ -172,6 +181,7 @@ part 'serializers.g.dart';
   EtiquetasRfidGeradas,
   ExtratoItem,
   FormatoArquivo,
+  FornecedorDaNota,
   FornecedorDetalhe,
   FornecedorResumo,
   FuncionalidadeIa,
@@ -183,14 +193,18 @@ part 'serializers.g.dart';
   ImportacaoLinhaDetalhe,
   ImportacaoResumo,
   ImportarProdutosRequest,
+  ItemAnalisado,
+  ItemNota,
   LayoutArquivo,
   LeituraRfid,
   LeiturasRfidResolvidas,
   LoginRequest,
   LoteInformado,
+  LoteNota,
   MapeamentoColuna,
   MetodoSimilaridade,
   MovimentacaoDetalhe,
+  OrigemCasamento,
   PagedResultOfCadastroIncompleto,
   PagedResultOfChamadaIaDetalhe,
   PagedResultOfEnderecoDetalhe,

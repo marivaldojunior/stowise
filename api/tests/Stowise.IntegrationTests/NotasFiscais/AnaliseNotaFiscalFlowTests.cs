@@ -95,6 +95,24 @@ public sealed class AnaliseNotaFiscalFlowTests : IDisposable
         Assert.Empty(analise.Itens[0].Sugestoes);
     }
 
+    [DockerFact]
+    public async Task Upload_returns_the_analysis()
+    {
+        var token = await LoginAsync();
+        await CreateProdutoAsync(token, "COLA-2L", "Refrigerante Cola 2L", "17891000315504");
+        var xml = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "NotasFiscais", "Exemplos", "nfe-autorizada.xml"));
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/v1/notas-fiscais/analise") { Content = NotasFiscaisEndpointsTests.Arquivo(xml) };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        var response = await _client.SendAsync(request);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var analise = (await response.Content.ReadFromJsonAsync<AnaliseNotaFiscal>(Json))!;
+        Assert.Equal(2, analise.Itens.Count);
+        Assert.Equal(OrigemCasamento.Gtin, analise.Itens[0].Origem);
+        Assert.Equal("REF-001", analise.Itens[0].Item.CodigoFornecedor);
+    }
+
     private async Task<AnaliseNotaFiscal> AnalyzeAsync()
     {
         await using var xml = File.OpenRead(Path.Combine(AppContext.BaseDirectory, "NotasFiscais", "Exemplos", "nfe-autorizada.xml"));

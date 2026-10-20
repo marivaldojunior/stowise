@@ -6861,6 +6861,77 @@
           }
         ]
       }
+    },
+    "/api/v1/notas-fiscais/analise": {
+      "post": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Lê o XML da NF-e 4.00 (schema, chave e protocolo) e casa cada item: de-para do fornecedor, GTIN e similaridade da descrição. Não grava nada.",
+        "operationId": "AnalisarNotaFiscal",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "arquivo": {
+                    "$ref": "#/components/schemas/IFormFile"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnaliseNotaFiscal"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6965,6 +7036,47 @@
               "integer"
             ],
             "format": "uint32"
+          }
+        }
+      },
+      "AnaliseNotaFiscal": {
+        "required": [
+          "chaveAcesso",
+          "numero",
+          "serie",
+          "dataEmissao",
+          "autorizada",
+          "fornecedor",
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "chaveAcesso": {
+            "type": "string"
+          },
+          "numero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serie": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "dataEmissao": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "autorizada": {
+            "type": "boolean"
+          },
+          "fornecedor": {
+            "$ref": "#/components/schemas/FornecedorDaNota"
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemAnalisado"
+            }
           }
         }
       },
@@ -7295,6 +7407,48 @@
           },
           "obrigatorio": {
             "type": "boolean"
+          }
+        }
+      },
+      "CasamentoItem": {
+        "required": [
+          "produtoId",
+          "sku",
+          "descricao",
+          "embalagemId",
+          "tipoEmbalagem",
+          "fatorConversao",
+          "produtoFornecedorId"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipoEmbalagem": {
+            "$ref": "#/components/schemas/TipoEmbalagem"
+          },
+          "fatorConversao": {
+            "type": "number",
+            "format": "double"
+          },
+          "produtoFornecedorId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
           }
         }
       },
@@ -8434,6 +8588,46 @@
           "NFeXml"
         ]
       },
+      "FornecedorDaNota": {
+        "required": [
+          "fornecedorId",
+          "cnpj",
+          "cpf",
+          "razaoSocial",
+          "nomeFantasia"
+        ],
+        "type": "object",
+        "properties": {
+          "fornecedorId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "cnpj": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cpf": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "razaoSocial": {
+            "type": "string"
+          },
+          "nomeFantasia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "FornecedorDetalhe": {
         "required": [
           "id",
@@ -9083,6 +9277,136 @@
           }
         }
       },
+      "ItemAnalisado": {
+        "required": [
+          "item",
+          "origem",
+          "casamento",
+          "metodoSugestoes",
+          "sugestoes",
+          "requerConfirmacao"
+        ],
+        "type": "object",
+        "properties": {
+          "item": {
+            "$ref": "#/components/schemas/ItemNota"
+          },
+          "origem": {
+            "$ref": "#/components/schemas/OrigemCasamento"
+          },
+          "casamento": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CasamentoItem"
+              }
+            ]
+          },
+          "metodoSugestoes": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/MetodoSimilaridade"
+              }
+            ]
+          },
+          "sugestoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProdutoSimilar"
+            }
+          },
+          "requerConfirmacao": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ItemNota": {
+        "required": [
+          "numeroItem",
+          "codigoFornecedor",
+          "gtin",
+          "descricao",
+          "ncm",
+          "cest",
+          "cfop",
+          "unidadeComercial",
+          "quantidadeComercial",
+          "valorUnitarioComercial",
+          "gtinTributavel",
+          "unidadeTributavel",
+          "quantidadeTributavel",
+          "lotes"
+        ],
+        "type": "object",
+        "properties": {
+          "numeroItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "codigoFornecedor": {
+            "type": "string"
+          },
+          "gtin": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "ncm": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cest": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cfop": {
+            "type": "string"
+          },
+          "unidadeComercial": {
+            "type": "string"
+          },
+          "quantidadeComercial": {
+            "type": "number",
+            "format": "double"
+          },
+          "valorUnitarioComercial": {
+            "type": "number",
+            "format": "double"
+          },
+          "gtinTributavel": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "unidadeTributavel": {
+            "type": "string"
+          },
+          "quantidadeTributavel": {
+            "type": "number",
+            "format": "double"
+          },
+          "lotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoteNota"
+            }
+          }
+        }
+      },
       "LayoutArquivo": {
         "required": [
           "formato",
@@ -9252,6 +9576,38 @@
           }
         }
       },
+      "LoteNota": {
+        "required": [
+          "numero",
+          "quantidade",
+          "fabricacao",
+          "validade"
+        ],
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string"
+          },
+          "quantidade": {
+            "type": "number",
+            "format": "double"
+          },
+          "fabricacao": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "MapeamentoColuna": {
         "required": [
           "campo",
@@ -9375,6 +9731,14 @@
             "format": "uuid"
           }
         }
+      },
+      "OrigemCasamento": {
+        "enum": [
+          "DePara",
+          "Gtin",
+          "Similaridade",
+          "SemCandidato"
+        ]
       },
       "PagedResultOfCadastroIncompleto": {
         "required": [
@@ -11451,6 +11815,9 @@
     },
     {
       "name": "RFID"
+    },
+    {
+      "name": "Notas fiscais"
     }
   ]
 }

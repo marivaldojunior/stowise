@@ -29,6 +29,8 @@ import type {
 import type {
   AdicionarEmbalagem,
   AlterarLimitesCotaIa,
+  AnalisarNotaFiscalBody,
+  AnaliseNotaFiscal,
   ArmazemDetalhe,
   ArmazemResumo,
   AtualizarFornecedor,
@@ -8275,5 +8277,83 @@ export const useGerarEtiquetasRfid = <TError = ErrorType<HttpValidationProblemDe
         TContext
       > => {
       return useMutation(getGerarEtiquetasRfidMutationOptions(options), queryClient);
+    }
+
+export const getAnalisarNotaFiscalUrl = () => {
+
+
+
+
+  return `/api/v1/notas-fiscais/analise`
+}
+
+/**
+ * @summary Lê o XML da NF-e 4.00 (schema, chave e protocolo) e casa cada item: de-para do fornecedor, GTIN e similaridade da descrição. Não grava nada.
+ */
+export const analisarNotaFiscal = async (analisarNotaFiscalBody: AnalisarNotaFiscalBody, options?: Parameters<typeof apiFetch>[1]): Promise<AnaliseNotaFiscal> => {
+    const formData = new FormData();
+if(analisarNotaFiscalBody.arquivo !== undefined) {
+ formData.append(`arquivo`, analisarNotaFiscalBody.arquivo);
+ }
+
+  return apiFetch<AnaliseNotaFiscal>(getAnalisarNotaFiscalUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getAnalisarNotaFiscalMutationKey = () => ['analisarNotaFiscal'] as const;
+
+export const getAnalisarNotaFiscalMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analisarNotaFiscal>>, TError,AnalisarNotaFiscalMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof analisarNotaFiscal>>, TError,AnalisarNotaFiscalMutationVariables, TContext> => {
+
+const mutationKey = getAnalisarNotaFiscalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof analisarNotaFiscal>>, AnalisarNotaFiscalMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  analisarNotaFiscal(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AnalisarNotaFiscalMutationResult = NonNullable<Awaited<ReturnType<typeof analisarNotaFiscal>>>
+    export type AnalisarNotaFiscalMutationBody = BodyType<AnalisarNotaFiscalBody>
+    export type AnalisarNotaFiscalMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type AnalisarNotaFiscalMutationVariables = {data: BodyType<AnalisarNotaFiscalBody>}
+
+    /**
+ * @summary Lê o XML da NF-e 4.00 (schema, chave e protocolo) e casa cada item: de-para do fornecedor, GTIN e similaridade da descrição. Não grava nada.
+ */
+export const useAnalisarNotaFiscal = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof analisarNotaFiscal>>, TError,AnalisarNotaFiscalMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof analisarNotaFiscal>>,
+        TError,
+        AnalisarNotaFiscalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAnalisarNotaFiscalMutationOptions(options), queryClient);
     }
 
