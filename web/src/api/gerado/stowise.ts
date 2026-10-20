@@ -49,11 +49,14 @@ import type {
   EfetivarImportacao,
   EmbalagemMedidas,
   EnderecoDetalhe,
+  EtiquetasRfidGeradas,
   GeracaoEnderecosResultado,
   GerarEnderecos,
+  GerarEtiquetasRfid,
   HttpValidationProblemDetails,
   ImportacaoDetalhe,
   ImportarProdutosBody,
+  LeiturasRfidResolvidas,
   ListarChamadasIaParams,
   ListarEnderecosParams,
   ListarImportacoesParams,
@@ -92,6 +95,7 @@ import type {
   RenomearArmazem,
   RenomearTemplate,
   ReservaDetalhe,
+  ResolverLeiturasRfid,
   ResumoSaldoProduto,
   SalvarCategoria,
   SalvarCotaIa,
@@ -2241,7 +2245,7 @@ export const getObterProdutoPorCodigoUrl = (codigo: string,) => {
 }
 
 /**
- * @summary Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.
+ * @summary Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.
  */
 export const obterProdutoPorCodigo = async (codigo: string, options?: Parameters<typeof apiFetch>[1]): Promise<ProdutoPorCodigo> => {
 
@@ -2312,7 +2316,7 @@ export function useObterProdutoPorCodigo<TData = Awaited<ReturnType<typeof obter
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
- * @summary Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.
+ * @summary Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.
  */
 
 export function useObterProdutoPorCodigo<TData = Awaited<ReturnType<typeof obterProdutoPorCodigo>>, TError = ErrorType<ProblemDetails>>(
@@ -6936,5 +6940,181 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
         TContext
       > => {
       return useMutation(getExcluirCotaIaMutationOptions(options), queryClient);
+    }
+
+export const getResolverLeiturasRfidUrl = () => {
+
+
+
+
+  return `/api/v1/rfid/leituras`
+}
+
+/**
+ * @summary Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.
+ */
+export const resolverLeiturasRfid = async (resolverLeiturasRfidBody: ResolverLeiturasRfid, options?: Parameters<typeof apiFetch>[1]): Promise<LeiturasRfidResolvidas> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<LeiturasRfidResolvidas>(getResolverLeiturasRfidUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(resolverLeiturasRfidBody)
+  }
+);}
+
+
+
+
+
+export const getResolverLeiturasRfidMutationKey = () => ['resolverLeiturasRfid'] as const;
+
+export const getResolverLeiturasRfidMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolverLeiturasRfid>>, TError,ResolverLeiturasRfidMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof resolverLeiturasRfid>>, TError,ResolverLeiturasRfidMutationVariables, TContext> => {
+
+const mutationKey = getResolverLeiturasRfidMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof resolverLeiturasRfid>>, ResolverLeiturasRfidMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  resolverLeiturasRfid(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ResolverLeiturasRfidMutationResult = NonNullable<Awaited<ReturnType<typeof resolverLeiturasRfid>>>
+    export type ResolverLeiturasRfidMutationBody = BodyType<ResolverLeiturasRfid>
+    export type ResolverLeiturasRfidMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type ResolverLeiturasRfidMutationVariables = {data: BodyType<ResolverLeiturasRfid>}
+
+    /**
+ * @summary Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.
+ */
+export const useResolverLeiturasRfid = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof resolverLeiturasRfid>>, TError,ResolverLeiturasRfidMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof resolverLeiturasRfid>>,
+        TError,
+        ResolverLeiturasRfidMutationVariables,
+        TContext
+      > => {
+      return useMutation(getResolverLeiturasRfidMutationOptions(options), queryClient);
+    }
+
+export const getGerarEtiquetasRfidUrl = () => {
+
+
+
+
+  return `/api/v1/rfid/etiquetas`
+}
+
+/**
+ * @summary Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.
+ */
+export const gerarEtiquetasRfid = async (gerarEtiquetasRfidBody: GerarEtiquetasRfid, options?: Parameters<typeof apiFetch>[1]): Promise<EtiquetasRfidGeradas> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<EtiquetasRfidGeradas>(getGerarEtiquetasRfidUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(gerarEtiquetasRfidBody)
+  }
+);}
+
+
+
+
+
+export const getGerarEtiquetasRfidMutationKey = () => ['gerarEtiquetasRfid'] as const;
+
+export const getGerarEtiquetasRfidMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gerarEtiquetasRfid>>, TError,GerarEtiquetasRfidMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof gerarEtiquetasRfid>>, TError,GerarEtiquetasRfidMutationVariables, TContext> => {
+
+const mutationKey = getGerarEtiquetasRfidMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof gerarEtiquetasRfid>>, GerarEtiquetasRfidMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  gerarEtiquetasRfid(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type GerarEtiquetasRfidMutationResult = NonNullable<Awaited<ReturnType<typeof gerarEtiquetasRfid>>>
+    export type GerarEtiquetasRfidMutationBody = BodyType<GerarEtiquetasRfid>
+    export type GerarEtiquetasRfidMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type GerarEtiquetasRfidMutationVariables = {data: BodyType<GerarEtiquetasRfid>}
+
+    /**
+ * @summary Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.
+ */
+export const useGerarEtiquetasRfid = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof gerarEtiquetasRfid>>, TError,GerarEtiquetasRfidMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof gerarEtiquetasRfid>>,
+        TError,
+        GerarEtiquetasRfidMutationVariables,
+        TContext
+      > => {
+      return useMutation(getGerarEtiquetasRfidMutationOptions(options), queryClient);
     }
 

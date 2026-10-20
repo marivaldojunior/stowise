@@ -1631,7 +1631,7 @@
         "tags": [
           "Catálogo"
         ],
-        "summary": "Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.",
+        "summary": "Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.",
         "operationId": "ObterProdutoPorCodigo",
         "parameters": [
           {
@@ -5804,6 +5804,138 @@
           }
         ]
       }
+    },
+    "/api/v1/rfid/leituras": {
+      "post": {
+        "tags": [
+          "RFID"
+        ],
+        "summary": "Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.",
+        "operationId": "ResolverLeiturasRfid",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResolverLeiturasRfid"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeiturasRfidResolvidas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/rfid/etiquetas": {
+      "post": {
+        "tags": [
+          "RFID"
+        ],
+        "summary": "Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.",
+        "operationId": "GerarEtiquetasRfid",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GerarEtiquetasRfid"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EtiquetasRfidGeradas"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -6390,6 +6522,54 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "ContagemRfid": {
+        "required": [
+          "produtoId",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "embalagemId",
+          "tipo",
+          "fatorConversao",
+          "etiquetas",
+          "quantidadeBase"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "tipo": {
+            "$ref": "#/components/schemas/TipoEmbalagem"
+          },
+          "fatorConversao": {
+            "type": "number",
+            "format": "double"
+          },
+          "etiquetas": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "quantidadeBase": {
+            "type": "number",
+            "format": "double"
           }
         }
       },
@@ -7006,6 +7186,54 @@
           }
         }
       },
+      "EtiquetaRfid": {
+        "required": [
+          "epc",
+          "epcUri",
+          "serie"
+        ],
+        "type": "object",
+        "properties": {
+          "epc": {
+            "type": "string"
+          },
+          "epcUri": {
+            "type": "string"
+          },
+          "serie": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "EtiquetasRfidGeradas": {
+        "required": [
+          "produtoId",
+          "embalagemId",
+          "gtin",
+          "etiquetas"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "gtin": {
+            "type": "string"
+          },
+          "etiquetas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EtiquetaRfid"
+            }
+          }
+        }
+      },
       "ExtratoItem": {
         "required": [
           "id",
@@ -7274,6 +7502,37 @@
           "simular": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "GerarEtiquetasRfid": {
+        "required": [
+          "embalagemId",
+          "quantidade",
+          "tamanhoPrefixoEmpresa"
+        ],
+        "type": "object",
+        "properties": {
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantidade": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
+          },
+          "tamanhoPrefixoEmpresa": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -7686,6 +7945,74 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "LeituraRfid": {
+        "required": [
+          "epc",
+          "gtin",
+          "serie",
+          "produtoId",
+          "embalagemId"
+        ],
+        "type": "object",
+        "properties": {
+          "epc": {
+            "type": "string"
+          },
+          "gtin": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "serie": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "int64"
+          },
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "LeiturasRfidResolvidas": {
+        "required": [
+          "leituras",
+          "produtos",
+          "naoReconhecidas"
+        ],
+        "type": "object",
+        "properties": {
+          "leituras": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LeituraRfid"
+            }
+          },
+          "produtos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContagemRfid"
+            }
+          },
+          "naoReconhecidas": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },
@@ -8959,6 +9286,23 @@
           }
         }
       },
+      "ResolverLeiturasRfid": {
+        "required": [
+          "epcs"
+        ],
+        "type": "object",
+        "properties": {
+          "epcs": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ResumoSaldoLote": {
         "required": [
           "loteId",
@@ -9648,6 +9992,9 @@
     },
     {
       "name": "IA"
+    },
+    {
+      "name": "RFID"
     }
   ]
 }

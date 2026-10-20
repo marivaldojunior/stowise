@@ -10,7 +10,7 @@ public interface IProdutoService
 
     Task<Result<ProdutoDetalhe>> GetAsync(Guid id, CancellationToken cancellationToken = default);
 
-    /// <summary>Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.</summary>
+    /// <summary>Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.</summary>
     Task<Result<ProdutoPorCodigo>> FindByCodigoAsync(string? codigo, CancellationToken cancellationToken = default);
 
     Task<Result<ProdutoDetalhe>> CreateAsync(CriarProduto comando, CancellationToken cancellationToken = default);

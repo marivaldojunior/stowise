@@ -67,6 +67,7 @@ v1.MapReservasEndpoints();
 v1.MapConsultasEstoqueEndpoints();
 v1.MapImportacoesEndpoints();
 v1.MapIaEndpoints();
+v1.MapRfidEndpoints();
 
 app.MapPainelWeb();
 

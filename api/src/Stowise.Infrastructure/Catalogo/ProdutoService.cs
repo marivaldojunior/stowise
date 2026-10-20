@@ -3,6 +3,7 @@ using Npgsql;
 using Stowise.Application.Catalogo;
 using Stowise.Application.Common;
 using Stowise.Domain.Catalogo;
+using Stowise.Domain.Rfid;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Catalogo;
@@ -61,8 +62,10 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
             return AppError.Validation("codigo", "Informe o SKU ou o GTIN.");
         }
 
+        // ADR-0010: um coletor RFID em modo teclado digita o EPC; o SGTIN-96 traz o GTIN-14 da embalagem.
+        IReadOnlyList<string> gtins = Sgtin96.TryParseHex(valor, out var epc) ? Gtin.Equivalents(epc!.Gtin14) : [valor];
         var porGtin = await db.ProdutoEmbalagens.AsNoTracking()
-            .Where(e => e.Gtin == valor)
+            .Where(e => e.Gtin != null && gtins.Contains(e.Gtin))
             .Select(e => new { e.ProdutoId, e.Id })
             .FirstOrDefaultAsync(cancellationToken);
         if (porGtin is not null)
@@ -74,9 +77,14 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
         var sku = valor.ToUpperInvariant();
         var porSku = await db.Produtos.AsNoTracking().Include(p => p.Embalagens)
             .FirstOrDefaultAsync(p => p.Sku == sku, cancellationToken);
-        return porSku is null
-            ? AppError.NotFound($"Nenhum produto com o SKU ou GTIN {valor}.")
-            : new ProdutoPorCodigo(ToDetalhe(porSku), porSku.EmbalagemBase.Id);
+        if (porSku is null)
+        {
+            return epc is null
+                ? AppError.NotFound($"Nenhum produto com o SKU ou GTIN {valor}.")
+                : AppError.NotFound($"Nenhum produto com o GTIN {epc.Gtin14}, lido na etiqueta RFID.");
+        }
+
+        return new ProdutoPorCodigo(ToDetalhe(porSku), porSku.EmbalagemBase.Id);
     }
 
     public async Task<Result<ProdutoDetalhe>> CreateAsync(CriarProduto comando, CancellationToken cancellationToken = default)

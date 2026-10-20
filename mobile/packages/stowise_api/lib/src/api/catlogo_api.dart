@@ -1105,7 +1105,7 @@ class CatlogoApi {
     );
   }
 
-  /// Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.
+  /// Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.
   ///
   ///
   /// Parameters:

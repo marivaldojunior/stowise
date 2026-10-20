@@ -26,7 +26,7 @@ public static class ProdutosEndpoints
 
         group.MapGet("/codigo/{codigo}", FindByCodigoAsync)
             .WithName("ObterProdutoPorCodigo")
-            .WithSummary("Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.")
+            .WithSummary("Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.")
             .Produces<ProdutoPorCodigo>()
             .ProducesProblem(StatusCodes.Status404NotFound);
 

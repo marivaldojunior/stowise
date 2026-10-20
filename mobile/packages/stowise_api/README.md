@@ -83,7 +83,7 @@ Class | Method | HTTP request | Description
 [*CatlogoApi*](doc/CatlogoApi.md) | [**listarProdutos**](doc/CatlogoApi.md#listarprodutos) | **GET** /api/v1/produtos | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**obterCategoria**](doc/CatlogoApi.md#obtercategoria) | **GET** /api/v1/categorias/{id} | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**obterProduto**](doc/CatlogoApi.md#obterproduto) | **GET** /api/v1/produtos/{id} | 
-[*CatlogoApi*](doc/CatlogoApi.md) | [**obterProdutoPorCodigo**](doc/CatlogoApi.md#obterprodutoporcodigo) | **GET** /api/v1/produtos/codigo/{codigo} | Busca pelo código lido no app: GTIN de qualquer embalagem ou SKU.
+[*CatlogoApi*](doc/CatlogoApi.md) | [**obterProdutoPorCodigo**](doc/CatlogoApi.md#obterprodutoporcodigo) | **GET** /api/v1/produtos/codigo/{codigo} | Busca pelo código lido no app: GTIN de qualquer embalagem, EPC SGTIN-96 em hexadecimal ou SKU.
 [*CatlogoApi*](doc/CatlogoApi.md) | [**reativarProduto**](doc/CatlogoApi.md#reativarproduto) | **POST** /api/v1/produtos/{id}/reativar | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**removerEmbalagem**](doc/CatlogoApi.md#removerembalagem) | **DELETE** /api/v1/produtos/{id}/embalagens/{embalagemId} | 
 [*EstoqueApi*](doc/EstoqueApi.md) | [**cancelarReserva**](doc/EstoqueApi.md#cancelarreserva) | **POST** /api/v1/reservas/{id}/cancelar | 
@@ -136,6 +136,8 @@ Class | Method | HTTP request | Description
 [*ImportaoApi*](doc/ImportaoApi.md) | [**obterTemplateImportacao**](doc/ImportaoApi.md#obtertemplateimportacao) | **GET** /api/v1/importacoes/templates/{id} | 
 [*ImportaoApi*](doc/ImportaoApi.md) | [**renomearTemplateImportacao**](doc/ImportaoApi.md#renomeartemplateimportacao) | **PUT** /api/v1/importacoes/templates/{id} | 
 [*ImportaoApi*](doc/ImportaoApi.md) | [**sugerirMapeamentoImportacao**](doc/ImportaoApi.md#sugerirmapeamentoimportacao) | **POST** /api/v1/importacoes/{id}/sugestao | Pede à IA a sugestão de mapeamento e de regras de normalização (a partir do cabeçalho e da amostra). A sugestão é só uma proposta: confirme em PUT /mapeamento. Sem IA ou com cota atingida, o mapeamento segue manual.
+[*RFIDApi*](doc/RFIDApi.md) | [**gerarEtiquetasRfid**](doc/RFIDApi.md#geraretiquetasrfid) | **POST** /api/v1/rfid/etiquetas | Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.
+[*RFIDApi*](doc/RFIDApi.md) | [**resolverLeiturasRfid**](doc/RFIDApi.md#resolverleiturasrfid) | **POST** /api/v1/rfid/leituras | Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.
 [*UsuriosApi*](doc/UsuriosApi.md) | [**atualizarUsuario**](doc/UsuriosApi.md#atualizarusuario) | **PUT** /api/v1/usuarios/{id} | 
 [*UsuriosApi*](doc/UsuriosApi.md) | [**criarUsuario**](doc/UsuriosApi.md#criarusuario) | **POST** /api/v1/usuarios | 
 [*UsuriosApi*](doc/UsuriosApi.md) | [**desativarUsuario**](doc/UsuriosApi.md#desativarusuario) | **POST** /api/v1/usuarios/{id}/desativar | 
@@ -165,6 +167,7 @@ Class | Method | HTTP request | Description
  - [ColunaSugerida](doc/ColunaSugerida.md)
  - [ConfirmarMapeamento](doc/ConfirmarMapeamento.md)
  - [ConsumirReserva](doc/ConsumirReserva.md)
+ - [ContagemRfid](doc/ContagemRfid.md)
  - [CotaIaDetalhe](doc/CotaIaDetalhe.md)
  - [CriarArmazem](doc/CriarArmazem.md)
  - [CriarEndereco](doc/CriarEndereco.md)
@@ -177,17 +180,22 @@ Class | Method | HTTP request | Description
  - [EmbalagemMedidas](doc/EmbalagemMedidas.md)
  - [EnderecoDetalhe](doc/EnderecoDetalhe.md)
  - [ErroLinha](doc/ErroLinha.md)
+ - [EtiquetaRfid](doc/EtiquetaRfid.md)
+ - [EtiquetasRfidGeradas](doc/EtiquetasRfidGeradas.md)
  - [ExtratoItem](doc/ExtratoItem.md)
  - [FormatoArquivo](doc/FormatoArquivo.md)
  - [FuncionalidadeIa](doc/FuncionalidadeIa.md)
  - [GeracaoEnderecosResultado](doc/GeracaoEnderecosResultado.md)
  - [GerarEnderecos](doc/GerarEnderecos.md)
+ - [GerarEtiquetasRfid](doc/GerarEtiquetasRfid.md)
  - [HttpValidationProblemDetails](doc/HttpValidationProblemDetails.md)
  - [ImportacaoDetalhe](doc/ImportacaoDetalhe.md)
  - [ImportacaoLinhaDetalhe](doc/ImportacaoLinhaDetalhe.md)
  - [ImportacaoResumo](doc/ImportacaoResumo.md)
  - [ImportarProdutosRequest](doc/ImportarProdutosRequest.md)
  - [LayoutArquivo](doc/LayoutArquivo.md)
+ - [LeituraRfid](doc/LeituraRfid.md)
+ - [LeiturasRfidResolvidas](doc/LeiturasRfidResolvidas.md)
  - [LoginRequest](doc/LoginRequest.md)
  - [LoteInformado](doc/LoteInformado.md)
  - [MapeamentoColuna](doc/MapeamentoColuna.md)
@@ -218,6 +226,7 @@ Class | Method | HTTP request | Description
  - [RenomearArmazem](doc/RenomearArmazem.md)
  - [RenomearTemplate](doc/RenomearTemplate.md)
  - [ReservaDetalhe](doc/ReservaDetalhe.md)
+ - [ResolverLeiturasRfid](doc/ResolverLeiturasRfid.md)
  - [ResumoSaldoLote](doc/ResumoSaldoLote.md)
  - [ResumoSaldoProduto](doc/ResumoSaldoProduto.md)
  - [SaldoItem](doc/SaldoItem.md)

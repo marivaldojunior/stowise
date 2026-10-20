@@ -10,6 +10,7 @@ using Stowise.Application.Estoque;
 using Stowise.Application.Estrutura;
 using Stowise.Application.Ia;
 using Stowise.Application.Importacoes;
+using Stowise.Application.Rfid;
 using Stowise.Application.Usuarios;
 using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Estoque;
@@ -19,6 +20,7 @@ using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Importacoes;
 using Stowise.Infrastructure.Jobs;
 using Stowise.Infrastructure.Persistence;
+using Stowise.Infrastructure.Rfid;
 
 namespace Stowise.Infrastructure;
 
@@ -56,6 +58,8 @@ public static class DependencyInjection
         services.AddScoped<StagingProdutos>();
         services.AddScoped<EfetivacaoProdutos>();
         services.AddScoped<SugestaoMapeamentoIa>();
+        services.AddOptions<RfidOptions>().BindConfiguration(RfidOptions.SectionName);
+        services.AddScoped<IRfidService, RfidService>();
         services.AddJobs();
 
         // ADR-0004: camada de IA atrás da API. Desligada (Ia:Habilitada=false), os fluxos seguem manuais.

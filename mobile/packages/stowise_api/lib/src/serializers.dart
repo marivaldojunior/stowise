@@ -31,6 +31,7 @@ import 'package:stowise_api/src/model/coluna_arquivo.dart';
 import 'package:stowise_api/src/model/coluna_sugerida.dart';
 import 'package:stowise_api/src/model/confirmar_mapeamento.dart';
 import 'package:stowise_api/src/model/consumir_reserva.dart';
+import 'package:stowise_api/src/model/contagem_rfid.dart';
 import 'package:stowise_api/src/model/cota_ia_detalhe.dart';
 import 'package:stowise_api/src/model/criar_armazem.dart';
 import 'package:stowise_api/src/model/criar_endereco.dart';
@@ -43,17 +44,22 @@ import 'package:stowise_api/src/model/embalagem_detalhe.dart';
 import 'package:stowise_api/src/model/embalagem_medidas.dart';
 import 'package:stowise_api/src/model/endereco_detalhe.dart';
 import 'package:stowise_api/src/model/erro_linha.dart';
+import 'package:stowise_api/src/model/etiqueta_rfid.dart';
+import 'package:stowise_api/src/model/etiquetas_rfid_geradas.dart';
 import 'package:stowise_api/src/model/extrato_item.dart';
 import 'package:stowise_api/src/model/formato_arquivo.dart';
 import 'package:stowise_api/src/model/funcionalidade_ia.dart';
 import 'package:stowise_api/src/model/geracao_enderecos_resultado.dart';
 import 'package:stowise_api/src/model/gerar_enderecos.dart';
+import 'package:stowise_api/src/model/gerar_etiquetas_rfid.dart';
 import 'package:stowise_api/src/model/http_validation_problem_details.dart';
 import 'package:stowise_api/src/model/importacao_detalhe.dart';
 import 'package:stowise_api/src/model/importacao_linha_detalhe.dart';
 import 'package:stowise_api/src/model/importacao_resumo.dart';
 import 'package:stowise_api/src/model/importar_produtos_request.dart';
 import 'package:stowise_api/src/model/layout_arquivo.dart';
+import 'package:stowise_api/src/model/leitura_rfid.dart';
+import 'package:stowise_api/src/model/leituras_rfid_resolvidas.dart';
 import 'package:stowise_api/src/model/login_request.dart';
 import 'package:stowise_api/src/model/lote_informado.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
@@ -84,6 +90,7 @@ import 'package:stowise_api/src/model/relatorio_importacao.dart';
 import 'package:stowise_api/src/model/renomear_armazem.dart';
 import 'package:stowise_api/src/model/renomear_template.dart';
 import 'package:stowise_api/src/model/reserva_detalhe.dart';
+import 'package:stowise_api/src/model/resolver_leituras_rfid.dart';
 import 'package:stowise_api/src/model/resumo_saldo_lote.dart';
 import 'package:stowise_api/src/model/resumo_saldo_produto.dart';
 import 'package:stowise_api/src/model/saldo_item.dart';
@@ -127,6 +134,7 @@ part 'serializers.g.dart';
   ColunaSugerida,
   ConfirmarMapeamento,
   ConsumirReserva,
+  ContagemRfid,
   CotaIaDetalhe,
   CriarArmazem,
   CriarEndereco,
@@ -139,17 +147,22 @@ part 'serializers.g.dart';
   EmbalagemMedidas,
   EnderecoDetalhe,
   ErroLinha,
+  EtiquetaRfid,
+  EtiquetasRfidGeradas,
   ExtratoItem,
   FormatoArquivo,
   FuncionalidadeIa,
   GeracaoEnderecosResultado,
   GerarEnderecos,
+  GerarEtiquetasRfid,
   HttpValidationProblemDetails,
   ImportacaoDetalhe,
   ImportacaoLinhaDetalhe,
   ImportacaoResumo,
   ImportarProdutosRequest,
   LayoutArquivo,
+  LeituraRfid,
+  LeiturasRfidResolvidas,
   LoginRequest,
   LoteInformado,
   MapeamentoColuna,
@@ -180,6 +193,7 @@ part 'serializers.g.dart';
   RenomearArmazem,
   RenomearTemplate,
   ReservaDetalhe,
+  ResolverLeiturasRfid,
   ResumoSaldoLote,
   ResumoSaldoProduto,
   SaldoItem,

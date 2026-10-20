@@ -6,8 +6,10 @@ using Stowise.Domain.Estoque;
 using Stowise.Domain.Estrutura;
 using Stowise.Domain.Ia;
 using Stowise.Domain.Importacoes;
+using Stowise.Domain.Rfid;
 using Stowise.Infrastructure.Identity;
 using Stowise.Infrastructure.Persistence.Configurations;
+using Stowise.Infrastructure.Rfid;
 
 namespace Stowise.Infrastructure.Persistence;
 
@@ -53,6 +55,9 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
         base.OnModelCreating(builder);
 
         builder.HasPostgresExtension("vector");
+
+        // ADR-0010: séries únicas dos EPCs SGTIN-96 gerados (38 bits).
+        builder.HasSequence<long>(RfidService.SerialSequence).StartsAt(1).HasMax(Sgtin96.SerieMaxima);
         IdentityConfiguration.Configure(builder);
         builder.ApplyConfigurationsFromAssembly(typeof(StowiseDbContext).Assembly);
 

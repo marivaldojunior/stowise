@@ -21,6 +21,7 @@ doc/ColunaArquivo.md
 doc/ColunaSugerida.md
 doc/ConfirmarMapeamento.md
 doc/ConsumirReserva.md
+doc/ContagemRfid.md
 doc/CotaIaDetalhe.md
 doc/CriarArmazem.md
 doc/CriarEndereco.md
@@ -35,11 +36,14 @@ doc/EnderecoDetalhe.md
 doc/ErroLinha.md
 doc/EstoqueApi.md
 doc/EstruturaFsicaApi.md
+doc/EtiquetaRfid.md
+doc/EtiquetasRfidGeradas.md
 doc/ExtratoItem.md
 doc/FormatoArquivo.md
 doc/FuncionalidadeIa.md
 doc/GeracaoEnderecosResultado.md
 doc/GerarEnderecos.md
+doc/GerarEtiquetasRfid.md
 doc/HttpValidationProblemDetails.md
 doc/IAApi.md
 doc/ImportacaoDetalhe.md
@@ -48,6 +52,8 @@ doc/ImportacaoResumo.md
 doc/ImportaoApi.md
 doc/ImportarProdutosRequest.md
 doc/LayoutArquivo.md
+doc/LeituraRfid.md
+doc/LeiturasRfidResolvidas.md
 doc/LoginRequest.md
 doc/LoteInformado.md
 doc/MapeamentoColuna.md
@@ -67,6 +73,7 @@ doc/ProblemDetails.md
 doc/ProdutoDetalhe.md
 doc/ProdutoPorCodigo.md
 doc/ProdutoResumo.md
+doc/RFIDApi.md
 doc/RedefinirSenhaRequest.md
 doc/RefreshRequest.md
 doc/RegistrarAjuste.md
@@ -78,6 +85,7 @@ doc/RelatorioImportacao.md
 doc/RenomearArmazem.md
 doc/RenomearTemplate.md
 doc/ReservaDetalhe.md
+doc/ResolverLeiturasRfid.md
 doc/ResumoSaldoLote.md
 doc/ResumoSaldoProduto.md
 doc/SaldoItem.md
@@ -108,6 +116,7 @@ lib/src/api/estoque_api.dart
 lib/src/api/estrutura_fsica_api.dart
 lib/src/api/ia_api.dart
 lib/src/api/importao_api.dart
+lib/src/api/rfid_api.dart
 lib/src/api/usurios_api.dart
 lib/src/api_util.dart
 lib/src/auth/api_key_auth.dart
@@ -133,6 +142,7 @@ lib/src/model/coluna_arquivo.dart
 lib/src/model/coluna_sugerida.dart
 lib/src/model/confirmar_mapeamento.dart
 lib/src/model/consumir_reserva.dart
+lib/src/model/contagem_rfid.dart
 lib/src/model/cota_ia_detalhe.dart
 lib/src/model/criar_armazem.dart
 lib/src/model/criar_endereco.dart
@@ -146,17 +156,22 @@ lib/src/model/embalagem_detalhe.dart
 lib/src/model/embalagem_medidas.dart
 lib/src/model/endereco_detalhe.dart
 lib/src/model/erro_linha.dart
+lib/src/model/etiqueta_rfid.dart
+lib/src/model/etiquetas_rfid_geradas.dart
 lib/src/model/extrato_item.dart
 lib/src/model/formato_arquivo.dart
 lib/src/model/funcionalidade_ia.dart
 lib/src/model/geracao_enderecos_resultado.dart
 lib/src/model/gerar_enderecos.dart
+lib/src/model/gerar_etiquetas_rfid.dart
 lib/src/model/http_validation_problem_details.dart
 lib/src/model/importacao_detalhe.dart
 lib/src/model/importacao_linha_detalhe.dart
 lib/src/model/importacao_resumo.dart
 lib/src/model/importar_produtos_request.dart
 lib/src/model/layout_arquivo.dart
+lib/src/model/leitura_rfid.dart
+lib/src/model/leituras_rfid_resolvidas.dart
 lib/src/model/login_request.dart
 lib/src/model/lote_informado.dart
 lib/src/model/mapeamento_coluna.dart
@@ -187,6 +202,7 @@ lib/src/model/relatorio_importacao.dart
 lib/src/model/renomear_armazem.dart
 lib/src/model/renomear_template.dart
 lib/src/model/reserva_detalhe.dart
+lib/src/model/resolver_leituras_rfid.dart
 lib/src/model/resumo_saldo_lote.dart
 lib/src/model/resumo_saldo_produto.dart
 lib/src/model/saldo_item.dart
@@ -231,6 +247,7 @@ test/coluna_arquivo_test.dart
 test/coluna_sugerida_test.dart
 test/confirmar_mapeamento_test.dart
 test/consumir_reserva_test.dart
+test/contagem_rfid_test.dart
 test/cota_ia_detalhe_test.dart
 test/criar_armazem_test.dart
 test/criar_endereco_test.dart
@@ -245,11 +262,14 @@ test/endereco_detalhe_test.dart
 test/erro_linha_test.dart
 test/estoque_api_test.dart
 test/estrutura_fsica_api_test.dart
+test/etiqueta_rfid_test.dart
+test/etiquetas_rfid_geradas_test.dart
 test/extrato_item_test.dart
 test/formato_arquivo_test.dart
 test/funcionalidade_ia_test.dart
 test/geracao_enderecos_resultado_test.dart
 test/gerar_enderecos_test.dart
+test/gerar_etiquetas_rfid_test.dart
 test/http_validation_problem_details_test.dart
 test/ia_api_test.dart
 test/importacao_detalhe_test.dart
@@ -258,6 +278,8 @@ test/importacao_resumo_test.dart
 test/importao_api_test.dart
 test/importar_produtos_request_test.dart
 test/layout_arquivo_test.dart
+test/leitura_rfid_test.dart
+test/leituras_rfid_resolvidas_test.dart
 test/login_request_test.dart
 test/lote_informado_test.dart
 test/mapeamento_coluna_test.dart
@@ -288,8 +310,10 @@ test/relatorio_importacao_test.dart
 test/renomear_armazem_test.dart
 test/renomear_template_test.dart
 test/reserva_detalhe_test.dart
+test/resolver_leituras_rfid_test.dart
 test/resumo_saldo_lote_test.dart
 test/resumo_saldo_produto_test.dart
+test/rfid_api_test.dart
 test/saldo_item_test.dart
 test/saldo_na_data_test.dart
 test/salvar_categoria_test.dart
