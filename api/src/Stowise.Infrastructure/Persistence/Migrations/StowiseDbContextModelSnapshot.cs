@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
+using Pgvector;
 using Stowise.Infrastructure.Persistence;
 
 #nullable disable
@@ -20,6 +21,7 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                 .HasAnnotation("ProductVersion", "10.0.13")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
+            NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "pg_trgm");
             NpgsqlModelBuilderExtensions.HasPostgresExtension(modelBuilder, "vector");
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
@@ -257,6 +259,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoriaId")
                         .HasDatabaseName("ix_produtos_categoria_id");
+
+                    b.HasIndex("Descricao")
+                        .HasDatabaseName("ix_produtos_descricao");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Descricao"), "gin");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Descricao"), new[] { "gin_trgm_ops" });
 
                     b.HasIndex("Sku")
                         .IsUnique()
@@ -1409,6 +1417,45 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("importacao_templates", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Infrastructure.Catalogo.ProdutoEmbedding", b =>
+                {
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<DateTimeOffset>("GeradoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("gerado_em");
+
+                    b.Property<string>("Modelo")
+                        .IsRequired()
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)")
+                        .HasColumnName("modelo");
+
+                    b.Property<string>("Texto")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("texto");
+
+                    b.Property<Vector>("Vetor")
+                        .IsRequired()
+                        .HasColumnType("vector(768)")
+                        .HasColumnName("vetor");
+
+                    b.HasKey("ProdutoId")
+                        .HasName("pk_produto_embeddings");
+
+                    b.HasIndex("Vetor")
+                        .HasDatabaseName("ix_produto_embeddings_vetor");
+
+                    NpgsqlIndexBuilderExtensions.HasMethod(b.HasIndex("Vetor"), "hnsw");
+                    NpgsqlIndexBuilderExtensions.HasOperators(b.HasIndex("Vetor"), new[] { "vector_cosine_ops" });
+
+                    b.ToTable("produto_embeddings", (string)null);
+                });
+
             modelBuilder.Entity("Stowise.Infrastructure.Identity.Perfil", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1927,6 +1974,16 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired()
                         .HasConstraintName("fk_importacao_templates_usuarios_confirmado_por");
+                });
+
+            modelBuilder.Entity("Stowise.Infrastructure.Catalogo.ProdutoEmbedding", b =>
+                {
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithOne()
+                        .HasForeignKey("Stowise.Infrastructure.Catalogo.ProdutoEmbedding", "ProdutoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_produto_embeddings_produtos_produto_id");
                 });
 
             modelBuilder.Entity("Stowise.Infrastructure.Identity.RefreshToken", b =>

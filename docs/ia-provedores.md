@@ -99,6 +99,24 @@ A tabela `CotaIa` limita o uso por perfil, com exceção opcional por usuário (
 6. Sem sugestão (IA fora, cota, resposta inválida), a importação volta e `MotivoSemSugestao` diz o motivo. O mapeamento segue manual.
 7. Na validação das linhas, o código aplica as regras confirmadas, sem IA.
 
+## Embeddings e busca de similares
+
+A busca de produtos parecidos (`GET /api/v1/produtos/similares`, usada no casamento dos itens da NF-e) usa embeddings quando estão ligados ([ADR-0011](adr/0011-embeddings-e-similares.md)). Ela usa **um só modelo**, na seção `Ia:Embeddings`, sem fallback: vetores de modelos diferentes não se comparam. A Anthropic não gera embeddings; use `Ollama`, `OpenAICompativel` ou `Gemini`. O vetor tem 768 dimensões.
+
+```json
+"Embeddings": {
+  "Habilitado": true,
+  "Tipo": "Ollama",
+  "Modelo": "nomic-embed-text",
+  "Endpoint": "http://localhost:11434"
+}
+```
+
+Outras opções: `"Tipo": "OpenAICompativel", "Modelo": "text-embedding-3-small"` (chave em `OPENAI_API_KEY`) ou `"Tipo": "Gemini", "Modelo": "gemini-embedding-001"` (chave em `GOOGLE_API_KEY`). Os embeddings só funcionam com `Ia:Habilitada` ligada.
+
+- Um job recorrente (a cada 5 minutos, fila `ia`) gera os vetores que faltam e refaz os de produtos cuja descrição ou cujo modelo mudou. Cada lote grava um registro em `ChamadaIa`, sem usuário.
+- Sem embeddings, ou enquanto um produto não tem vetor, a busca usa trigramas do PostgreSQL (`pg_trgm`). A resposta diz o método: `Semantica` ou `Trigramas`.
+
 ## Parâmetros próprios do provedor
 
 `ParametrosAdicionais` repassa pares chave-valor em `ChatOptions.AdditionalProperties`. Cada adaptador decide o que aceita, então confira antes no SDK do provedor. As funcionalidades não dependem desses parâmetros.

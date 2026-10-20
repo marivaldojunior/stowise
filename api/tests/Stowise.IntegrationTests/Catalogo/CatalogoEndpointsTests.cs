@@ -72,6 +72,20 @@ public class CatalogoEndpointsTests(StowiseApiFactory factory) : IClassFixture<S
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
+    [Theory]
+    [InlineData("/api/v1/produtos/similares", "texto")]
+    [InlineData("/api/v1/produtos/similares?texto=cola&limite=21", "limite")]
+    public async Task Similar_search_validates_text_and_limit(string url, string campo)
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var response = await client.GetAsync(new Uri(url, UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problema = await response.Content.ReadFromJsonAsync<Microsoft.AspNetCore.Mvc.ValidationProblemDetails>();
+        Assert.Contains(campo, problema!.Errors.Keys);
+    }
+
     private HttpClient ClientWith(string perfil)
     {
         var client = factory.CreateClient();

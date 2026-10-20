@@ -27,6 +27,10 @@ internal interface IFabricaProvedorIa
     /// <c>null</c> para usar a regra geral do gateway (status 408, 429 e 5xx, rede e timeout).
     /// </summary>
     bool? IsTransient(Exception erro) => null;
+
+    /// <summary>Gerador de embeddings do tipo (ADR-0011). Nem todo provedor gera embeddings (a Anthropic não gera).</summary>
+    IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddings(ProvedorIaOptions opcoes) =>
+        throw new InvalidOperationException($"The AI provider type '{Tipo}' does not generate embeddings. Use OpenAICompativel, Gemini or Ollama.");
 }
 
 /// <summary>Claude pelo SDK oficial da Anthropic. Sem chave na configuração, o SDK lê <c>ANTHROPIC_API_KEY</c>.</summary>
@@ -60,6 +64,20 @@ internal sealed class OpenAICompativelFabrica : IFabricaProvedorIa
     {
         ArgumentNullException.ThrowIfNull(opcoes);
 
+        var (apiKey, clientOptions) = Cliente(opcoes);
+        return new ChatClient(opcoes.Modelo, new ApiKeyCredential(apiKey), clientOptions).AsIChatClient();
+    }
+
+    public IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddings(ProvedorIaOptions opcoes)
+    {
+        ArgumentNullException.ThrowIfNull(opcoes);
+
+        var (apiKey, clientOptions) = Cliente(opcoes);
+        return new OpenAI.Embeddings.EmbeddingClient(opcoes.Modelo, new ApiKeyCredential(apiKey), clientOptions).AsIEmbeddingGenerator();
+    }
+
+    private static (string ApiKey, OpenAIClientOptions Options) Cliente(ProvedorIaOptions opcoes)
+    {
         var apiKey = string.IsNullOrWhiteSpace(opcoes.ApiKey) ? Environment.GetEnvironmentVariable("OPENAI_API_KEY") : opcoes.ApiKey;
         if (string.IsNullOrWhiteSpace(apiKey))
         {
@@ -72,7 +90,7 @@ internal sealed class OpenAICompativelFabrica : IFabricaProvedorIa
             clientOptions.Endpoint = new Uri(opcoes.Endpoint);
         }
 
-        return new ChatClient(opcoes.Modelo, new ApiKeyCredential(apiKey), clientOptions).AsIChatClient();
+        return (apiKey, clientOptions);
     }
 }
 
@@ -94,6 +112,20 @@ internal sealed class GeminiFabrica : IFabricaProvedorIa
         var client = new Client(apiKey: apiKey, httpOptions: new HttpOptions { RetryOptions = new HttpRetryOptions { Attempts = 1 } });
         return client.AsIChatClient(opcoes.Modelo);
     }
+
+    public IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddings(ProvedorIaOptions opcoes)
+    {
+        ArgumentNullException.ThrowIfNull(opcoes);
+
+        var apiKey = string.IsNullOrWhiteSpace(opcoes.ApiKey) ? Environment.GetEnvironmentVariable("GOOGLE_API_KEY") : opcoes.ApiKey;
+        if (string.IsNullOrWhiteSpace(apiKey))
+        {
+            throw new InvalidOperationException($"The AI provider '{opcoes.Nome}' needs an ApiKey (or GOOGLE_API_KEY).");
+        }
+
+        var client = new Client(apiKey: apiKey, httpOptions: new HttpOptions { RetryOptions = new HttpRetryOptions { Attempts = 1 } });
+        return client.AsIEmbeddingGenerator(opcoes.Modelo);
+    }
 }
 
 /// <summary>Modelos abertos rodando localmente no Ollama (Llama, Qwen, DeepSeek, Gemma e outros). Sem chave.</summary>
@@ -102,6 +134,13 @@ internal sealed class OllamaFabrica : IFabricaProvedorIa
     public string Tipo => "Ollama";
 
     public IChatClient Create(ProvedorIaOptions opcoes)
+    {
+        ArgumentNullException.ThrowIfNull(opcoes);
+
+        return new OllamaApiClient(new Uri(opcoes.Endpoint ?? "http://localhost:11434"), opcoes.Modelo);
+    }
+
+    public IEmbeddingGenerator<string, Embedding<float>> CreateEmbeddings(ProvedorIaOptions opcoes)
     {
         ArgumentNullException.ThrowIfNull(opcoes);
 

@@ -37,6 +37,7 @@ import type {
   AtualizarUsuarioRequest,
   AuthResponse,
   BloquearEndereco,
+  BuscarProdutosSimilaresParams,
   CampoImportacao,
   CategoriaDetalhe,
   ConfirmarMapeamento,
@@ -97,6 +98,7 @@ import type {
   ProdutoDetalhe,
   ProdutoFornecedorDetalhe,
   ProdutoPorCodigo,
+  ProdutosSimilares,
   RedefinirSenhaRequest,
   RefreshRequest,
   RegistrarAjuste,
@@ -2160,6 +2162,114 @@ export function useListarCadastrosIncompletos<TData = Awaited<ReturnType<typeof 
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
   const queryOptions = getListarCadastrosIncompletosQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getBuscarProdutosSimilaresUrl = (params?: BuscarProdutosSimilaresParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/produtos/similares?${stringifiedParams}` : `/api/v1/produtos/similares`
+}
+
+/**
+ * @summary Produtos ativos parecidos com o texto (ex.: a descrição da NF-e): por embeddings quando ligados, senão por trigramas. Só sugere.
+ */
+export const buscarProdutosSimilares = async (params?: BuscarProdutosSimilaresParams, options?: Parameters<typeof apiFetch>[1]): Promise<ProdutosSimilares> => {
+
+  return apiFetch<ProdutosSimilares>(getBuscarProdutosSimilaresUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getBuscarProdutosSimilaresQueryKey = (params?: BuscarProdutosSimilaresParams,) => {
+    return [
+    `/api/v1/produtos/similares`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getBuscarProdutosSimilaresQueryOptions = <TData = Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>>(params?: BuscarProdutosSimilaresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getBuscarProdutosSimilaresQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof buscarProdutosSimilares>>> = ({ signal }) => buscarProdutosSimilares(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type BuscarProdutosSimilaresQueryResult = NonNullable<Awaited<ReturnType<typeof buscarProdutosSimilares>>>
+export type BuscarProdutosSimilaresQueryError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+
+
+export function useBuscarProdutosSimilares<TData = Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>>(
+ params: undefined |  BuscarProdutosSimilaresParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof buscarProdutosSimilares>>,
+          TError,
+          Awaited<ReturnType<typeof buscarProdutosSimilares>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBuscarProdutosSimilares<TData = Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>>(
+ params?: BuscarProdutosSimilaresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof buscarProdutosSimilares>>,
+          TError,
+          Awaited<ReturnType<typeof buscarProdutosSimilares>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useBuscarProdutosSimilares<TData = Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>>(
+ params?: BuscarProdutosSimilaresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Produtos ativos parecidos com o texto (ex.: a descrição da NF-e): por embeddings quando ligados, senão por trigramas. Só sugere.
+ */
+
+export function useBuscarProdutosSimilares<TData = Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>>(
+ params?: BuscarProdutosSimilaresParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof buscarProdutosSimilares>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getBuscarProdutosSimilaresQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

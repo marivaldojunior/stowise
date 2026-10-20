@@ -222,6 +222,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 13. **Jobs em background com Hangfire** no mesmo PostgreSQL: fila durável, nova tentativa só para falha transitória e jobs idempotentes ([ADR-0007](adr/0007-jobs-em-background.md))
 14. **Etiquetas RFID em SGTIN-96 (GS1)**: o RFID conta unidades da embalagem do GTIN, sem rastrear cada unidade; série única pela sequência do banco; leitor atrás da porta `LeitorRfid` no app ([ADR-0010](adr/0010-etiquetas-rfid.md))
 15. **Celular primeiro no app**: toda funcionalidade do app funciona num celular comum, com a câmera como leitor; leitor físico (modo teclado), RFID UHF e SDKs de coletores são extras opcionais, nunca obrigatórios
+16. **Embeddings com um só modelo** (768 dimensões, sem fallback entre modelos) e busca de similares com fallback por trigramas ([ADR-0011](adr/0011-embeddings-e-similares.md))
 
 ## Plano de tarefas
 
@@ -339,7 +340,7 @@ Regras de ordem:
 
 - [x] Parser do XML 4.00 e dígito da chave de acesso (inclui CNPJ alfanumérico e proteção contra XXE)
 - [x] Validação do XML pelos XSD oficiais da NF-e 4.00 (pacote de liberação 010f da SEFAZ, embutido na API)
-- [ ] Job de embeddings de produtos e busca de similares
+- [x] Job de embeddings de produtos e busca de similares
 - [ ] Casamento de itens: de-para, depois GTIN, depois similaridade
 - [ ] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`)
 - [ ] Efetivação: cria produtos, de-para, Recebimento e itens

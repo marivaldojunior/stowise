@@ -65,6 +65,7 @@ doc/LeiturasRfidResolvidas.md
 doc/LoginRequest.md
 doc/LoteInformado.md
 doc/MapeamentoColuna.md
+doc/MetodoSimilaridade.md
 doc/MovimentacaoDetalhe.md
 doc/PagedResultOfCadastroIncompleto.md
 doc/PagedResultOfChamadaIaDetalhe.md
@@ -86,6 +87,8 @@ doc/ProdutoDetalhe.md
 doc/ProdutoFornecedorDetalhe.md
 doc/ProdutoPorCodigo.md
 doc/ProdutoResumo.md
+doc/ProdutoSimilar.md
+doc/ProdutosSimilares.md
 doc/RFIDApi.md
 doc/RedefinirSenhaRequest.md
 doc/RefreshRequest.md
@@ -197,6 +200,7 @@ lib/src/model/leituras_rfid_resolvidas.dart
 lib/src/model/login_request.dart
 lib/src/model/lote_informado.dart
 lib/src/model/mapeamento_coluna.dart
+lib/src/model/metodo_similaridade.dart
 lib/src/model/movimentacao_detalhe.dart
 lib/src/model/paged_result_of_cadastro_incompleto.dart
 lib/src/model/paged_result_of_chamada_ia_detalhe.dart
@@ -218,6 +222,8 @@ lib/src/model/produto_detalhe.dart
 lib/src/model/produto_fornecedor_detalhe.dart
 lib/src/model/produto_por_codigo.dart
 lib/src/model/produto_resumo.dart
+lib/src/model/produto_similar.dart
+lib/src/model/produtos_similares.dart
 lib/src/model/redefinir_senha_request.dart
 lib/src/model/refresh_request.dart
 lib/src/model/registrar_ajuste.dart
@@ -319,6 +325,7 @@ test/leituras_rfid_resolvidas_test.dart
 test/login_request_test.dart
 test/lote_informado_test.dart
 test/mapeamento_coluna_test.dart
+test/metodo_similaridade_test.dart
 test/movimentacao_detalhe_test.dart
 test/paged_result_of_cadastro_incompleto_test.dart
 test/paged_result_of_chamada_ia_detalhe_test.dart
@@ -340,6 +347,8 @@ test/produto_detalhe_test.dart
 test/produto_fornecedor_detalhe_test.dart
 test/produto_por_codigo_test.dart
 test/produto_resumo_test.dart
+test/produto_similar_test.dart
+test/produtos_similares_test.dart
 test/redefinir_senha_request_test.dart
 test/refresh_request_test.dart
 test/registrar_ajuste_test.dart

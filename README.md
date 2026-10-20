@@ -89,6 +89,7 @@ Cada decisão tem um ADR em [`docs/adr/`](docs/adr) com o contexto e as alternat
 | [0008](docs/adr/0008-arquitetura-do-app.md) | App com Riverpod, go_router, flavors e cliente gerado | Dependências trocáveis nos testes e tipos iguais aos da API, ao custo do código gerado no repositório |
 | [0009](docs/adr/0009-deploy-de-demonstracao.md) | Demonstração numa só imagem no Render, banco no Neon | Custo zero e uma só origem (sem CORS), ao custo de a primeira visita acordar o serviço (cerca de 30 s) |
 | [0010](docs/adr/0010-etiquetas-rfid.md) | Etiquetas RFID em SGTIN-96 (GS1), contando unidades, com o leitor atrás de uma porta no app | Funciona com etiquetas de fornecedores e coletores em modo teclado, ao custo de não rastrear cada unidade e de um plugin por fabricante |
+| [0011](docs/adr/0011-embeddings-e-similares.md) | Embeddings dos produtos com um só modelo e busca de similares com fallback por trigramas | Casamento por sentido, não só por letras, ao custo de gerar todos os vetores de novo ao trocar de modelo |
 
 ## Pré-requisitos
 

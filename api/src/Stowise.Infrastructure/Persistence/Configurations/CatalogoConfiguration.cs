@@ -34,6 +34,9 @@ internal sealed class ProdutoConfiguration : IEntityTypeConfiguration<Produto>
         builder.HasIndex(p => p.Sku).IsUnique();
         builder.HasIndex(p => p.CategoriaId);
 
+        // Busca de similares por trigramas quando não há embeddings (ADR-0011).
+        builder.HasIndex(p => p.Descricao).HasMethod("gin").HasOperators("gin_trgm_ops");
+
         // Fila de cadastros incompletos (SPEC, 2.1).
         builder.HasIndex(p => new { p.StatusCadastro, p.Ativo });
 

@@ -70,6 +70,7 @@ import 'package:stowise_api/src/model/leituras_rfid_resolvidas.dart';
 import 'package:stowise_api/src/model/login_request.dart';
 import 'package:stowise_api/src/model/lote_informado.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
+import 'package:stowise_api/src/model/metodo_similaridade.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/paged_result_of_chamada_ia_detalhe.dart';
@@ -91,6 +92,8 @@ import 'package:stowise_api/src/model/produto_detalhe.dart';
 import 'package:stowise_api/src/model/produto_fornecedor_detalhe.dart';
 import 'package:stowise_api/src/model/produto_por_codigo.dart';
 import 'package:stowise_api/src/model/produto_resumo.dart';
+import 'package:stowise_api/src/model/produto_similar.dart';
+import 'package:stowise_api/src/model/produtos_similares.dart';
 import 'package:stowise_api/src/model/redefinir_senha_request.dart';
 import 'package:stowise_api/src/model/refresh_request.dart';
 import 'package:stowise_api/src/model/registrar_ajuste.dart';
@@ -186,6 +189,7 @@ part 'serializers.g.dart';
   LoginRequest,
   LoteInformado,
   MapeamentoColuna,
+  MetodoSimilaridade,
   MovimentacaoDetalhe,
   PagedResultOfCadastroIncompleto,
   PagedResultOfChamadaIaDetalhe,
@@ -207,6 +211,8 @@ part 'serializers.g.dart';
   ProdutoFornecedorDetalhe,
   ProdutoPorCodigo,
   ProdutoResumo,
+  ProdutoSimilar,
+  ProdutosSimilares,
   RedefinirSenhaRequest,
   RefreshRequest,
   RegistrarAjuste,

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Stowise.Application.Importacoes;
+using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Importacoes;
 
 namespace Stowise.Infrastructure.Jobs;
@@ -79,6 +80,7 @@ internal static class JobsSetup
 
         services.AddScoped<IFilaTrabalhos, HangfireFilaTrabalhos>();
         services.AddScoped<ImportacaoJobs>();
+        services.AddScoped<EmbeddingsJobs>();
         services.TryAddScoped<INotificadorImportacao, NotificadorImportacaoNulo>();
         return services;
     }
@@ -98,6 +100,7 @@ internal static class JobsSetup
                 // Abaixo do limite de parada do host (30 s): um job interrompido volta para a fila e roda de novo.
                 server.ShutdownTimeout = TimeSpan.FromSeconds(10);
             });
+            services.AddHostedService<AgendaRecorrente>();
         }
 
         return services;

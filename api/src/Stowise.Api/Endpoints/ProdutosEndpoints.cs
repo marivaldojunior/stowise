@@ -25,6 +25,13 @@ public static class ProdutosEndpoints
             .WithSummary("Fila de produtos ativos com peso ou medida faltando em alguma embalagem, dos mais antigos aos mais novos.")
             .Produces<PagedResult<CadastroIncompleto>>();
 
+        group.MapGet("/similares", async (IBuscaProdutosSimilares busca, string? texto, int? limite, CancellationToken ct) =>
+                (await busca.FindAsync(texto, limite, ct)).ToHttpResult(TypedResults.Ok))
+            .WithName("BuscarProdutosSimilares")
+            .WithSummary("Produtos ativos parecidos com o texto (ex.: a descrição da NF-e): por embeddings quando ligados, senão por trigramas. Só sugere.")
+            .Produces<ProdutosSimilares>()
+            .ProducesValidationProblem();
+
         group.MapGet("/{id:guid}", GetAsync)
             .WithName(ObterProdutoRoute)
             .Produces<ProdutoDetalhe>()

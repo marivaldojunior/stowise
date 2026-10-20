@@ -77,6 +77,8 @@ public static class DependencyInjection
         services.AddSingleton<IProvedoresIa, ProvedoresIa>();
         services.AddSingleton<IRegistroChamadasIa, RegistroChamadasIaEf>();
         services.AddSingleton<GatewayIa>();
+        services.AddSingleton<GeradorEmbeddings>();
+        services.AddScoped<IBuscaProdutosSimilares, BuscaProdutosSimilares>();
         services.AddScoped<IConsultaIaService, ConsultaIaService>();
         services.AddScoped<ICotaIaService, CotaIaService>();
         services.AddSingleton<IVerificadorCotaIa, VerificadorCotaIa>();

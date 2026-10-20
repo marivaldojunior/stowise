@@ -1551,6 +1551,69 @@
         ]
       }
     },
+    "/api/v1/produtos/similares": {
+      "get": {
+        "tags": [
+          "Catálogo"
+        ],
+        "summary": "Produtos ativos parecidos com o texto (ex.: a descrição da NF-e): por embeddings quando ligados, senão por trigramas. Só sugere.",
+        "operationId": "BuscarProdutosSimilares",
+        "parameters": [
+          {
+            "name": "texto",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProdutosSimilares"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/produtos/{id}": {
       "get": {
         "tags": [
@@ -9205,6 +9268,12 @@
           }
         }
       },
+      "MetodoSimilaridade": {
+        "enum": [
+          "Semantica",
+          "Trigramas"
+        ]
+      },
       "MovimentacaoDetalhe": {
         "required": [
           "id",
@@ -10046,6 +10115,53 @@
           },
           "statusCadastro": {
             "$ref": "#/components/schemas/StatusCadastro"
+          }
+        }
+      },
+      "ProdutoSimilar": {
+        "required": [
+          "id",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "pontuacao"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "pontuacao": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ProdutosSimilares": {
+        "required": [
+          "metodo",
+          "produtos"
+        ],
+        "type": "object",
+        "properties": {
+          "metodo": {
+            "$ref": "#/components/schemas/MetodoSimilaridade"
+          },
+          "produtos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ProdutoSimilar"
+            }
           }
         }
       },

@@ -75,6 +75,7 @@ Class | Method | HTTP request | Description
 [*CatlogoApi*](doc/CatlogoApi.md) | [**atualizarCategoria**](doc/CatlogoApi.md#atualizarcategoria) | **PUT** /api/v1/categorias/{id} | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**atualizarEmbalagem**](doc/CatlogoApi.md#atualizarembalagem) | **PUT** /api/v1/produtos/{id}/embalagens/{embalagemId} | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**atualizarProduto**](doc/CatlogoApi.md#atualizarproduto) | **PUT** /api/v1/produtos/{id} | Exige a versão lida. Se o produto mudou desde então, responde 409.
+[*CatlogoApi*](doc/CatlogoApi.md) | [**buscarProdutosSimilares**](doc/CatlogoApi.md#buscarprodutossimilares) | **GET** /api/v1/produtos/similares | Produtos ativos parecidos com o texto (ex.: a descrição da NF-e): por embeddings quando ligados, senão por trigramas. Só sugere.
 [*CatlogoApi*](doc/CatlogoApi.md) | [**criarCategoria**](doc/CatlogoApi.md#criarcategoria) | **POST** /api/v1/categorias | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**criarProduto**](doc/CatlogoApi.md#criarproduto) | **POST** /api/v1/produtos | 
 [*CatlogoApi*](doc/CatlogoApi.md) | [**desativarProduto**](doc/CatlogoApi.md#desativarproduto) | **POST** /api/v1/produtos/{id}/desativar | 
@@ -217,6 +218,7 @@ Class | Method | HTTP request | Description
  - [LoginRequest](doc/LoginRequest.md)
  - [LoteInformado](doc/LoteInformado.md)
  - [MapeamentoColuna](doc/MapeamentoColuna.md)
+ - [MetodoSimilaridade](doc/MetodoSimilaridade.md)
  - [MovimentacaoDetalhe](doc/MovimentacaoDetalhe.md)
  - [PagedResultOfCadastroIncompleto](doc/PagedResultOfCadastroIncompleto.md)
  - [PagedResultOfChamadaIaDetalhe](doc/PagedResultOfChamadaIaDetalhe.md)
@@ -238,6 +240,8 @@ Class | Method | HTTP request | Description
  - [ProdutoFornecedorDetalhe](doc/ProdutoFornecedorDetalhe.md)
  - [ProdutoPorCodigo](doc/ProdutoPorCodigo.md)
  - [ProdutoResumo](doc/ProdutoResumo.md)
+ - [ProdutoSimilar](doc/ProdutoSimilar.md)
+ - [ProdutosSimilares](doc/ProdutosSimilares.md)
  - [RedefinirSenhaRequest](doc/RedefinirSenhaRequest.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [RegistrarAjuste](doc/RegistrarAjuste.md)

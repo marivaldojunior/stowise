@@ -33,6 +33,38 @@ public sealed class IaOptions
 
     /// <summary>Ajustes por funcionalidade (chave = nome de <see cref="FuncionalidadeIa"/>). Sem ajuste, vale a lista global.</summary>
     public Dictionary<string, FuncionalidadeIaOptions> Funcionalidades { get; } = new(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>Modelo de embeddings (ADR-0011): um só, sem fallback, porque vetores de modelos diferentes não se comparam.</summary>
+    public EmbeddingsIaOptions Embeddings { get; } = new();
+}
+
+/// <summary>Embeddings dos produtos (ADR-0011). Desligado, a busca de similares usa trigramas.</summary>
+public sealed class EmbeddingsIaOptions
+{
+    /// <summary>Dimensões do vetor gravado; o modelo precisa gerar (ou aceitar reduzir para) este tamanho.</summary>
+    public const int Dimensoes = 768;
+
+    public bool Habilitado { get; set; }
+
+    /// <summary>OpenAICompativel, Gemini ou Ollama.</summary>
+    public string Tipo { get; set; } = string.Empty;
+
+    /// <summary>Ex.: nomic-embed-text (Ollama), text-embedding-3-small (OpenAI), gemini-embedding-001.</summary>
+    public string Modelo { get; set; } = string.Empty;
+
+    public string? Endpoint { get; set; }
+
+    public string? ApiKey { get; set; }
+
+    /// <summary>Textos por chamada ao provedor.</summary>
+    public int Lote { get; set; } = 64;
+
+    public double TimeoutSegundos { get; set; } = 30;
+
+    public int Tentativas { get; set; } = 3;
+
+    /// <summary>Preço por milhão de tokens de entrada, para o custo estimado no registro.</summary>
+    public decimal PrecoEntradaPorMilhao { get; set; }
 }
 
 /// <summary>Um modelo num provedor. Dois modelos do mesmo provedor são duas entradas com nomes diferentes.</summary>
