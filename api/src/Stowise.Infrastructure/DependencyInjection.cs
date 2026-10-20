@@ -55,6 +55,7 @@ public static class DependencyInjection
         services.AddScoped<IProdutoService, ProdutoService>();
         services.AddScoped<IFornecedorService, FornecedorService>();
         services.AddSingleton<ILeitorNfe, LeitorNfe>();
+        services.AddScoped<IAnaliseNotaFiscal, AnaliseNotaFiscalService>();
         services.AddScoped<IArmazemService, ArmazemService>();
         services.AddScoped<IEnderecoService, EnderecoService>();
         services.AddScoped<IMovimentacaoService, MovimentacaoService>();
