@@ -39,4 +39,9 @@
     <InternalsVisibleTo Include="Stowise.IntegrationTests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Schemas oficiais da NF-e 4.00 (Portal Nacional da NF-e), lidos do assembly pelo ValidadorSchemaNfe. -->
+    <EmbeddedResource Include="NotasFiscais\Schemas\*.xsd" LogicalName="Schemas.%(Filename)%(Extension)" />
+  </ItemGroup>
+
 </Project>

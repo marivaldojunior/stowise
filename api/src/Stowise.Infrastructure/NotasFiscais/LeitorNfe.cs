@@ -11,7 +11,8 @@ namespace Stowise.Infrastructure.NotasFiscais;
 
 /// <summary>
 /// Leitor do XML da NF-e 4.00. O XML vem do usuário: DTD e entidades externas ficam bloqueadas (XXE) e o tamanho é
-/// limitado. A nota pode ser o <c>NFe</c> sozinho ou o <c>nfeProc</c> (nota + protocolo de autorização).
+/// limitado. A nota pode ser o <c>NFe</c> sozinho ou o <c>nfeProc</c> (nota + protocolo de autorização). O <c>NFe</c> é
+/// validado pelos schemas oficiais (<see cref="ValidadorSchemaNfe"/>); o protocolo, pela chave e pelo cStat.
 /// </summary>
 internal sealed class LeitorNfe : ILeitorNfe
 {
@@ -66,6 +67,12 @@ internal sealed class LeitorNfe : ILeitorNfe
         if ((string?)infNfe.Attribute("versao") != "4.00")
         {
             return Falha($"Só a NF-e versão 4.00 é aceita; este XML é da versão {(string?)infNfe.Attribute("versao") ?? "desconhecida"}.");
+        }
+
+        var errosSchema = ValidadorSchemaNfe.Validate(nfe!);
+        if (errosSchema.Count > 0)
+        {
+            return Falha($"O XML não segue o schema oficial da NF-e 4.00: {string.Join(" | ", errosSchema)}");
         }
 
         var id = (string?)infNfe.Attribute("Id") ?? string.Empty;

@@ -24,4 +24,8 @@
     <ProjectReference Include="..\..\src\Stowise.Infrastructure\Stowise.Infrastructure.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="NotasFiscais/Exemplos/*.xml" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
 </Project>

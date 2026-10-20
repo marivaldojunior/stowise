@@ -1,4 +1,5 @@
 using System.Text;
+using System.Xml.Linq;
 using Stowise.Application.Common;
 using Stowise.Infrastructure.NotasFiscais;
 
@@ -72,6 +73,14 @@ public class LeitorNfeTests
     }
 
     [Fact]
+    public void Invoice_must_follow_the_official_schema()
+    {
+        var semCfopValido = NotaExemplo().Replace("<CFOP>5102</CFOP>", "<CFOP>51X2</CFOP>", StringComparison.Ordinal);
+
+        AssertFalha(semCfopValido, "não segue o schema oficial da NF-e 4.00");
+    }
+
+    [Fact]
     public void Only_version_4_is_accepted()
     {
         AssertFalha(NotaExemplo(versao: "3.10"), "versão 4.00");
@@ -112,48 +121,41 @@ public class LeitorNfeTests
         Assert.Contains(mensagem, resultado.Error.Fields!["xml"][0], StringComparison.Ordinal);
     }
 
+    /// <summary>NF-e fictícia completa, válida pelo schema oficial (Exemplos/nfe-autorizada.xml), com alterações para cada caso.</summary>
     private static string NotaExemplo(
-        string id = "NFe" + Chave,
-        string cnpj = "11222333000181",
-        string versao = "4.00",
+        string? id = null,
+        string? cnpj = null,
+        string? versao = null,
         bool comProtocolo = true,
-        string chaveProtocolo = Chave)
+        string? chaveProtocolo = null)
     {
-        var nfe = $"""
-            <NFe xmlns="http://www.portalfiscal.inf.br/nfe">
-              <infNFe versao="{versao}" Id="{id}">
-                <ide>
-                  <cUF>35</cUF><cNF>12345678</cNF><natOp>Venda</natOp><mod>55</mod><serie>1</serie><nNF>1234</nNF>
-                  <dhEmi>2026-10-20T09:30:00-03:00</dhEmi><tpNF>1</tpNF><tpEmis>1</tpEmis><cDV>7</cDV>
-                </ide>
-                <emit><CNPJ>{cnpj}</CNPJ><xNome>Distribuidora Exemplo Ltda</xNome><xFant>Exemplo</xFant></emit>
-                <det nItem="1">
-                  <prod>
-                    <cProd>REF-001</cProd><cEAN>17891000315504</cEAN><xProd>REFRIGERANTE COLA 2L CX 12</xProd>
-                    <NCM>22021000</NCM><CEST>0300700</CEST><CFOP>5102</CFOP><uCom>CX</uCom><qCom>10.0000</qCom>
-                    <vUnCom>95.4000000000</vUnCom><vProd>954.00</vProd><cEANTrib>7891000315507</cEANTrib><uTrib>UN</uTrib>
-                    <qTrib>120.0000</qTrib><vUnTrib>7.9500000000</vUnTrib><indTot>1</indTot>
-                    <rastro><nLote>L2610A</nLote><qLote>10.000</qLote><dFab>2026-10-01</dFab><dVal>2027-04-30</dVal></rastro>
-                  </prod>
-                </det>
-                <det nItem="2">
-                  <prod>
-                    <cProd>REF-077</cProd><cEAN>SEM GTIN</cEAN><xProd>COPO DESCARTAVEL 200ML</xProd><NCM>39241000</NCM>
-                    <CFOP>5102</CFOP><uCom>PCT</uCom><qCom>5</qCom><vUnCom>12.5</vUnCom><vProd>62.50</vProd>
-                    <cEANTrib>SEM GTIN</cEANTrib><uTrib>UN</uTrib><qTrib>500</qTrib><vUnTrib>0.125</vUnTrib><indTot>1</indTot>
-                  </prod>
-                </det>
-              </infNFe>
-            </NFe>
-            """;
+        var xml = File.ReadAllText(Path.Combine(AppContext.BaseDirectory, "NotasFiscais", "Exemplos", "nfe-autorizada.xml"));
+        if (id is not null)
+        {
+            xml = xml.Replace($"Id=\"NFe{Chave}\"", $"Id=\"{id}\"", StringComparison.Ordinal);
+        }
 
-        return comProtocolo
-            ? $"""
-                <nfeProc xmlns="http://www.portalfiscal.inf.br/nfe" versao="4.00">
-                {nfe}
-                <protNFe versao="4.00"><infProt><tpAmb>1</tpAmb><chNFe>{chaveProtocolo}</chNFe><cStat>100</cStat><xMotivo>Autorizado o uso da NF-e</xMotivo></infProt></protNFe>
-                </nfeProc>
-                """
-            : nfe;
+        if (cnpj is not null)
+        {
+            xml = xml.Replace("<CNPJ>11222333000181</CNPJ>", $"<CNPJ>{cnpj}</CNPJ>", StringComparison.Ordinal);
+        }
+
+        if (versao is not null)
+        {
+            xml = xml.Replace("<infNFe versao=\"4.00\"", $"<infNFe versao=\"{versao}\"", StringComparison.Ordinal);
+        }
+
+        if (chaveProtocolo is not null)
+        {
+            xml = xml.Replace($"<chNFe>{Chave}</chNFe>", $"<chNFe>{chaveProtocolo}</chNFe>", StringComparison.Ordinal);
+        }
+
+        if (!comProtocolo)
+        {
+            var nfe = XDocument.Parse(xml).Root!.Element(XName.Get("NFe", "http://www.portalfiscal.inf.br/nfe"))!;
+            xml = nfe.ToString();
+        }
+
+        return xml;
     }
 }
