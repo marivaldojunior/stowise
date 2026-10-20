@@ -512,7 +512,7 @@ Etiquetas UHF no padrão GS1 (EPC SGTIN-96), conforme o [ADR-0010](adr/0010-etiq
 - [x] Busca de produto por código aceita o EPC (coletor RFID em modo teclado funciona no app atual)
 - [x] `POST /rfid/leituras`: lote de EPCs → produtos, embalagens e quantidades
 - [x] `POST /rfid/etiquetas`: EPCs para uma embalagem com GTIN, com série da sequência `rfid_serial`
-- [ ] App: porta `LeitorRfid` (ler em massa, parar, gravar), implementação indisponível por padrão e repositório dos endpoints
+- [x] App: porta `LeitorRfid` (ler em massa, parar, gravar), implementação indisponível por padrão e repositório dos endpoints
 
 **R.2 App — Leitor RFID**
 
