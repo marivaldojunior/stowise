@@ -342,7 +342,7 @@ Regras de ordem:
 - [x] Validação do XML pelos XSD oficiais da NF-e 4.00 (pacote de liberação 010f da SEFAZ, embutido na API)
 - [x] Job de embeddings de produtos e busca de similares
 - [x] Casamento de itens: de-para, depois GTIN, depois similaridade (`POST /notas-fiscais/analise`, sem gravar)
-- [ ] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`)
+- [x] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`), com alertas para a revisão
 - [ ] Efetivação: cria produtos, de-para, Recebimento e itens
 
 **2.3 API — Recebimento e armazenagem**
