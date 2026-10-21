@@ -26,7 +26,8 @@ Depois da conferência, cada item do recebimento precisa de um endereço (SPEC, 
    - **Consolidação**: mesmo lote (100), mesmo produto em outro lote (70), endereço vazio (40), só outros produtos (0), todos parametrizáveis.
 5. **Medidas da carga.** O peso e o volume por unidade base vêm da maior embalagem que tem o dado (`MedidasUnitarias`). O estoque que já está no endereço usa a mesma conta.
 6. **Snapshot.** Cada sugestão leva a nota, o peso, o estado e a explicação de todas as regras (`NotaRegra`). A tarefa de armazenagem grava essa lista em `PontuacaoJson`, para explicar a sugestão depois que os pesos mudam.
-7. **Configuração.** As cinco linhas de `regras_armazenagem` entram pela migration, com os parâmetros padrão. A Gestão muda o peso (0 a 100), o estado e os parâmetros com a versão lida (`xmin`, 409 se mudou). Um parâmetro que a regra não conhece é recusado (422).
+7. **Tarefas.** A conclusão da conferência cria uma `TarefaArmazenagem` por item e lote contados, com o snapshot e a `RegrasVersao` (resumo SHA-256 da configuração). A carga de cada tarefa entra na ocupação do endereço sugerido para as tarefas seguintes do mesmo recebimento. Tarefas pendentes de outros recebimentos não reservam espaço. A confirmação faz a entrada no estoque com o id da tarefa como chave de idempotência. Fora da sugestão, o motivo é obrigatório e a zona continua valendo.
+8. **Configuração.** As cinco linhas de `regras_armazenagem` entram pela migration, com os parâmetros padrão. A Gestão muda o peso (0 a 100), o estado e os parâmetros com a versão lida (`xmin`, 409 se mudou). Um parâmetro que a regra não conhece é recusado (422).
 
 ## Consequências
 

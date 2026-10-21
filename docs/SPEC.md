@@ -350,7 +350,7 @@ Regras de ordem:
 
 - [x] Fluxo de status do recebimento e conferência (`/recebimentos`; a conferência não mexe no saldo)
 - [x] Motor de pontuação: interface de regra e regras de capacidade, zona, curva ABC, FEFO e consolidação
-- [ ] Geração de TarefaArmazenagem com snapshot da pontuação; confirmação e divergência
+- [x] Geração de TarefaArmazenagem com snapshot da pontuação; confirmação e divergência
 - [ ] Job de recálculo da curva ABC
 
 **2.4 Web — NF-e e operação**
