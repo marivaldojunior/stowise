@@ -4,12 +4,15 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Stowise.Api.Endpoints;
 using Stowise.Application.Common;
 using Stowise.Application.NotasFiscais;
 using Stowise.Application.Recebimentos;
+using Stowise.Domain.Armazenagem;
 using Stowise.Domain.Recebimentos;
+using Stowise.Infrastructure.Persistence;
 using Stowise.IntegrationTests.Infrastructure;
 
 namespace Stowise.IntegrationTests.Recebimentos;
@@ -97,6 +100,21 @@ public sealed class ConferenciaFlowTests : IDisposable
 
         var conferidos = await SendAsync<PagedResult<RecebimentoResumo>>(token, HttpMethod.Get, "/api/v1/recebimentos?status=Conferido&busca=Exemplo");
         Assert.Equal(2, Assert.Single(conferidos.Itens).ItensConferidos);
+
+
+        // A conclusão cria uma tarefa por item e lote contados. Sem endereços cadastrados, não há sugestão.
+        using var scope = _factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<StowiseDbContext>();
+        var tarefas = await db.TarefasArmazenagem.AsNoTracking().Where(t => t.RecebimentoId == recebimentoId).OrderBy(t => t.Quantidade).ToListAsync();
+        Assert.Equal([120m, 400m], tarefas.Select(t => t.Quantidade));
+        Assert.Equal("L2610A", tarefas[0].LoteNumero);
+        Assert.Equal(new DateOnly(2027, 4, 30), tarefas[0].LoteValidade);
+        Assert.All(tarefas, t =>
+        {
+            Assert.Equal(StatusTarefaArmazenagem.Pendente, t.Status);
+            Assert.Null(t.EnderecoSugeridoId);
+            Assert.Equal(TarefaArmazenagem.RegrasVersaoLength, t.RegrasVersao.Length);
+        });
     }
 
     /// <summary>A NF-e de exemplo com dois produtos novos (o refrigerante controla lote e validade pelo rastro).</summary>

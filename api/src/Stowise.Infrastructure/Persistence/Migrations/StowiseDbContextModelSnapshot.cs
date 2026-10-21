@@ -250,6 +250,127 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Armazenagem.TarefaArmazenagem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset?>("ConcluidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("concluido_em");
+
+                    b.Property<Guid?>("ConcluidoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("concluido_por");
+
+                    b.Property<DateTimeOffset>("CriadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("criado_em");
+
+                    b.Property<Guid?>("EnderecoConfirmadoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endereco_confirmado_id");
+
+                    b.Property<Guid?>("EnderecoSugeridoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("endereco_sugerido_id");
+
+                    b.Property<DateOnly?>("LoteFabricacao")
+                        .HasColumnType("date")
+                        .HasColumnName("lote_fabricacao");
+
+                    b.Property<string>("LoteNumero")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("lote_numero");
+
+                    b.Property<DateOnly?>("LoteValidade")
+                        .HasColumnType("date")
+                        .HasColumnName("lote_validade");
+
+                    b.Property<string>("MotivoDivergencia")
+                        .HasMaxLength(250)
+                        .HasColumnType("character varying(250)")
+                        .HasColumnName("motivo_divergencia");
+
+                    b.Property<Guid?>("MovimentacaoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("movimentacao_id");
+
+                    b.Property<string>("Notas")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("notas");
+
+                    b.Property<decimal?>("Pontuacao")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("pontuacao");
+
+                    b.Property<Guid>("ProdutoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("produto_id");
+
+                    b.Property<decimal>("Quantidade")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantidade");
+
+                    b.Property<Guid>("RecebimentoId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recebimento_id");
+
+                    b.Property<Guid>("RecebimentoItemId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("recebimento_item_id");
+
+                    b.Property<string>("RegrasVersao")
+                        .IsRequired()
+                        .HasMaxLength(12)
+                        .HasColumnType("character(12)")
+                        .HasColumnName("regras_versao")
+                        .IsFixedLength();
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("status");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_tarefas_armazenagem");
+
+                    b.HasIndex("EnderecoConfirmadoId")
+                        .HasDatabaseName("ix_tarefas_armazenagem_endereco_confirmado_id");
+
+                    b.HasIndex("EnderecoSugeridoId")
+                        .HasDatabaseName("ix_tarefas_armazenagem_endereco_sugerido_id");
+
+                    b.HasIndex("MovimentacaoId")
+                        .HasDatabaseName("ix_tarefas_armazenagem_movimentacao_id");
+
+                    b.HasIndex("ProdutoId")
+                        .HasDatabaseName("ix_tarefas_armazenagem_produto_id");
+
+                    b.HasIndex("RecebimentoId")
+                        .HasDatabaseName("ix_tarefas_armazenagem_recebimento_id");
+
+                    b.HasIndex("RecebimentoItemId")
+                        .HasDatabaseName("ix_tarefas_armazenagem_recebimento_item_id");
+
+                    b.HasIndex("Status", "CriadoEm")
+                        .HasDatabaseName("ix_tarefas_armazenagem_status_criado_em");
+
+                    b.ToTable("tarefas_armazenagem", (string)null);
+                });
+
             modelBuilder.Entity("Stowise.Domain.Catalogo.Categoria", b =>
                 {
                     b.Property<Guid>("Id")
@@ -2032,6 +2153,48 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_usuario_tokens_usuarios_user_id");
+                });
+
+            modelBuilder.Entity("Stowise.Domain.Armazenagem.TarefaArmazenagem", b =>
+                {
+                    b.HasOne("Stowise.Domain.Estrutura.Endereco", null)
+                        .WithMany()
+                        .HasForeignKey("EnderecoConfirmadoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_tarefas_armazenagem_enderecos_endereco_confirmado_id");
+
+                    b.HasOne("Stowise.Domain.Estrutura.Endereco", null)
+                        .WithMany()
+                        .HasForeignKey("EnderecoSugeridoId")
+                        .OnDelete(DeleteBehavior.SetNull)
+                        .HasConstraintName("fk_tarefas_armazenagem_enderecos_endereco_sugerido_id");
+
+                    b.HasOne("Stowise.Domain.Estoque.Movimentacao", null)
+                        .WithMany()
+                        .HasForeignKey("MovimentacaoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_tarefas_armazenagem_movimentacoes_movimentacao_id");
+
+                    b.HasOne("Stowise.Domain.Catalogo.Produto", null)
+                        .WithMany()
+                        .HasForeignKey("ProdutoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tarefas_armazenagem_produtos_produto_id");
+
+                    b.HasOne("Stowise.Domain.Recebimentos.Recebimento", null)
+                        .WithMany()
+                        .HasForeignKey("RecebimentoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tarefas_armazenagem_recebimentos_recebimento_id");
+
+                    b.HasOne("Stowise.Domain.Recebimentos.RecebimentoItem", null)
+                        .WithMany()
+                        .HasForeignKey("RecebimentoItemId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_tarefas_armazenagem_recebimento_itens_recebimento_item_id");
                 });
 
             modelBuilder.Entity("Stowise.Domain.Catalogo.Categoria", b =>

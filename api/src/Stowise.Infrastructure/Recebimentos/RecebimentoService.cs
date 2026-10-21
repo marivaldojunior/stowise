@@ -3,11 +3,12 @@ using Stowise.Application.Common;
 using Stowise.Application.Recebimentos;
 using Stowise.Domain.Common;
 using Stowise.Domain.Recebimentos;
+using Stowise.Infrastructure.Armazenagem;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Recebimentos;
 
-internal sealed class RecebimentoService(StowiseDbContext db, TimeProvider time) : IRecebimentoService
+internal sealed class RecebimentoService(StowiseDbContext db, PlanejadorArmazenagem planejador, TimeProvider time) : IRecebimentoService
 {
     public async Task<PagedResult<RecebimentoResumo>> ListAsync(RecebimentoFiltro filtro, CancellationToken cancellationToken = default)
     {
@@ -77,8 +78,18 @@ internal sealed class RecebimentoService(StowiseDbContext db, TimeProvider time)
         Guid id,
         AlterarRecebimento comando,
         Guid usuarioId,
-        CancellationToken cancellationToken = default) =>
-        ChangeAsync(id, comando, r => r.FinishConferencia(usuarioId, time.GetUtcNow()), cancellationToken);
+        CancellationToken cancellationToken = default)
+    {
+        var agora = time.GetUtcNow();
+
+        // As tarefas de armazenagem nascem com a conferência concluída, no mesmo SaveChanges.
+        return ChangeAsync(
+            id,
+            comando,
+            r => r.FinishConferencia(usuarioId, agora),
+            cancellationToken,
+            async (r, ct) => db.TarefasArmazenagem.AddRange(await planejador.PlanejarAsync(r, agora, ct)));
+    }
 
     public async Task<Result<RecebimentoDetalhe>> ConferirItemAsync(
         Guid id,
@@ -127,7 +138,8 @@ internal sealed class RecebimentoService(StowiseDbContext db, TimeProvider time)
         Guid id,
         AlterarRecebimento comando,
         Action<Recebimento> mudanca,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        Func<Recebimento, CancellationToken, Task>? depois = null)
     {
         ArgumentNullException.ThrowIfNull(comando);
         if (comando.Versao is null)
@@ -153,6 +165,11 @@ internal sealed class RecebimentoService(StowiseDbContext db, TimeProvider time)
         catch (DomainException e)
         {
             return AppError.BusinessRule(e.Message);
+        }
+
+        if (depois is not null)
+        {
+            await depois(recebimento, cancellationToken);
         }
 
         db.Entry(recebimento).Property(r => r.Versao).OriginalValue = comando.Versao.Value;

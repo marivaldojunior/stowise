@@ -3,13 +3,14 @@ using Stowise.Application.Armazenagem;
 using Stowise.Application.Common;
 using Stowise.Domain.Armazenagem;
 using Stowise.Domain.Common;
-using Stowise.Domain.Estrutura;
 using Stowise.Infrastructure.Persistence;
 
 namespace Stowise.Infrastructure.Armazenagem;
 
-internal sealed class ArmazenagemService(StowiseDbContext db, MotorArmazenagem motor, TimeProvider time) : IArmazenagemService
+internal sealed class ArmazenagemService(StowiseDbContext db, PlanejadorArmazenagem planejador, TimeProvider time) : IArmazenagemService
 {
+    private MotorArmazenagem Motor => planejador.Motor;
+
     private const int LimitePadrao = 5;
     private const int LimiteMaximo = 20;
     private const int DescartadosMaximo = 20;
@@ -60,9 +61,8 @@ internal sealed class ArmazenagemService(StowiseDbContext db, MotorArmazenagem m
         var item = new ItemArmazenagem(
             produto.Id, produto.ClasseArmazenagem, produto.ClasseAbc, pedido.LoteId, validade, quantidade, medidas.PesoDe(quantidade), medidas.VolumeDe(quantidade));
 
-        var candidatos = await LoadCandidatosAsync(pedido.ArmazemId, cancellationToken);
-        var configuracao = await db.RegrasArmazenagem.AsNoTracking().ToListAsync(cancellationToken);
-        var resultado = motor.Sugerir(item, candidatos, configuracao.Select(r => r.ToConfiguracao()).ToList());
+        var candidatos = await planejador.LoadCandidatosAsync(pedido.ArmazemId, cancellationToken);
+        var resultado = Motor.Sugerir(item, candidatos, await planejador.LoadConfiguracaoAsync(cancellationToken));
 
         var limite = Math.Clamp(pedido.Limite ?? LimitePadrao, 1, LimiteMaximo);
         return new SugestaoArmazenagem(
@@ -83,7 +83,7 @@ internal sealed class ArmazenagemService(StowiseDbContext db, MotorArmazenagem m
     public async Task<IReadOnlyList<RegraArmazenagemDetalhe>> ListRegrasAsync(CancellationToken cancellationToken = default)
     {
         var regras = await db.RegrasArmazenagem.AsNoTracking().ToListAsync(cancellationToken);
-        return motor.Regras
+        return Motor.Regras
             .Select(r => regras.FirstOrDefault(c => c.Codigo == r.Codigo) is { } config ? ToDetalhe(r, config) : null)
             .OfType<RegraArmazenagemDetalhe>()
             .ToList();
@@ -116,7 +116,7 @@ internal sealed class ArmazenagemService(StowiseDbContext db, MotorArmazenagem m
             return AppError.Validation("versao", "Informe a versão lida da regra.");
         }
 
-        var regra = motor.Regras.FirstOrDefault(r => r.Codigo == codigo);
+        var regra = Motor.Regras.FirstOrDefault(r => r.Codigo == codigo);
         var config = regra is null ? null : await db.RegrasArmazenagem.FirstOrDefaultAsync(r => r.Codigo == codigo, cancellationToken);
         if (regra is null || config is null)
         {
@@ -149,52 +149,6 @@ internal sealed class ArmazenagemService(StowiseDbContext db, MotorArmazenagem m
 
         var atualizada = await db.RegrasArmazenagem.AsNoTracking().FirstAsync(r => r.Id == config.Id, cancellationToken);
         return ToDetalhe(regra, atualizada);
-    }
-
-    /// <summary>Endereços não bloqueados, com a classe da zona e o estoque de cada um (peso e volume pelas embalagens).</summary>
-    private async Task<IReadOnlyList<CandidatoEndereco>> LoadCandidatosAsync(Guid? armazemId, CancellationToken cancellationToken)
-    {
-        var enderecosQuery = db.Enderecos.AsNoTracking().Where(e => e.Status != StatusEndereco.Bloqueado);
-        if (armazemId is { } id)
-        {
-            enderecosQuery = enderecosQuery.Where(e => e.ArmazemId == id);
-        }
-
-        var enderecos = await (
-                from e in enderecosQuery
-                join z in db.Zonas on e.ZonaId equals z.Id
-                select new { Endereco = e, z.ClasseArmazenagem })
-            .ToListAsync(cancellationToken);
-
-        var saldos = await (
-                from s in db.Saldos.AsNoTracking()
-                join e in enderecosQuery on s.EnderecoId equals e.Id
-                join l in db.Lotes on s.LoteId equals l.Id into lotes
-                from l in lotes.DefaultIfEmpty()
-                where s.Quantidade > 0
-                select new { s.EnderecoId, s.ProdutoId, s.LoteId, Validade = l == null ? null : l.Validade, s.Quantidade })
-            .ToListAsync(cancellationToken);
-
-        var produtos = saldos.Select(s => s.ProdutoId).Distinct().ToList();
-        var medidas = (await db.ProdutoEmbalagens.AsNoTracking().Where(e => produtos.Contains(e.ProdutoId)).ToListAsync(cancellationToken))
-            .GroupBy(e => e.ProdutoId)
-            .ToDictionary(g => g.Key, MedidasUnitarias.From);
-
-        var ocupacao = saldos
-            .GroupBy(s => s.EnderecoId)
-            .ToDictionary(
-                g => g.Key,
-                g => (IReadOnlyList<OcupacaoEndereco>)g
-                    .Select(s =>
-                    {
-                        var m = medidas.GetValueOrDefault(s.ProdutoId);
-                        return new OcupacaoEndereco(s.ProdutoId, s.LoteId, s.Validade, s.Quantidade, m?.PesoDe(s.Quantidade), m?.VolumeDe(s.Quantidade));
-                    })
-                    .ToList());
-
-        return enderecos
-            .Select(x => CandidatoEndereco.From(x.Endereco, x.ClasseArmazenagem, ocupacao.GetValueOrDefault(x.Endereco.Id) ?? []))
-            .ToList();
     }
 
     private static RegraArmazenagemDetalhe ToDetalhe(IRegraArmazenagem regra, RegraArmazenagem config) =>

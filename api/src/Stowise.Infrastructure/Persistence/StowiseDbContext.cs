@@ -44,6 +44,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
 
     public DbSet<RegraArmazenagem> RegrasArmazenagem => Set<RegraArmazenagem>();
 
+    public DbSet<TarefaArmazenagem> TarefasArmazenagem => Set<TarefaArmazenagem>();
+
     public DbSet<Lote> Lotes => Set<Lote>();
 
     public DbSet<Movimentacao> Movimentacoes => Set<Movimentacao>();
