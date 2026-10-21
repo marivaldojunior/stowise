@@ -152,6 +152,11 @@ Class | Method | HTTP request | Description
 [*NotasFiscaisApi*](doc/NotasFiscaisApi.md) | [**efetivarNotaFiscal**](doc/NotasFiscaisApi.md#efetivarnotafiscal) | **POST** /api/v1/notas-fiscais/efetivacao | Grava a nota revisada: refaz a análise, aplica a decisão de cada item e cria o fornecedor novo, os produtos novos (Incompletos), os de-para e o recebimento. Nota já recebida: 409.
 [*RFIDApi*](doc/RFIDApi.md) | [**gerarEtiquetasRfid**](doc/RFIDApi.md#geraretiquetasrfid) | **POST** /api/v1/rfid/etiquetas | Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.
 [*RFIDApi*](doc/RFIDApi.md) | [**resolverLeiturasRfid**](doc/RFIDApi.md#resolverleiturasrfid) | **POST** /api/v1/rfid/leituras | Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.
+[*RecebimentosApi*](doc/RecebimentosApi.md) | [**concluirConferenciaRecebimento**](doc/RecebimentosApi.md#concluirconferenciarecebimento) | **POST** /api/v1/recebimentos/{id}/conferencia/conclusao | Fecha a conferência quando todos os itens foram contados. Exige a versão lida (409 se mudou).
+[*RecebimentosApi*](doc/RecebimentosApi.md) | [**conferirItemRecebimento**](doc/RecebimentosApi.md#conferiritemrecebimento) | **PUT** /api/v1/recebimentos/{id}/itens/{itemId}/conferencia | Registra ou corrige a contagem de um item, na unidade da nota, com os lotes. A diferença com a nota fica marcada como divergência.
+[*RecebimentosApi*](doc/RecebimentosApi.md) | [**iniciarConferenciaRecebimento**](doc/RecebimentosApi.md#iniciarconferenciarecebimento) | **POST** /api/v1/recebimentos/{id}/conferencia/inicio | A mercadoria chegou: marca a chegada e libera a contagem. Exige a versão lida (409 se mudou).
+[*RecebimentosApi*](doc/RecebimentosApi.md) | [**listarRecebimentos**](doc/RecebimentosApi.md#listarrecebimentos) | **GET** /api/v1/recebimentos | Mais recentes primeiro. Busca por parte da chave de acesso, pelo número da nota ou por parte da razão social do fornecedor.
+[*RecebimentosApi*](doc/RecebimentosApi.md) | [**obterRecebimento**](doc/RecebimentosApi.md#obterrecebimento) | **GET** /api/v1/recebimentos/{id} | 
 [*UsuriosApi*](doc/UsuriosApi.md) | [**atualizarUsuario**](doc/UsuriosApi.md#atualizarusuario) | **PUT** /api/v1/usuarios/{id} | 
 [*UsuriosApi*](doc/UsuriosApi.md) | [**criarUsuario**](doc/UsuriosApi.md#criarusuario) | **POST** /api/v1/usuarios | 
 [*UsuriosApi*](doc/UsuriosApi.md) | [**desativarUsuario**](doc/UsuriosApi.md#desativarusuario) | **POST** /api/v1/usuarios/{id}/desativar | 
@@ -169,6 +174,7 @@ Class | Method | HTTP request | Description
  - [AdicionarEmbalagem](doc/AdicionarEmbalagem.md)
  - [AlertaItemNota](doc/AlertaItemNota.md)
  - [AlterarLimitesCotaIa](doc/AlterarLimitesCotaIa.md)
+ - [AlterarRecebimento](doc/AlterarRecebimento.md)
  - [AnaliseNotaFiscal](doc/AnaliseNotaFiscal.md)
  - [ArmazemDetalhe](doc/ArmazemDetalhe.md)
  - [ArmazemResumo](doc/ArmazemResumo.md)
@@ -186,6 +192,7 @@ Class | Method | HTTP request | Description
  - [ClasseArmazenagem](doc/ClasseArmazenagem.md)
  - [ColunaArquivo](doc/ColunaArquivo.md)
  - [ColunaSugerida](doc/ColunaSugerida.md)
+ - [ConferirItemRecebimento](doc/ConferirItemRecebimento.md)
  - [ConfirmarMapeamento](doc/ConfirmarMapeamento.md)
  - [ConsumirReserva](doc/ConsumirReserva.md)
  - [ContagemRfid](doc/ContagemRfid.md)
@@ -229,9 +236,11 @@ Class | Method | HTTP request | Description
  - [LeituraRfid](doc/LeituraRfid.md)
  - [LeiturasRfidResolvidas](doc/LeiturasRfidResolvidas.md)
  - [LoginRequest](doc/LoginRequest.md)
+ - [LoteConferido](doc/LoteConferido.md)
  - [LoteInferido](doc/LoteInferido.md)
  - [LoteInformado](doc/LoteInformado.md)
  - [LoteNota](doc/LoteNota.md)
+ - [LoteRecebido](doc/LoteRecebido.md)
  - [MapeamentoColuna](doc/MapeamentoColuna.md)
  - [MetodoSimilaridade](doc/MetodoSimilaridade.md)
  - [MovimentacaoDetalhe](doc/MovimentacaoDetalhe.md)
@@ -248,6 +257,7 @@ Class | Method | HTTP request | Description
  - [PagedResultOfImportacaoResumo](doc/PagedResultOfImportacaoResumo.md)
  - [PagedResultOfProdutoFornecedorDetalhe](doc/PagedResultOfProdutoFornecedorDetalhe.md)
  - [PagedResultOfProdutoResumo](doc/PagedResultOfProdutoResumo.md)
+ - [PagedResultOfRecebimentoResumo](doc/PagedResultOfRecebimentoResumo.md)
  - [PagedResultOfReservaDetalhe](doc/PagedResultOfReservaDetalhe.md)
  - [PagedResultOfSaldoItem](doc/PagedResultOfSaldoItem.md)
  - [PagedResultOfSaldoNaData](doc/PagedResultOfSaldoNaData.md)
@@ -261,6 +271,9 @@ Class | Method | HTTP request | Description
  - [ProdutoResumo](doc/ProdutoResumo.md)
  - [ProdutoSimilar](doc/ProdutoSimilar.md)
  - [ProdutosSimilares](doc/ProdutosSimilares.md)
+ - [RecebimentoDetalhe](doc/RecebimentoDetalhe.md)
+ - [RecebimentoItemDetalhe](doc/RecebimentoItemDetalhe.md)
+ - [RecebimentoResumo](doc/RecebimentoResumo.md)
  - [RedefinirSenhaRequest](doc/RedefinirSenhaRequest.md)
  - [RefreshRequest](doc/RefreshRequest.md)
  - [RegistrarAjuste](doc/RegistrarAjuste.md)
@@ -284,6 +297,7 @@ Class | Method | HTTP request | Description
  - [StatusEndereco](doc/StatusEndereco.md)
  - [StatusImportacao](doc/StatusImportacao.md)
  - [StatusLinha](doc/StatusLinha.md)
+ - [StatusRecebimento](doc/StatusRecebimento.md)
  - [StatusReserva](doc/StatusReserva.md)
  - [SugerirMapeamento](doc/SugerirMapeamento.md)
  - [SugestaoIa](doc/SugestaoIa.md)

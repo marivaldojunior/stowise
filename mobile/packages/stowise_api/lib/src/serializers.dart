@@ -19,6 +19,7 @@ import 'package:stowise_api/src/model/acao_linha.dart';
 import 'package:stowise_api/src/model/adicionar_embalagem.dart';
 import 'package:stowise_api/src/model/alerta_item_nota.dart';
 import 'package:stowise_api/src/model/alterar_limites_cota_ia.dart';
+import 'package:stowise_api/src/model/alterar_recebimento.dart';
 import 'package:stowise_api/src/model/analise_nota_fiscal.dart';
 import 'package:stowise_api/src/model/armazem_detalhe.dart';
 import 'package:stowise_api/src/model/armazem_resumo.dart';
@@ -36,6 +37,7 @@ import 'package:stowise_api/src/model/chamada_ia_detalhe.dart';
 import 'package:stowise_api/src/model/classe_armazenagem.dart';
 import 'package:stowise_api/src/model/coluna_arquivo.dart';
 import 'package:stowise_api/src/model/coluna_sugerida.dart';
+import 'package:stowise_api/src/model/conferir_item_recebimento.dart';
 import 'package:stowise_api/src/model/confirmar_mapeamento.dart';
 import 'package:stowise_api/src/model/consumir_reserva.dart';
 import 'package:stowise_api/src/model/contagem_rfid.dart';
@@ -79,9 +81,11 @@ import 'package:stowise_api/src/model/layout_arquivo.dart';
 import 'package:stowise_api/src/model/leitura_rfid.dart';
 import 'package:stowise_api/src/model/leituras_rfid_resolvidas.dart';
 import 'package:stowise_api/src/model/login_request.dart';
+import 'package:stowise_api/src/model/lote_conferido.dart';
 import 'package:stowise_api/src/model/lote_inferido.dart';
 import 'package:stowise_api/src/model/lote_informado.dart';
 import 'package:stowise_api/src/model/lote_nota.dart';
+import 'package:stowise_api/src/model/lote_recebido.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
 import 'package:stowise_api/src/model/metodo_similaridade.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
@@ -98,6 +102,7 @@ import 'package:stowise_api/src/model/paged_result_of_importacao_linha_detalhe.d
 import 'package:stowise_api/src/model/paged_result_of_importacao_resumo.dart';
 import 'package:stowise_api/src/model/paged_result_of_produto_fornecedor_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_produto_resumo.dart';
+import 'package:stowise_api/src/model/paged_result_of_recebimento_resumo.dart';
 import 'package:stowise_api/src/model/paged_result_of_reserva_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_item.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_na_data.dart';
@@ -111,6 +116,9 @@ import 'package:stowise_api/src/model/produto_por_codigo.dart';
 import 'package:stowise_api/src/model/produto_resumo.dart';
 import 'package:stowise_api/src/model/produto_similar.dart';
 import 'package:stowise_api/src/model/produtos_similares.dart';
+import 'package:stowise_api/src/model/recebimento_detalhe.dart';
+import 'package:stowise_api/src/model/recebimento_item_detalhe.dart';
+import 'package:stowise_api/src/model/recebimento_resumo.dart';
 import 'package:stowise_api/src/model/redefinir_senha_request.dart';
 import 'package:stowise_api/src/model/refresh_request.dart';
 import 'package:stowise_api/src/model/registrar_ajuste.dart';
@@ -134,6 +142,7 @@ import 'package:stowise_api/src/model/status_cadastro.dart';
 import 'package:stowise_api/src/model/status_endereco.dart';
 import 'package:stowise_api/src/model/status_importacao.dart';
 import 'package:stowise_api/src/model/status_linha.dart';
+import 'package:stowise_api/src/model/status_recebimento.dart';
 import 'package:stowise_api/src/model/status_reserva.dart';
 import 'package:stowise_api/src/model/sugerir_mapeamento.dart';
 import 'package:stowise_api/src/model/sugestao_ia.dart';
@@ -155,6 +164,7 @@ part 'serializers.g.dart';
   AdicionarEmbalagem,
   AlertaItemNota,
   AlterarLimitesCotaIa,
+  AlterarRecebimento,
   AnaliseNotaFiscal,
   ArmazemDetalhe,
   ArmazemResumo,
@@ -172,6 +182,7 @@ part 'serializers.g.dart';
   ClasseArmazenagem,
   ColunaArquivo,
   ColunaSugerida,
+  ConferirItemRecebimento,
   ConfirmarMapeamento,
   ConsumirReserva,
   ContagemRfid,
@@ -215,9 +226,11 @@ part 'serializers.g.dart';
   LeituraRfid,
   LeiturasRfidResolvidas,
   LoginRequest,
+  LoteConferido,
   LoteInferido,
   LoteInformado,
   LoteNota,
+  LoteRecebido,
   MapeamentoColuna,
   MetodoSimilaridade,
   MovimentacaoDetalhe,
@@ -234,6 +247,7 @@ part 'serializers.g.dart';
   PagedResultOfImportacaoResumo,
   PagedResultOfProdutoFornecedorDetalhe,
   PagedResultOfProdutoResumo,
+  PagedResultOfRecebimentoResumo,
   PagedResultOfReservaDetalhe,
   PagedResultOfSaldoItem,
   PagedResultOfSaldoNaData,
@@ -247,6 +261,9 @@ part 'serializers.g.dart';
   ProdutoResumo,
   ProdutoSimilar,
   ProdutosSimilares,
+  RecebimentoDetalhe,
+  RecebimentoItemDetalhe,
+  RecebimentoResumo,
   RedefinirSenhaRequest,
   RefreshRequest,
   RegistrarAjuste,
@@ -270,6 +287,7 @@ part 'serializers.g.dart';
   StatusEndereco,
   StatusImportacao,
   StatusLinha,
+  StatusRecebimento,
   StatusReserva,
   SugerirMapeamento,
   SugestaoIa,

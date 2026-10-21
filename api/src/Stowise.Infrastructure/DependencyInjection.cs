@@ -12,6 +12,7 @@ using Stowise.Application.Fornecedores;
 using Stowise.Application.Ia;
 using Stowise.Application.Importacoes;
 using Stowise.Application.NotasFiscais;
+using Stowise.Application.Recebimentos;
 using Stowise.Application.Rfid;
 using Stowise.Application.Usuarios;
 using Stowise.Infrastructure.Catalogo;
@@ -24,6 +25,7 @@ using Stowise.Infrastructure.Importacoes;
 using Stowise.Infrastructure.Jobs;
 using Stowise.Infrastructure.NotasFiscais;
 using Stowise.Infrastructure.Persistence;
+using Stowise.Infrastructure.Recebimentos;
 using Stowise.Infrastructure.Rfid;
 
 namespace Stowise.Infrastructure;
@@ -57,6 +59,7 @@ public static class DependencyInjection
         services.AddSingleton<ILeitorNfe, LeitorNfe>();
         services.AddScoped<IAnaliseNotaFiscal, AnaliseNotaFiscalService>();
         services.AddScoped<IEfetivacaoNotaFiscal, EfetivacaoNotaFiscalService>();
+        services.AddScoped<IRecebimentoService, RecebimentoService>();
         services.AddScoped<IArmazemService, ArmazemService>();
         services.AddScoped<IEnderecoService, EnderecoService>();
         services.AddScoped<IMovimentacaoService, MovimentacaoService>();

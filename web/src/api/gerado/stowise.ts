@@ -29,6 +29,7 @@ import type {
 import type {
   AdicionarEmbalagem,
   AlterarLimitesCotaIa,
+  AlterarRecebimento,
   AnalisarNotaFiscalBody,
   AnaliseNotaFiscal,
   ArmazemDetalhe,
@@ -42,6 +43,7 @@ import type {
   BuscarProdutosSimilaresParams,
   CampoImportacao,
   CategoriaDetalhe,
+  ConferirItemRecebimento,
   ConfirmarMapeamento,
   ConsumirReserva,
   CotaIaDetalhe,
@@ -74,6 +76,7 @@ import type {
   ListarLinhasImportacaoParams,
   ListarProdutosDoFornecedorParams,
   ListarProdutosParams,
+  ListarRecebimentosParams,
   ListarReservasParams,
   ListarSaldosParams,
   ListarTemplatesImportacaoParams,
@@ -93,6 +96,7 @@ import type {
   PagedResultOfImportacaoResumo,
   PagedResultOfProdutoFornecedorDetalhe,
   PagedResultOfProdutoResumo,
+  PagedResultOfRecebimentoResumo,
   PagedResultOfReservaDetalhe,
   PagedResultOfSaldoItem,
   PagedResultOfSaldoNaData,
@@ -103,6 +107,7 @@ import type {
   ProdutoFornecedorDetalhe,
   ProdutoPorCodigo,
   ProdutosSimilares,
+  RecebimentoDetalhe,
   RedefinirSenhaRequest,
   RefreshRequest,
   RegistrarAjuste,
@@ -8451,5 +8456,477 @@ export const useEfetivarNotaFiscal = <TError = ErrorType<HttpValidationProblemDe
         TContext
       > => {
       return useMutation(getEfetivarNotaFiscalMutationOptions(options), queryClient);
+    }
+
+export const getListarRecebimentosUrl = (params?: ListarRecebimentosParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/recebimentos?${stringifiedParams}` : `/api/v1/recebimentos`
+}
+
+/**
+ * @summary Mais recentes primeiro. Busca por parte da chave de acesso, pelo número da nota ou por parte da razão social do fornecedor.
+ */
+export const listarRecebimentos = async (params?: ListarRecebimentosParams, options?: Parameters<typeof apiFetch>[1]): Promise<PagedResultOfRecebimentoResumo> => {
+
+  return apiFetch<PagedResultOfRecebimentoResumo>(getListarRecebimentosUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListarRecebimentosQueryKey = (params?: ListarRecebimentosParams,) => {
+    return [
+    `/api/v1/recebimentos`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListarRecebimentosQueryOptions = <TData = Awaited<ReturnType<typeof listarRecebimentos>>, TError = ErrorType<ProblemDetails>>(params?: ListarRecebimentosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRecebimentos>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListarRecebimentosQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listarRecebimentos>>> = ({ signal }) => listarRecebimentos(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listarRecebimentos>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListarRecebimentosQueryResult = NonNullable<Awaited<ReturnType<typeof listarRecebimentos>>>
+export type ListarRecebimentosQueryError = ErrorType<ProblemDetails>
+
+
+export function useListarRecebimentos<TData = Awaited<ReturnType<typeof listarRecebimentos>>, TError = ErrorType<ProblemDetails>>(
+ params: undefined |  ListarRecebimentosParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRecebimentos>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarRecebimentos>>,
+          TError,
+          Awaited<ReturnType<typeof listarRecebimentos>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarRecebimentos<TData = Awaited<ReturnType<typeof listarRecebimentos>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarRecebimentosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRecebimentos>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarRecebimentos>>,
+          TError,
+          Awaited<ReturnType<typeof listarRecebimentos>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarRecebimentos<TData = Awaited<ReturnType<typeof listarRecebimentos>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarRecebimentosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRecebimentos>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Mais recentes primeiro. Busca por parte da chave de acesso, pelo número da nota ou por parte da razão social do fornecedor.
+ */
+
+export function useListarRecebimentos<TData = Awaited<ReturnType<typeof listarRecebimentos>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarRecebimentosParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRecebimentos>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListarRecebimentosQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getObterRecebimentoUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/recebimentos/${id}`
+}
+
+export const obterRecebimento = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<RecebimentoDetalhe> => {
+
+  return apiFetch<RecebimentoDetalhe>(getObterRecebimentoUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getObterRecebimentoQueryKey = (id: string,) => {
+    return [
+    `/api/v1/recebimentos/${id}`
+    ] as const;
+    }
+
+
+export const getObterRecebimentoQueryOptions = <TData = Awaited<ReturnType<typeof obterRecebimento>>, TError = ErrorType<ProblemDetails>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterRecebimento>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getObterRecebimentoQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof obterRecebimento>>> = ({ signal }) => obterRecebimento(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof obterRecebimento>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ObterRecebimentoQueryResult = NonNullable<Awaited<ReturnType<typeof obterRecebimento>>>
+export type ObterRecebimentoQueryError = ErrorType<ProblemDetails>
+
+
+export function useObterRecebimento<TData = Awaited<ReturnType<typeof obterRecebimento>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterRecebimento>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterRecebimento>>,
+          TError,
+          Awaited<ReturnType<typeof obterRecebimento>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterRecebimento<TData = Awaited<ReturnType<typeof obterRecebimento>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterRecebimento>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterRecebimento>>,
+          TError,
+          Awaited<ReturnType<typeof obterRecebimento>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterRecebimento<TData = Awaited<ReturnType<typeof obterRecebimento>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterRecebimento>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useObterRecebimento<TData = Awaited<ReturnType<typeof obterRecebimento>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterRecebimento>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getObterRecebimentoQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getIniciarConferenciaRecebimentoUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/recebimentos/${id}/conferencia/inicio`
+}
+
+/**
+ * @summary A mercadoria chegou: marca a chegada e libera a contagem. Exige a versão lida (409 se mudou).
+ */
+export const iniciarConferenciaRecebimento = async (id: string,
+    alterarRecebimento: AlterarRecebimento, options?: Parameters<typeof apiFetch>[1]): Promise<RecebimentoDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<RecebimentoDetalhe>(getIniciarConferenciaRecebimentoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(alterarRecebimento)
+  }
+);}
+
+
+
+
+
+export const getIniciarConferenciaRecebimentoMutationKey = () => ['iniciarConferenciaRecebimento'] as const;
+
+export const getIniciarConferenciaRecebimentoMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof iniciarConferenciaRecebimento>>, TError,IniciarConferenciaRecebimentoMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof iniciarConferenciaRecebimento>>, TError,IniciarConferenciaRecebimentoMutationVariables, TContext> => {
+
+const mutationKey = getIniciarConferenciaRecebimentoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof iniciarConferenciaRecebimento>>, IniciarConferenciaRecebimentoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  iniciarConferenciaRecebimento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type IniciarConferenciaRecebimentoMutationResult = NonNullable<Awaited<ReturnType<typeof iniciarConferenciaRecebimento>>>
+    export type IniciarConferenciaRecebimentoMutationBody = BodyType<AlterarRecebimento>
+    export type IniciarConferenciaRecebimentoMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type IniciarConferenciaRecebimentoMutationVariables = {id: string;data: BodyType<AlterarRecebimento>}
+
+    /**
+ * @summary A mercadoria chegou: marca a chegada e libera a contagem. Exige a versão lida (409 se mudou).
+ */
+export const useIniciarConferenciaRecebimento = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof iniciarConferenciaRecebimento>>, TError,IniciarConferenciaRecebimentoMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof iniciarConferenciaRecebimento>>,
+        TError,
+        IniciarConferenciaRecebimentoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getIniciarConferenciaRecebimentoMutationOptions(options), queryClient);
+    }
+
+export const getConferirItemRecebimentoUrl = (id: string,
+    itemId: string,) => {
+
+
+
+
+  return `/api/v1/recebimentos/${id}/itens/${itemId}/conferencia`
+}
+
+/**
+ * @summary Registra ou corrige a contagem de um item, na unidade da nota, com os lotes. A diferença com a nota fica marcada como divergência.
+ */
+export const conferirItemRecebimento = async (id: string,
+    itemId: string,
+    conferirItemRecebimentoBody: ConferirItemRecebimento, options?: Parameters<typeof apiFetch>[1]): Promise<RecebimentoDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<RecebimentoDetalhe>(getConferirItemRecebimentoUrl(id,itemId),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(conferirItemRecebimentoBody)
+  }
+);}
+
+
+
+
+
+export const getConferirItemRecebimentoMutationKey = () => ['conferirItemRecebimento'] as const;
+
+export const getConferirItemRecebimentoMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conferirItemRecebimento>>, TError,ConferirItemRecebimentoMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof conferirItemRecebimento>>, TError,ConferirItemRecebimentoMutationVariables, TContext> => {
+
+const mutationKey = getConferirItemRecebimentoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof conferirItemRecebimento>>, ConferirItemRecebimentoMutationVariables> = (props) => {
+          const {id,itemId,data} = props ?? {};
+
+          return  conferirItemRecebimento(id,itemId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConferirItemRecebimentoMutationResult = NonNullable<Awaited<ReturnType<typeof conferirItemRecebimento>>>
+    export type ConferirItemRecebimentoMutationBody = BodyType<ConferirItemRecebimento>
+    export type ConferirItemRecebimentoMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type ConferirItemRecebimentoMutationVariables = {id: string;itemId: string;data: BodyType<ConferirItemRecebimento>}
+
+    /**
+ * @summary Registra ou corrige a contagem de um item, na unidade da nota, com os lotes. A diferença com a nota fica marcada como divergência.
+ */
+export const useConferirItemRecebimento = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof conferirItemRecebimento>>, TError,ConferirItemRecebimentoMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof conferirItemRecebimento>>,
+        TError,
+        ConferirItemRecebimentoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConferirItemRecebimentoMutationOptions(options), queryClient);
+    }
+
+export const getConcluirConferenciaRecebimentoUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/recebimentos/${id}/conferencia/conclusao`
+}
+
+/**
+ * @summary Fecha a conferência quando todos os itens foram contados. Exige a versão lida (409 se mudou).
+ */
+export const concluirConferenciaRecebimento = async (id: string,
+    alterarRecebimento: AlterarRecebimento, options?: Parameters<typeof apiFetch>[1]): Promise<RecebimentoDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<RecebimentoDetalhe>(getConcluirConferenciaRecebimentoUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(alterarRecebimento)
+  }
+);}
+
+
+
+
+
+export const getConcluirConferenciaRecebimentoMutationKey = () => ['concluirConferenciaRecebimento'] as const;
+
+export const getConcluirConferenciaRecebimentoMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof concluirConferenciaRecebimento>>, TError,ConcluirConferenciaRecebimentoMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof concluirConferenciaRecebimento>>, TError,ConcluirConferenciaRecebimentoMutationVariables, TContext> => {
+
+const mutationKey = getConcluirConferenciaRecebimentoMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof concluirConferenciaRecebimento>>, ConcluirConferenciaRecebimentoMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  concluirConferenciaRecebimento(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConcluirConferenciaRecebimentoMutationResult = NonNullable<Awaited<ReturnType<typeof concluirConferenciaRecebimento>>>
+    export type ConcluirConferenciaRecebimentoMutationBody = BodyType<AlterarRecebimento>
+    export type ConcluirConferenciaRecebimentoMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type ConcluirConferenciaRecebimentoMutationVariables = {id: string;data: BodyType<AlterarRecebimento>}
+
+    /**
+ * @summary Fecha a conferência quando todos os itens foram contados. Exige a versão lida (409 se mudou).
+ */
+export const useConcluirConferenciaRecebimento = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof concluirConferenciaRecebimento>>, TError,ConcluirConferenciaRecebimentoMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof concluirConferenciaRecebimento>>,
+        TError,
+        ConcluirConferenciaRecebimentoMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConcluirConferenciaRecebimentoMutationOptions(options), queryClient);
     }
 

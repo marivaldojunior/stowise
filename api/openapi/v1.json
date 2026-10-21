@@ -7039,6 +7039,420 @@
           }
         ]
       }
+    },
+    "/api/v1/recebimentos": {
+      "get": {
+        "tags": [
+          "Recebimentos"
+        ],
+        "summary": "Mais recentes primeiro. Busca por parte da chave de acesso, pelo número da nota ou por parte da razão social do fornecedor.",
+        "operationId": "ListarRecebimentos",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StatusRecebimento"
+            }
+          },
+          {
+            "name": "busca",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfRecebimentoResumo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recebimentos/{id}": {
+      "get": {
+        "tags": [
+          "Recebimentos"
+        ],
+        "operationId": "ObterRecebimento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecebimentoDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recebimentos/{id}/conferencia/inicio": {
+      "post": {
+        "tags": [
+          "Recebimentos"
+        ],
+        "summary": "A mercadoria chegou: marca a chegada e libera a contagem. Exige a versão lida (409 se mudou).",
+        "operationId": "IniciarConferenciaRecebimento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlterarRecebimento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecebimentoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recebimentos/{id}/itens/{itemId}/conferencia": {
+      "put": {
+        "tags": [
+          "Recebimentos"
+        ],
+        "summary": "Registra ou corrige a contagem de um item, na unidade da nota, com os lotes. A diferença com a nota fica marcada como divergência.",
+        "operationId": "ConferirItemRecebimento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "itemId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConferirItemRecebimento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecebimentoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/recebimentos/{id}/conferencia/conclusao": {
+      "post": {
+        "tags": [
+          "Recebimentos"
+        ],
+        "summary": "Fecha a conferência quando todos os itens foram contados. Exige a versão lida (409 se mudou).",
+        "operationId": "ConcluirConferenciaRecebimento",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlterarRecebimento"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RecebimentoDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7153,6 +7567,21 @@
             ],
             "format": "int64"
           },
+          "versao": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
+      "AlterarRecebimento": {
+        "required": [
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
           "versao": {
             "type": [
               "null",
@@ -7772,6 +8201,31 @@
           "confianca": {
             "type": "number",
             "format": "double"
+          }
+        }
+      },
+      "ConferirItemRecebimento": {
+        "required": [
+          "quantidade",
+          "lotes"
+        ],
+        "type": "object",
+        "properties": {
+          "quantidade": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "lotes": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/LoteConferido"
+            }
           }
         }
       },
@@ -9838,6 +10292,41 @@
           }
         }
       },
+      "LoteConferido": {
+        "required": [
+          "numero",
+          "quantidade",
+          "fabricacao",
+          "validade"
+        ],
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantidade": {
+            "type": "number",
+            "format": "double"
+          },
+          "fabricacao": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "LoteInferido": {
         "required": [
           "numero",
@@ -9921,6 +10410,38 @@
             "type": "string"
           },
           "quantidade": {
+            "type": "number",
+            "format": "double"
+          },
+          "fabricacao": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
+      "LoteRecebido": {
+        "required": [
+          "numero",
+          "quantidadeBase",
+          "fabricacao",
+          "validade"
+        ],
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string"
+          },
+          "quantidadeBase": {
             "type": "number",
             "format": "double"
           },
@@ -10460,6 +10981,39 @@
           }
         }
       },
+      "PagedResultOfRecebimentoResumo": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecebimentoResumo"
+            }
+          },
+          "pagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResultOfReservaDetalhe": {
         "required": [
           "itens",
@@ -10949,6 +11503,269 @@
             "items": {
               "$ref": "#/components/schemas/ProdutoSimilar"
             }
+          }
+        }
+      },
+      "RecebimentoDetalhe": {
+        "required": [
+          "id",
+          "numero",
+          "serie",
+          "chaveAcesso",
+          "fornecedorId",
+          "fornecedor",
+          "dataEmissao",
+          "status",
+          "dataChegada",
+          "conferidoPor",
+          "conferidoEm",
+          "temDivergencia",
+          "versao",
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serie": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "chaveAcesso": {
+            "type": "string"
+          },
+          "fornecedorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fornecedor": {
+            "type": "string"
+          },
+          "dataEmissao": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusRecebimento"
+          },
+          "dataChegada": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "conferidoPor": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "conferidoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "temDivergencia": {
+            "type": "boolean"
+          },
+          "versao": {
+            "type": "integer",
+            "format": "uint32"
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecebimentoItemDetalhe"
+            }
+          }
+        }
+      },
+      "RecebimentoItemDetalhe": {
+        "required": [
+          "id",
+          "numeroItem",
+          "produtoId",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "controlaLote",
+          "controlaValidade",
+          "embalagemId",
+          "codigoFornecedor",
+          "descricaoNota",
+          "unidadeNota",
+          "quantidadeNota",
+          "fatorConversao",
+          "quantidade",
+          "lotes",
+          "quantidadeConferida",
+          "lotesConferidos",
+          "divergente",
+          "conferidoPor",
+          "conferidoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "controlaLote": {
+            "type": "boolean"
+          },
+          "controlaValidade": {
+            "type": "boolean"
+          },
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigoFornecedor": {
+            "type": "string"
+          },
+          "descricaoNota": {
+            "type": "string"
+          },
+          "unidadeNota": {
+            "type": "string"
+          },
+          "quantidadeNota": {
+            "type": "number",
+            "format": "double"
+          },
+          "fatorConversao": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantidade": {
+            "type": "number",
+            "format": "double"
+          },
+          "lotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoteRecebido"
+            }
+          },
+          "quantidadeConferida": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "lotesConferidos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoteRecebido"
+            }
+          },
+          "divergente": {
+            "type": "boolean"
+          },
+          "conferidoPor": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "conferidoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "RecebimentoResumo": {
+        "required": [
+          "id",
+          "numero",
+          "serie",
+          "chaveAcesso",
+          "fornecedorId",
+          "fornecedor",
+          "dataEmissao",
+          "status",
+          "itens",
+          "itensConferidos",
+          "temDivergencia",
+          "criadoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numero": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "serie": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "chaveAcesso": {
+            "type": "string"
+          },
+          "fornecedorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fornecedor": {
+            "type": "string"
+          },
+          "dataEmissao": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusRecebimento"
+          },
+          "itens": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itensConferidos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "temDivergencia": {
+            "type": "boolean"
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
           }
         }
       },
@@ -11883,6 +12700,13 @@
           "Ignorada"
         ]
       },
+      "StatusRecebimento": {
+        "enum": [
+          "AguardandoConferencia",
+          "EmConferencia",
+          "Conferido"
+        ]
+      },
       "StatusReserva": {
         "enum": [
           "Ativa",
@@ -12241,6 +13065,9 @@
     },
     {
       "name": "Notas fiscais"
+    },
+    {
+      "name": "Recebimentos"
     }
   ]
 }

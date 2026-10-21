@@ -7,6 +7,7 @@ doc/AcaoLinha.md
 doc/AdicionarEmbalagem.md
 doc/AlertaItemNota.md
 doc/AlterarLimitesCotaIa.md
+doc/AlterarRecebimento.md
 doc/AnaliseNotaFiscal.md
 doc/ArmazemDetalhe.md
 doc/ArmazemResumo.md
@@ -26,6 +27,7 @@ doc/ChamadaIaDetalhe.md
 doc/ClasseArmazenagem.md
 doc/ColunaArquivo.md
 doc/ColunaSugerida.md
+doc/ConferirItemRecebimento.md
 doc/ConfirmarMapeamento.md
 doc/ConsumirReserva.md
 doc/ContagemRfid.md
@@ -74,9 +76,11 @@ doc/LayoutArquivo.md
 doc/LeituraRfid.md
 doc/LeiturasRfidResolvidas.md
 doc/LoginRequest.md
+doc/LoteConferido.md
 doc/LoteInferido.md
 doc/LoteInformado.md
 doc/LoteNota.md
+doc/LoteRecebido.md
 doc/MapeamentoColuna.md
 doc/MetodoSimilaridade.md
 doc/MovimentacaoDetalhe.md
@@ -94,6 +98,7 @@ doc/PagedResultOfImportacaoLinhaDetalhe.md
 doc/PagedResultOfImportacaoResumo.md
 doc/PagedResultOfProdutoFornecedorDetalhe.md
 doc/PagedResultOfProdutoResumo.md
+doc/PagedResultOfRecebimentoResumo.md
 doc/PagedResultOfReservaDetalhe.md
 doc/PagedResultOfSaldoItem.md
 doc/PagedResultOfSaldoNaData.md
@@ -108,6 +113,10 @@ doc/ProdutoResumo.md
 doc/ProdutoSimilar.md
 doc/ProdutosSimilares.md
 doc/RFIDApi.md
+doc/RecebimentoDetalhe.md
+doc/RecebimentoItemDetalhe.md
+doc/RecebimentoResumo.md
+doc/RecebimentosApi.md
 doc/RedefinirSenhaRequest.md
 doc/RefreshRequest.md
 doc/RegistrarAjuste.md
@@ -131,6 +140,7 @@ doc/StatusCadastro.md
 doc/StatusEndereco.md
 doc/StatusImportacao.md
 doc/StatusLinha.md
+doc/StatusRecebimento.md
 doc/StatusReserva.md
 doc/SugerirMapeamento.md
 doc/SugestaoIa.md
@@ -153,6 +163,7 @@ lib/src/api/fornecedores_api.dart
 lib/src/api/ia_api.dart
 lib/src/api/importao_api.dart
 lib/src/api/notas_fiscais_api.dart
+lib/src/api/recebimentos_api.dart
 lib/src/api/rfid_api.dart
 lib/src/api/usurios_api.dart
 lib/src/api_util.dart
@@ -167,6 +178,7 @@ lib/src/model/acao_linha.dart
 lib/src/model/adicionar_embalagem.dart
 lib/src/model/alerta_item_nota.dart
 lib/src/model/alterar_limites_cota_ia.dart
+lib/src/model/alterar_recebimento.dart
 lib/src/model/analise_nota_fiscal.dart
 lib/src/model/armazem_detalhe.dart
 lib/src/model/armazem_resumo.dart
@@ -184,6 +196,7 @@ lib/src/model/chamada_ia_detalhe.dart
 lib/src/model/classe_armazenagem.dart
 lib/src/model/coluna_arquivo.dart
 lib/src/model/coluna_sugerida.dart
+lib/src/model/conferir_item_recebimento.dart
 lib/src/model/confirmar_mapeamento.dart
 lib/src/model/consumir_reserva.dart
 lib/src/model/contagem_rfid.dart
@@ -228,9 +241,11 @@ lib/src/model/layout_arquivo.dart
 lib/src/model/leitura_rfid.dart
 lib/src/model/leituras_rfid_resolvidas.dart
 lib/src/model/login_request.dart
+lib/src/model/lote_conferido.dart
 lib/src/model/lote_inferido.dart
 lib/src/model/lote_informado.dart
 lib/src/model/lote_nota.dart
+lib/src/model/lote_recebido.dart
 lib/src/model/mapeamento_coluna.dart
 lib/src/model/metodo_similaridade.dart
 lib/src/model/movimentacao_detalhe.dart
@@ -247,6 +262,7 @@ lib/src/model/paged_result_of_importacao_linha_detalhe.dart
 lib/src/model/paged_result_of_importacao_resumo.dart
 lib/src/model/paged_result_of_produto_fornecedor_detalhe.dart
 lib/src/model/paged_result_of_produto_resumo.dart
+lib/src/model/paged_result_of_recebimento_resumo.dart
 lib/src/model/paged_result_of_reserva_detalhe.dart
 lib/src/model/paged_result_of_saldo_item.dart
 lib/src/model/paged_result_of_saldo_na_data.dart
@@ -260,6 +276,9 @@ lib/src/model/produto_por_codigo.dart
 lib/src/model/produto_resumo.dart
 lib/src/model/produto_similar.dart
 lib/src/model/produtos_similares.dart
+lib/src/model/recebimento_detalhe.dart
+lib/src/model/recebimento_item_detalhe.dart
+lib/src/model/recebimento_resumo.dart
 lib/src/model/redefinir_senha_request.dart
 lib/src/model/refresh_request.dart
 lib/src/model/registrar_ajuste.dart
@@ -283,6 +302,7 @@ lib/src/model/status_cadastro.dart
 lib/src/model/status_endereco.dart
 lib/src/model/status_importacao.dart
 lib/src/model/status_linha.dart
+lib/src/model/status_recebimento.dart
 lib/src/model/status_reserva.dart
 lib/src/model/sugerir_mapeamento.dart
 lib/src/model/sugestao_ia.dart
@@ -303,6 +323,7 @@ test/acao_linha_test.dart
 test/adicionar_embalagem_test.dart
 test/alerta_item_nota_test.dart
 test/alterar_limites_cota_ia_test.dart
+test/alterar_recebimento_test.dart
 test/analise_nota_fiscal_test.dart
 test/armazem_detalhe_test.dart
 test/armazem_resumo_test.dart
@@ -322,6 +343,7 @@ test/chamada_ia_detalhe_test.dart
 test/classe_armazenagem_test.dart
 test/coluna_arquivo_test.dart
 test/coluna_sugerida_test.dart
+test/conferir_item_recebimento_test.dart
 test/confirmar_mapeamento_test.dart
 test/consumir_reserva_test.dart
 test/contagem_rfid_test.dart
@@ -370,9 +392,11 @@ test/layout_arquivo_test.dart
 test/leitura_rfid_test.dart
 test/leituras_rfid_resolvidas_test.dart
 test/login_request_test.dart
+test/lote_conferido_test.dart
 test/lote_inferido_test.dart
 test/lote_informado_test.dart
 test/lote_nota_test.dart
+test/lote_recebido_test.dart
 test/mapeamento_coluna_test.dart
 test/metodo_similaridade_test.dart
 test/movimentacao_detalhe_test.dart
@@ -390,6 +414,7 @@ test/paged_result_of_importacao_linha_detalhe_test.dart
 test/paged_result_of_importacao_resumo_test.dart
 test/paged_result_of_produto_fornecedor_detalhe_test.dart
 test/paged_result_of_produto_resumo_test.dart
+test/paged_result_of_recebimento_resumo_test.dart
 test/paged_result_of_reserva_detalhe_test.dart
 test/paged_result_of_saldo_item_test.dart
 test/paged_result_of_saldo_na_data_test.dart
@@ -403,6 +428,10 @@ test/produto_por_codigo_test.dart
 test/produto_resumo_test.dart
 test/produto_similar_test.dart
 test/produtos_similares_test.dart
+test/recebimento_detalhe_test.dart
+test/recebimento_item_detalhe_test.dart
+test/recebimento_resumo_test.dart
+test/recebimentos_api_test.dart
 test/redefinir_senha_request_test.dart
 test/refresh_request_test.dart
 test/registrar_ajuste_test.dart
@@ -427,6 +456,7 @@ test/status_cadastro_test.dart
 test/status_endereco_test.dart
 test/status_importacao_test.dart
 test/status_linha_test.dart
+test/status_recebimento_test.dart
 test/status_reserva_test.dart
 test/sugerir_mapeamento_test.dart
 test/sugestao_ia_test.dart
