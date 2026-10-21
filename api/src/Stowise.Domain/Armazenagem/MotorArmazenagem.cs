@@ -24,7 +24,7 @@ public sealed class MotorArmazenagem
     public static MotorArmazenagem Padrao() =>
         new([new RegraZona(), new RegraCapacidade(), new RegraCurvaAbc(), new RegraFefo(), new RegraConsolidacao()]);
 
-    public IReadOnlyList<string> Codigos => _regras.Select(r => r.Codigo).ToList();
+    public IReadOnlyList<IRegraArmazenagem> Regras => _regras;
 
     /// <param name="configuracao">Peso, estado e parâmetros por código. Regra sem configuração fica inativa.</param>
     public ResultadoArmazenagem Sugerir(

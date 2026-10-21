@@ -8,9 +8,11 @@ doc/AdicionarEmbalagem.md
 doc/AlertaItemNota.md
 doc/AlterarLimitesCotaIa.md
 doc/AlterarRecebimento.md
+doc/AlterarRegraArmazenagem.md
 doc/AnaliseNotaFiscal.md
 doc/ArmazemDetalhe.md
 doc/ArmazemResumo.md
+doc/ArmazenagemApi.md
 doc/AtualizarFornecedor.md
 doc/AtualizarProduto.md
 doc/AtualizarProdutoFornecedor.md
@@ -24,6 +26,7 @@ doc/CasamentoItem.md
 doc/CategoriaDetalhe.md
 doc/CatlogoApi.md
 doc/ChamadaIaDetalhe.md
+doc/ClasseAbc.md
 doc/ClasseArmazenagem.md
 doc/ColunaArquivo.md
 doc/ColunaSugerida.md
@@ -46,6 +49,7 @@ doc/EfetivarImportacao.md
 doc/EfetivarNotaFiscal.md
 doc/EmbalagemDetalhe.md
 doc/EmbalagemMedidas.md
+doc/EnderecoDescartado.md
 doc/EnderecoDetalhe.md
 doc/ErroLinha.md
 doc/EstoqueApi.md
@@ -85,6 +89,7 @@ doc/MapeamentoColuna.md
 doc/MetodoSimilaridade.md
 doc/MovimentacaoDetalhe.md
 doc/NotaFiscalEfetivada.md
+doc/NotaRegra.md
 doc/NotasFiscaisApi.md
 doc/NovoProdutoNota.md
 doc/OrigemCasamento.md
@@ -104,6 +109,7 @@ doc/PagedResultOfSaldoItem.md
 doc/PagedResultOfSaldoNaData.md
 doc/PagedResultOfTemplateDetalhe.md
 doc/PagedResultOfUsuarioDetalhe.md
+doc/PedidoSugestaoArmazenagem.md
 doc/PendenciaEmbalagem.md
 doc/ProblemDetails.md
 doc/ProdutoDetalhe.md
@@ -123,6 +129,7 @@ doc/RegistrarAjuste.md
 doc/RegistrarEntrada.md
 doc/RegistrarSaida.md
 doc/RegistrarTransferencia.md
+doc/RegraArmazenagemDetalhe.md
 doc/RegrasNormalizacao.md
 doc/RelatorioImportacao.md
 doc/RenomearArmazem.md
@@ -143,6 +150,8 @@ doc/StatusLinha.md
 doc/StatusRecebimento.md
 doc/StatusReserva.md
 doc/SugerirMapeamento.md
+doc/SugestaoArmazenagem.md
+doc/SugestaoEndereco.md
 doc/SugestaoIa.md
 doc/TemplateDetalhe.md
 doc/TipoEmbalagem.md
@@ -155,6 +164,7 @@ doc/UsuarioResumo.md
 doc/UsuriosApi.md
 doc/ZonaDetalhe.md
 lib/src/api.dart
+lib/src/api/armazenagem_api.dart
 lib/src/api/autenticao_api.dart
 lib/src/api/catlogo_api.dart
 lib/src/api/estoque_api.dart
@@ -179,6 +189,7 @@ lib/src/model/adicionar_embalagem.dart
 lib/src/model/alerta_item_nota.dart
 lib/src/model/alterar_limites_cota_ia.dart
 lib/src/model/alterar_recebimento.dart
+lib/src/model/alterar_regra_armazenagem.dart
 lib/src/model/analise_nota_fiscal.dart
 lib/src/model/armazem_detalhe.dart
 lib/src/model/armazem_resumo.dart
@@ -193,6 +204,7 @@ lib/src/model/campo_importacao.dart
 lib/src/model/casamento_item.dart
 lib/src/model/categoria_detalhe.dart
 lib/src/model/chamada_ia_detalhe.dart
+lib/src/model/classe_abc.dart
 lib/src/model/classe_armazenagem.dart
 lib/src/model/coluna_arquivo.dart
 lib/src/model/coluna_sugerida.dart
@@ -216,6 +228,7 @@ lib/src/model/efetivar_importacao.dart
 lib/src/model/efetivar_nota_fiscal.dart
 lib/src/model/embalagem_detalhe.dart
 lib/src/model/embalagem_medidas.dart
+lib/src/model/endereco_descartado.dart
 lib/src/model/endereco_detalhe.dart
 lib/src/model/erro_linha.dart
 lib/src/model/etiqueta_rfid.dart
@@ -250,6 +263,7 @@ lib/src/model/mapeamento_coluna.dart
 lib/src/model/metodo_similaridade.dart
 lib/src/model/movimentacao_detalhe.dart
 lib/src/model/nota_fiscal_efetivada.dart
+lib/src/model/nota_regra.dart
 lib/src/model/novo_produto_nota.dart
 lib/src/model/origem_casamento.dart
 lib/src/model/origem_fator.dart
@@ -268,6 +282,7 @@ lib/src/model/paged_result_of_saldo_item.dart
 lib/src/model/paged_result_of_saldo_na_data.dart
 lib/src/model/paged_result_of_template_detalhe.dart
 lib/src/model/paged_result_of_usuario_detalhe.dart
+lib/src/model/pedido_sugestao_armazenagem.dart
 lib/src/model/pendencia_embalagem.dart
 lib/src/model/problem_details.dart
 lib/src/model/produto_detalhe.dart
@@ -285,6 +300,7 @@ lib/src/model/registrar_ajuste.dart
 lib/src/model/registrar_entrada.dart
 lib/src/model/registrar_saida.dart
 lib/src/model/registrar_transferencia.dart
+lib/src/model/regra_armazenagem_detalhe.dart
 lib/src/model/regras_normalizacao.dart
 lib/src/model/relatorio_importacao.dart
 lib/src/model/renomear_armazem.dart
@@ -305,6 +321,8 @@ lib/src/model/status_linha.dart
 lib/src/model/status_recebimento.dart
 lib/src/model/status_reserva.dart
 lib/src/model/sugerir_mapeamento.dart
+lib/src/model/sugestao_armazenagem.dart
+lib/src/model/sugestao_endereco.dart
 lib/src/model/sugestao_ia.dart
 lib/src/model/template_detalhe.dart
 lib/src/model/tipo_embalagem.dart
@@ -324,9 +342,11 @@ test/adicionar_embalagem_test.dart
 test/alerta_item_nota_test.dart
 test/alterar_limites_cota_ia_test.dart
 test/alterar_recebimento_test.dart
+test/alterar_regra_armazenagem_test.dart
 test/analise_nota_fiscal_test.dart
 test/armazem_detalhe_test.dart
 test/armazem_resumo_test.dart
+test/armazenagem_api_test.dart
 test/atualizar_fornecedor_test.dart
 test/atualizar_produto_fornecedor_test.dart
 test/atualizar_produto_test.dart
@@ -340,6 +360,7 @@ test/casamento_item_test.dart
 test/categoria_detalhe_test.dart
 test/catlogo_api_test.dart
 test/chamada_ia_detalhe_test.dart
+test/classe_abc_test.dart
 test/classe_armazenagem_test.dart
 test/coluna_arquivo_test.dart
 test/coluna_sugerida_test.dart
@@ -362,6 +383,7 @@ test/efetivar_importacao_test.dart
 test/efetivar_nota_fiscal_test.dart
 test/embalagem_detalhe_test.dart
 test/embalagem_medidas_test.dart
+test/endereco_descartado_test.dart
 test/endereco_detalhe_test.dart
 test/erro_linha_test.dart
 test/estoque_api_test.dart
@@ -401,6 +423,7 @@ test/mapeamento_coluna_test.dart
 test/metodo_similaridade_test.dart
 test/movimentacao_detalhe_test.dart
 test/nota_fiscal_efetivada_test.dart
+test/nota_regra_test.dart
 test/notas_fiscais_api_test.dart
 test/novo_produto_nota_test.dart
 test/origem_casamento_test.dart
@@ -420,6 +443,7 @@ test/paged_result_of_saldo_item_test.dart
 test/paged_result_of_saldo_na_data_test.dart
 test/paged_result_of_template_detalhe_test.dart
 test/paged_result_of_usuario_detalhe_test.dart
+test/pedido_sugestao_armazenagem_test.dart
 test/pendencia_embalagem_test.dart
 test/problem_details_test.dart
 test/produto_detalhe_test.dart
@@ -438,6 +462,7 @@ test/registrar_ajuste_test.dart
 test/registrar_entrada_test.dart
 test/registrar_saida_test.dart
 test/registrar_transferencia_test.dart
+test/regra_armazenagem_detalhe_test.dart
 test/regras_normalizacao_test.dart
 test/relatorio_importacao_test.dart
 test/renomear_armazem_test.dart
@@ -459,6 +484,8 @@ test/status_linha_test.dart
 test/status_recebimento_test.dart
 test/status_reserva_test.dart
 test/sugerir_mapeamento_test.dart
+test/sugestao_armazenagem_test.dart
+test/sugestao_endereco_test.dart
 test/sugestao_ia_test.dart
 test/template_detalhe_test.dart
 test/tipo_embalagem_test.dart

@@ -20,6 +20,7 @@ import 'package:stowise_api/src/model/adicionar_embalagem.dart';
 import 'package:stowise_api/src/model/alerta_item_nota.dart';
 import 'package:stowise_api/src/model/alterar_limites_cota_ia.dart';
 import 'package:stowise_api/src/model/alterar_recebimento.dart';
+import 'package:stowise_api/src/model/alterar_regra_armazenagem.dart';
 import 'package:stowise_api/src/model/analise_nota_fiscal.dart';
 import 'package:stowise_api/src/model/armazem_detalhe.dart';
 import 'package:stowise_api/src/model/armazem_resumo.dart';
@@ -34,6 +35,7 @@ import 'package:stowise_api/src/model/campo_importacao.dart';
 import 'package:stowise_api/src/model/casamento_item.dart';
 import 'package:stowise_api/src/model/categoria_detalhe.dart';
 import 'package:stowise_api/src/model/chamada_ia_detalhe.dart';
+import 'package:stowise_api/src/model/classe_abc.dart';
 import 'package:stowise_api/src/model/classe_armazenagem.dart';
 import 'package:stowise_api/src/model/coluna_arquivo.dart';
 import 'package:stowise_api/src/model/coluna_sugerida.dart';
@@ -56,6 +58,7 @@ import 'package:stowise_api/src/model/efetivar_importacao.dart';
 import 'package:stowise_api/src/model/efetivar_nota_fiscal.dart';
 import 'package:stowise_api/src/model/embalagem_detalhe.dart';
 import 'package:stowise_api/src/model/embalagem_medidas.dart';
+import 'package:stowise_api/src/model/endereco_descartado.dart';
 import 'package:stowise_api/src/model/endereco_detalhe.dart';
 import 'package:stowise_api/src/model/erro_linha.dart';
 import 'package:stowise_api/src/model/etiqueta_rfid.dart';
@@ -90,6 +93,7 @@ import 'package:stowise_api/src/model/mapeamento_coluna.dart';
 import 'package:stowise_api/src/model/metodo_similaridade.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
 import 'package:stowise_api/src/model/nota_fiscal_efetivada.dart';
+import 'package:stowise_api/src/model/nota_regra.dart';
 import 'package:stowise_api/src/model/novo_produto_nota.dart';
 import 'package:stowise_api/src/model/origem_casamento.dart';
 import 'package:stowise_api/src/model/origem_fator.dart';
@@ -108,6 +112,7 @@ import 'package:stowise_api/src/model/paged_result_of_saldo_item.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_na_data.dart';
 import 'package:stowise_api/src/model/paged_result_of_template_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_usuario_detalhe.dart';
+import 'package:stowise_api/src/model/pedido_sugestao_armazenagem.dart';
 import 'package:stowise_api/src/model/pendencia_embalagem.dart';
 import 'package:stowise_api/src/model/problem_details.dart';
 import 'package:stowise_api/src/model/produto_detalhe.dart';
@@ -125,6 +130,7 @@ import 'package:stowise_api/src/model/registrar_ajuste.dart';
 import 'package:stowise_api/src/model/registrar_entrada.dart';
 import 'package:stowise_api/src/model/registrar_saida.dart';
 import 'package:stowise_api/src/model/registrar_transferencia.dart';
+import 'package:stowise_api/src/model/regra_armazenagem_detalhe.dart';
 import 'package:stowise_api/src/model/regras_normalizacao.dart';
 import 'package:stowise_api/src/model/relatorio_importacao.dart';
 import 'package:stowise_api/src/model/renomear_armazem.dart';
@@ -145,6 +151,8 @@ import 'package:stowise_api/src/model/status_linha.dart';
 import 'package:stowise_api/src/model/status_recebimento.dart';
 import 'package:stowise_api/src/model/status_reserva.dart';
 import 'package:stowise_api/src/model/sugerir_mapeamento.dart';
+import 'package:stowise_api/src/model/sugestao_armazenagem.dart';
+import 'package:stowise_api/src/model/sugestao_endereco.dart';
 import 'package:stowise_api/src/model/sugestao_ia.dart';
 import 'package:stowise_api/src/model/template_detalhe.dart';
 import 'package:stowise_api/src/model/tipo_embalagem.dart';
@@ -165,6 +173,7 @@ part 'serializers.g.dart';
   AlertaItemNota,
   AlterarLimitesCotaIa,
   AlterarRecebimento,
+  AlterarRegraArmazenagem,
   AnaliseNotaFiscal,
   ArmazemDetalhe,
   ArmazemResumo,
@@ -179,6 +188,7 @@ part 'serializers.g.dart';
   CasamentoItem,
   CategoriaDetalhe,
   ChamadaIaDetalhe,
+  ClasseAbc,
   ClasseArmazenagem,
   ColunaArquivo,
   ColunaSugerida,
@@ -201,6 +211,7 @@ part 'serializers.g.dart';
   EfetivarNotaFiscal,
   EmbalagemDetalhe,
   EmbalagemMedidas,
+  EnderecoDescartado,
   EnderecoDetalhe,
   ErroLinha,
   EtiquetaRfid,
@@ -235,6 +246,7 @@ part 'serializers.g.dart';
   MetodoSimilaridade,
   MovimentacaoDetalhe,
   NotaFiscalEfetivada,
+  NotaRegra,
   NovoProdutoNota,
   OrigemCasamento,
   OrigemFator,
@@ -253,6 +265,7 @@ part 'serializers.g.dart';
   PagedResultOfSaldoNaData,
   PagedResultOfTemplateDetalhe,
   PagedResultOfUsuarioDetalhe,
+  PedidoSugestaoArmazenagem,
   PendenciaEmbalagem,
   ProblemDetails,
   ProdutoDetalhe,
@@ -270,6 +283,7 @@ part 'serializers.g.dart';
   RegistrarEntrada,
   RegistrarSaida,
   RegistrarTransferencia,
+  RegraArmazenagemDetalhe,
   RegrasNormalizacao,
   RelatorioImportacao,
   RenomearArmazem,
@@ -290,6 +304,8 @@ part 'serializers.g.dart';
   StatusRecebimento,
   StatusReserva,
   SugerirMapeamento,
+  SugestaoArmazenagem,
+  SugestaoEndereco,
   SugestaoIa,
   TemplateDetalhe,
   TipoEmbalagem,
@@ -302,6 +318,10 @@ part 'serializers.g.dart';
   ZonaDetalhe,
 ])
 Serializers serializers = (_$serializers.toBuilder()
+      ..addBuilderFactory(
+        const FullType(BuiltList, [FullType(RegraArmazenagemDetalhe)]),
+        () => ListBuilder<RegraArmazenagemDetalhe>(),
+      )
       ..addBuilderFactory(
         const FullType(BuiltList, [FullType(ArmazemResumo)]),
         () => ListBuilder<ArmazemResumo>(),

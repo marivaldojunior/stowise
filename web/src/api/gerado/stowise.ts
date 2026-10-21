@@ -30,6 +30,7 @@ import type {
   AdicionarEmbalagem,
   AlterarLimitesCotaIa,
   AlterarRecebimento,
+  AlterarRegraArmazenagem,
   AnalisarNotaFiscalBody,
   AnaliseNotaFiscal,
   ArmazemDetalhe,
@@ -102,6 +103,7 @@ import type {
   PagedResultOfSaldoNaData,
   PagedResultOfTemplateDetalhe,
   PagedResultOfUsuarioDetalhe,
+  PedidoSugestaoArmazenagem,
   ProblemDetails,
   ProdutoDetalhe,
   ProdutoFornecedorDetalhe,
@@ -114,6 +116,7 @@ import type {
   RegistrarEntrada,
   RegistrarSaida,
   RegistrarTransferencia,
+  RegraArmazenagemDetalhe,
   RelatorioImportacao,
   RenomearArmazem,
   RenomearTemplate,
@@ -124,6 +127,7 @@ import type {
   SalvarCotaIa,
   SalvarZona,
   SugerirMapeamento,
+  SugestaoArmazenagem,
   TemplateDetalhe,
   UsoCotaIa,
   UsuarioDetalhe,
@@ -8928,5 +8932,277 @@ export const useConcluirConferenciaRecebimento = <TError = ErrorType<HttpValidat
         TContext
       > => {
       return useMutation(getConcluirConferenciaRecebimentoMutationOptions(options), queryClient);
+    }
+
+export const getSugerirEnderecosUrl = () => {
+
+
+
+
+  return `/api/v1/armazenagem/sugestoes`
+}
+
+/**
+ * @summary Endereços para guardar o produto, da maior para a menor pontuação, com a nota e a explicação de cada regra. Endereços recusados por zona ou capacidade vêm com os motivos.
+ */
+export const sugerirEnderecos = async (pedidoSugestaoArmazenagem: PedidoSugestaoArmazenagem, options?: Parameters<typeof apiFetch>[1]): Promise<SugestaoArmazenagem> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<SugestaoArmazenagem>(getSugerirEnderecosUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(pedidoSugestaoArmazenagem)
+  }
+);}
+
+
+
+
+
+export const getSugerirEnderecosMutationKey = () => ['sugerirEnderecos'] as const;
+
+export const getSugerirEnderecosMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sugerirEnderecos>>, TError,SugerirEnderecosMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sugerirEnderecos>>, TError,SugerirEnderecosMutationVariables, TContext> => {
+
+const mutationKey = getSugerirEnderecosMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sugerirEnderecos>>, SugerirEnderecosMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  sugerirEnderecos(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SugerirEnderecosMutationResult = NonNullable<Awaited<ReturnType<typeof sugerirEnderecos>>>
+    export type SugerirEnderecosMutationBody = BodyType<PedidoSugestaoArmazenagem>
+    export type SugerirEnderecosMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type SugerirEnderecosMutationVariables = {data: BodyType<PedidoSugestaoArmazenagem>}
+
+    /**
+ * @summary Endereços para guardar o produto, da maior para a menor pontuação, com a nota e a explicação de cada regra. Endereços recusados por zona ou capacidade vêm com os motivos.
+ */
+export const useSugerirEnderecos = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sugerirEnderecos>>, TError,SugerirEnderecosMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof sugerirEnderecos>>,
+        TError,
+        SugerirEnderecosMutationVariables,
+        TContext
+      > => {
+      return useMutation(getSugerirEnderecosMutationOptions(options), queryClient);
+    }
+
+export const getListarRegrasArmazenagemUrl = () => {
+
+
+
+
+  return `/api/v1/armazenagem/regras`
+}
+
+export const listarRegrasArmazenagem = async ( options?: Parameters<typeof apiFetch>[1]): Promise<RegraArmazenagemDetalhe[]> => {
+
+  return apiFetch<RegraArmazenagemDetalhe[]>(getListarRegrasArmazenagemUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListarRegrasArmazenagemQueryKey = () => {
+    return [
+    `/api/v1/armazenagem/regras`
+    ] as const;
+    }
+
+
+export const getListarRegrasArmazenagemQueryOptions = <TData = Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError = ErrorType<ProblemDetails>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListarRegrasArmazenagemQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listarRegrasArmazenagem>>> = ({ signal }) => listarRegrasArmazenagem({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListarRegrasArmazenagemQueryResult = NonNullable<Awaited<ReturnType<typeof listarRegrasArmazenagem>>>
+export type ListarRegrasArmazenagemQueryError = ErrorType<ProblemDetails>
+
+
+export function useListarRegrasArmazenagem<TData = Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarRegrasArmazenagem>>,
+          TError,
+          Awaited<ReturnType<typeof listarRegrasArmazenagem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarRegrasArmazenagem<TData = Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarRegrasArmazenagem>>,
+          TError,
+          Awaited<ReturnType<typeof listarRegrasArmazenagem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarRegrasArmazenagem<TData = Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+
+export function useListarRegrasArmazenagem<TData = Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarRegrasArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListarRegrasArmazenagemQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getAlterarRegraArmazenagemUrl = (codigo: string,) => {
+
+
+
+
+  return `/api/v1/armazenagem/regras/${codigo}`
+}
+
+/**
+ * @summary Muda peso, estado e parâmetros. Uma regra restritiva inativa continua recusando endereços. Exige a versão lida (409 se mudou).
+ */
+export const alterarRegraArmazenagem = async (codigo: string,
+    alterarRegraArmazenagemBody: AlterarRegraArmazenagem, options?: Parameters<typeof apiFetch>[1]): Promise<RegraArmazenagemDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<RegraArmazenagemDetalhe>(getAlterarRegraArmazenagemUrl(codigo),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(alterarRegraArmazenagemBody)
+  }
+);}
+
+
+
+
+
+export const getAlterarRegraArmazenagemMutationKey = () => ['alterarRegraArmazenagem'] as const;
+
+export const getAlterarRegraArmazenagemMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof alterarRegraArmazenagem>>, TError,AlterarRegraArmazenagemMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof alterarRegraArmazenagem>>, TError,AlterarRegraArmazenagemMutationVariables, TContext> => {
+
+const mutationKey = getAlterarRegraArmazenagemMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof alterarRegraArmazenagem>>, AlterarRegraArmazenagemMutationVariables> = (props) => {
+          const {codigo,data} = props ?? {};
+
+          return  alterarRegraArmazenagem(codigo,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type AlterarRegraArmazenagemMutationResult = NonNullable<Awaited<ReturnType<typeof alterarRegraArmazenagem>>>
+    export type AlterarRegraArmazenagemMutationBody = BodyType<AlterarRegraArmazenagem>
+    export type AlterarRegraArmazenagemMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type AlterarRegraArmazenagemMutationVariables = {codigo: string;data: BodyType<AlterarRegraArmazenagem>}
+
+    /**
+ * @summary Muda peso, estado e parâmetros. Uma regra restritiva inativa continua recusando endereços. Exige a versão lida (409 se mudou).
+ */
+export const useAlterarRegraArmazenagem = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof alterarRegraArmazenagem>>, TError,AlterarRegraArmazenagemMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof alterarRegraArmazenagem>>,
+        TError,
+        AlterarRegraArmazenagemMutationVariables,
+        TContext
+      > => {
+      return useMutation(getAlterarRegraArmazenagemMutationOptions(options), queryClient);
     }
 

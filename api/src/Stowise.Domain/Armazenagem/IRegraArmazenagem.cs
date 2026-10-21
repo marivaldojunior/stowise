@@ -12,6 +12,9 @@ public interface IRegraArmazenagem
 
     bool Restritiva { get; }
 
+    /// <summary>Parâmetros que a regra aceita, com o valor usado quando a configuração não traz o parâmetro.</summary>
+    IReadOnlyDictionary<string, decimal> ParametrosPadrao { get; }
+
     /// <summary>Avalia todos os candidatos de uma vez (algumas regras comparam os endereços entre si).</summary>
     /// <returns>Uma avaliação por candidato, na mesma ordem.</returns>
     IReadOnlyList<AvaliacaoRegra> Avaliar(ItemArmazenagem item, IReadOnlyList<CandidatoEndereco> candidatos, ParametrosRegra parametros);

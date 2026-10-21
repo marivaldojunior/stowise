@@ -49,14 +49,15 @@ Please follow the [installation procedure](#installation--usage) and then run th
 import 'package:stowise_api/stowise_api.dart';
 
 
-final api = StowiseApi().getAutenticaoApi();
-final LoginRequest loginRequest = ; // LoginRequest | 
+final api = StowiseApi().getArmazenagemApi();
+final String codigo = codigo_example; // String | 
+final AlterarRegraArmazenagem alterarRegraArmazenagem = ; // AlterarRegraArmazenagem | 
 
 try {
-    final response = await api.login(loginRequest);
+    final response = await api.alterarRegraArmazenagem(codigo, alterarRegraArmazenagem);
     print(response);
 } catch on DioException (e) {
-    print("Exception when calling AutenticaoApi->login: $e\n");
+    print("Exception when calling ArmazenagemApi->alterarRegraArmazenagem: $e\n");
 }
 
 ```
@@ -67,6 +68,9 @@ All URIs are relative to *http://localhost*
 
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**alterarRegraArmazenagem**](doc/ArmazenagemApi.md#alterarregraarmazenagem) | **PUT** /api/v1/armazenagem/regras/{codigo} | Muda peso, estado e parâmetros. Uma regra restritiva inativa continua recusando endereços. Exige a versão lida (409 se mudou).
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**listarRegrasArmazenagem**](doc/ArmazenagemApi.md#listarregrasarmazenagem) | **GET** /api/v1/armazenagem/regras | 
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**sugerirEnderecos**](doc/ArmazenagemApi.md#sugerirenderecos) | **POST** /api/v1/armazenagem/sugestoes | Endereços para guardar o produto, da maior para a menor pontuação, com a nota e a explicação de cada regra. Endereços recusados por zona ou capacidade vêm com os motivos.
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**login**](doc/AutenticaoApi.md#login) | **POST** /api/v1/auth/login | 
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**logout**](doc/AutenticaoApi.md#logout) | **POST** /api/v1/auth/logout | 
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**renovarSessao**](doc/AutenticaoApi.md#renovarsessao) | **POST** /api/v1/auth/refresh | 
@@ -175,6 +179,7 @@ Class | Method | HTTP request | Description
  - [AlertaItemNota](doc/AlertaItemNota.md)
  - [AlterarLimitesCotaIa](doc/AlterarLimitesCotaIa.md)
  - [AlterarRecebimento](doc/AlterarRecebimento.md)
+ - [AlterarRegraArmazenagem](doc/AlterarRegraArmazenagem.md)
  - [AnaliseNotaFiscal](doc/AnaliseNotaFiscal.md)
  - [ArmazemDetalhe](doc/ArmazemDetalhe.md)
  - [ArmazemResumo](doc/ArmazemResumo.md)
@@ -189,6 +194,7 @@ Class | Method | HTTP request | Description
  - [CasamentoItem](doc/CasamentoItem.md)
  - [CategoriaDetalhe](doc/CategoriaDetalhe.md)
  - [ChamadaIaDetalhe](doc/ChamadaIaDetalhe.md)
+ - [ClasseAbc](doc/ClasseAbc.md)
  - [ClasseArmazenagem](doc/ClasseArmazenagem.md)
  - [ColunaArquivo](doc/ColunaArquivo.md)
  - [ColunaSugerida](doc/ColunaSugerida.md)
@@ -211,6 +217,7 @@ Class | Method | HTTP request | Description
  - [EfetivarNotaFiscal](doc/EfetivarNotaFiscal.md)
  - [EmbalagemDetalhe](doc/EmbalagemDetalhe.md)
  - [EmbalagemMedidas](doc/EmbalagemMedidas.md)
+ - [EnderecoDescartado](doc/EnderecoDescartado.md)
  - [EnderecoDetalhe](doc/EnderecoDetalhe.md)
  - [ErroLinha](doc/ErroLinha.md)
  - [EtiquetaRfid](doc/EtiquetaRfid.md)
@@ -245,6 +252,7 @@ Class | Method | HTTP request | Description
  - [MetodoSimilaridade](doc/MetodoSimilaridade.md)
  - [MovimentacaoDetalhe](doc/MovimentacaoDetalhe.md)
  - [NotaFiscalEfetivada](doc/NotaFiscalEfetivada.md)
+ - [NotaRegra](doc/NotaRegra.md)
  - [NovoProdutoNota](doc/NovoProdutoNota.md)
  - [OrigemCasamento](doc/OrigemCasamento.md)
  - [OrigemFator](doc/OrigemFator.md)
@@ -263,6 +271,7 @@ Class | Method | HTTP request | Description
  - [PagedResultOfSaldoNaData](doc/PagedResultOfSaldoNaData.md)
  - [PagedResultOfTemplateDetalhe](doc/PagedResultOfTemplateDetalhe.md)
  - [PagedResultOfUsuarioDetalhe](doc/PagedResultOfUsuarioDetalhe.md)
+ - [PedidoSugestaoArmazenagem](doc/PedidoSugestaoArmazenagem.md)
  - [PendenciaEmbalagem](doc/PendenciaEmbalagem.md)
  - [ProblemDetails](doc/ProblemDetails.md)
  - [ProdutoDetalhe](doc/ProdutoDetalhe.md)
@@ -280,6 +289,7 @@ Class | Method | HTTP request | Description
  - [RegistrarEntrada](doc/RegistrarEntrada.md)
  - [RegistrarSaida](doc/RegistrarSaida.md)
  - [RegistrarTransferencia](doc/RegistrarTransferencia.md)
+ - [RegraArmazenagemDetalhe](doc/RegraArmazenagemDetalhe.md)
  - [RegrasNormalizacao](doc/RegrasNormalizacao.md)
  - [RelatorioImportacao](doc/RelatorioImportacao.md)
  - [RenomearArmazem](doc/RenomearArmazem.md)
@@ -300,6 +310,8 @@ Class | Method | HTTP request | Description
  - [StatusRecebimento](doc/StatusRecebimento.md)
  - [StatusReserva](doc/StatusReserva.md)
  - [SugerirMapeamento](doc/SugerirMapeamento.md)
+ - [SugestaoArmazenagem](doc/SugestaoArmazenagem.md)
+ - [SugestaoEndereco](doc/SugestaoEndereco.md)
  - [SugestaoIa](doc/SugestaoIa.md)
  - [TemplateDetalhe](doc/TemplateDetalhe.md)
  - [TipoEmbalagem](doc/TipoEmbalagem.md)

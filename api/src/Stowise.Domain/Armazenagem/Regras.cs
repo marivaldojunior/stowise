@@ -20,6 +20,8 @@ public sealed class RegraZona : IRegraArmazenagem
 
     public bool Restritiva => true;
 
+    public IReadOnlyDictionary<string, decimal> ParametrosPadrao { get; } = new Dictionary<string, decimal>();
+
     public IReadOnlyList<AvaliacaoRegra> Avaliar(ItemArmazenagem item, IReadOnlyList<CandidatoEndereco> candidatos, ParametrosRegra parametros)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -53,12 +55,14 @@ public sealed class RegraCapacidade : IRegraArmazenagem
 
     public bool Restritiva => true;
 
+    public IReadOnlyDictionary<string, decimal> ParametrosPadrao { get; } = new Dictionary<string, decimal> { [OcupacaoMaxima] = 100m };
+
     public IReadOnlyList<AvaliacaoRegra> Avaliar(ItemArmazenagem item, IReadOnlyList<CandidatoEndereco> candidatos, ParametrosRegra parametros)
     {
         ArgumentNullException.ThrowIfNull(item);
         ArgumentNullException.ThrowIfNull(candidatos);
         ArgumentNullException.ThrowIfNull(parametros);
-        var limite = Math.Clamp(parametros.Get(OcupacaoMaxima, 100m), 1m, 100m) / 100m;
+        var limite = Math.Clamp(parametros.Get(OcupacaoMaxima, ParametrosPadrao[OcupacaoMaxima]), 1m, 100m) / 100m;
         return candidatos.Select(c => Avaliar(item, c, limite)).ToList();
     }
 
@@ -111,6 +115,8 @@ public sealed class RegraCurvaAbc : IRegraArmazenagem
     public string Codigo => CodigosRegra.CurvaAbc;
 
     public bool Restritiva => false;
+
+    public IReadOnlyDictionary<string, decimal> ParametrosPadrao { get; } = new Dictionary<string, decimal>();
 
     public IReadOnlyList<AvaliacaoRegra> Avaliar(ItemArmazenagem item, IReadOnlyList<CandidatoEndereco> candidatos, ParametrosRegra parametros)
     {
@@ -165,6 +171,8 @@ public sealed class RegraFefo : IRegraArmazenagem
 
     public bool Restritiva => false;
 
+    public IReadOnlyDictionary<string, decimal> ParametrosPadrao { get; } = new Dictionary<string, decimal> { [ToleranciaDias] = 0m };
+
     public IReadOnlyList<AvaliacaoRegra> Avaliar(ItemArmazenagem item, IReadOnlyList<CandidatoEndereco> candidatos, ParametrosRegra parametros)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -175,7 +183,7 @@ public sealed class RegraFefo : IRegraArmazenagem
             return candidatos.Select(_ => AvaliacaoRegra.NaoAplicavel("O item não tem validade.")).ToList();
         }
 
-        var tolerancia = (int)Math.Max(0m, parametros.Get(ToleranciaDias, 0m));
+        var tolerancia = (int)Math.Max(0m, parametros.Get(ToleranciaDias, ParametrosPadrao[ToleranciaDias]));
         return candidatos
             .Select(c =>
             {
@@ -209,6 +217,14 @@ public sealed class RegraConsolidacao : IRegraArmazenagem
 
     public bool Restritiva => false;
 
+    public IReadOnlyDictionary<string, decimal> ParametrosPadrao { get; } = new Dictionary<string, decimal>
+    {
+        [MesmoLote] = 100m,
+        [MesmoProduto] = 70m,
+        [Vazio] = 40m,
+        [OutroProduto] = 0m,
+    };
+
     public IReadOnlyList<AvaliacaoRegra> Avaliar(ItemArmazenagem item, IReadOnlyList<CandidatoEndereco> candidatos, ParametrosRegra parametros)
     {
         ArgumentNullException.ThrowIfNull(item);
@@ -221,21 +237,21 @@ public sealed class RegraConsolidacao : IRegraArmazenagem
                 if (doProduto.Any(o => o.LoteId == item.LoteId))
                 {
                     var explicacao = item.LoteId is null ? "O endereço já tem o produto." : "O endereço já tem o produto, do mesmo lote.";
-                    return Nota(parametros, MesmoLote, 100m, explicacao);
+                    return Nota(parametros, MesmoLote, explicacao);
                 }
 
                 if (doProduto.Count > 0)
                 {
-                    return Nota(parametros, MesmoProduto, 70m, "O endereço já tem o produto, de outro lote.");
+                    return Nota(parametros, MesmoProduto, "O endereço já tem o produto, de outro lote.");
                 }
 
                 return c.Ocupacao.Count == 0
-                    ? Nota(parametros, Vazio, 40m, "Endereço vazio.")
-                    : Nota(parametros, OutroProduto, 0m, "O endereço só tem outros produtos.");
+                    ? Nota(parametros, Vazio, "Endereço vazio.")
+                    : Nota(parametros, OutroProduto, "O endereço só tem outros produtos.");
             })
             .ToList();
     }
 
-    private static AvaliacaoRegra Nota(ParametrosRegra parametros, string nome, decimal padrao, string explicacao) =>
-        AvaliacaoRegra.Com(parametros.Get(nome, padrao) / 100m, explicacao);
+    private AvaliacaoRegra Nota(ParametrosRegra parametros, string nome, string explicacao) =>
+        AvaliacaoRegra.Com(parametros.Get(nome, ParametrosPadrao[nome]) / 100m, explicacao);
 }

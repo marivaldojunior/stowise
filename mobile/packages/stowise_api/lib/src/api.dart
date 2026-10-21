@@ -9,6 +9,7 @@ import 'package:stowise_api/src/auth/api_key_auth.dart';
 import 'package:stowise_api/src/auth/basic_auth.dart';
 import 'package:stowise_api/src/auth/bearer_auth.dart';
 import 'package:stowise_api/src/auth/oauth.dart';
+import 'package:stowise_api/src/api/armazenagem_api.dart';
 import 'package:stowise_api/src/api/autenticao_api.dart';
 import 'package:stowise_api/src/api/catlogo_api.dart';
 import 'package:stowise_api/src/api/estoque_api.dart';
@@ -76,6 +77,12 @@ class StowiseApi {
       (this.dio.interceptors.firstWhere((element) => element is ApiKeyAuthInterceptor) as ApiKeyAuthInterceptor)
           .apiKeys[name] = apiKey;
     }
+  }
+
+  /// Get ArmazenagemApi instance, base route and serializer can be overridden by a given but be careful,
+  /// by doing that all interceptors will not be executed
+  ArmazenagemApi getArmazenagemApi() {
+    return ArmazenagemApi(dio, serializers);
   }
 
   /// Get AutenticaoApi instance, base route and serializer can be overridden by a given but be careful,

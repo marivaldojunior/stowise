@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Stowise.Domain.Armazenagem;
 using Stowise.Domain.Catalogo;
 using Stowise.Domain.Common;
 using Stowise.Domain.Estoque;
@@ -40,6 +41,8 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
     public DbSet<Recebimento> Recebimentos => Set<Recebimento>();
 
     public DbSet<XmlRecebimento> XmlsRecebimento => Set<XmlRecebimento>();
+
+    public DbSet<RegraArmazenagem> RegrasArmazenagem => Set<RegraArmazenagem>();
 
     public DbSet<Lote> Lotes => Set<Lote>();
 

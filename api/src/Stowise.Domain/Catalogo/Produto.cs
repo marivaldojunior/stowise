@@ -36,6 +36,9 @@ public sealed class Produto : Entity
 
     public ClasseArmazenagem ClasseArmazenagem { get; private set; }
 
+    /// <summary>Giro na curva ABC. Produto novo entra como C; o job de recálculo muda a classe.</summary>
+    public ClasseAbc ClasseAbc { get; private set; }
+
     public bool ControlaLote { get; private set; }
 
     public bool ControlaValidade { get; private set; }
@@ -64,7 +67,7 @@ public sealed class Produto : Entity
         ArgumentNullException.ThrowIfNull(dados);
         ArgumentNullException.ThrowIfNull(unidadeBase);
 
-        var produto = new Produto { Sku = NormalizeSku(sku), Ativo = true };
+        var produto = new Produto { Sku = NormalizeSku(sku), Ativo = true, ClasseAbc = ClasseAbc.C };
         produto.Update(dados);
         produto._embalagens.Add(new ProdutoEmbalagem(produto.Id, TipoEmbalagem.Unidade, 1m, unidadeBase: true, unidadeBase));
         produto.RefreshStatusCadastro();
@@ -151,6 +154,9 @@ public sealed class Produto : Entity
 
     private void RefreshStatusCadastro() =>
         StatusCadastro = _embalagens.TrueForAll(e => e.TemMedidasCompletas) ? StatusCadastro.Completo : StatusCadastro.Incompleto;
+
+    /// <summary>Usado pelo job de recálculo da curva ABC.</summary>
+    public void SetClasseAbc(ClasseAbc classe) => ClasseAbc = classe;
 
     public void Deactivate() => Ativo = false;
 

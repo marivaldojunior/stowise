@@ -158,6 +158,98 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                     b.ToTable("usuario_tokens", (string)null);
                 });
 
+            modelBuilder.Entity("Stowise.Domain.Armazenagem.RegraArmazenagem", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("boolean")
+                        .HasColumnName("ativa");
+
+                    b.Property<DateTimeOffset?>("AtualizadoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("atualizado_em");
+
+                    b.Property<Guid?>("AtualizadoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("atualizado_por");
+
+                    b.Property<string>("Codigo")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)")
+                        .HasColumnName("codigo");
+
+                    b.Property<string>("Parametros")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("parametros");
+
+                    b.Property<decimal>("Peso")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("peso");
+
+                    b.Property<uint>("Versao")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id")
+                        .HasName("pk_regras_armazenagem");
+
+                    b.HasIndex("Codigo")
+                        .IsUnique()
+                        .HasDatabaseName("ix_regras_armazenagem_codigo");
+
+                    b.ToTable("regras_armazenagem", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-0000000a0001"),
+                            Ativa = true,
+                            Codigo = "zona",
+                            Parametros = "{}",
+                            Peso = 0m
+                        },
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-0000000a0002"),
+                            Ativa = true,
+                            Codigo = "capacidade",
+                            Parametros = "{\"ocupacaoMaxima\":100}",
+                            Peso = 1m
+                        },
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-0000000a0003"),
+                            Ativa = true,
+                            Codigo = "curva-abc",
+                            Parametros = "{}",
+                            Peso = 3m
+                        },
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-0000000a0004"),
+                            Ativa = true,
+                            Codigo = "fefo",
+                            Parametros = "{\"toleranciaDias\":0}",
+                            Peso = 2m
+                        },
+                        new
+                        {
+                            Id = new Guid("0199f0a0-0000-7000-8000-0000000a0005"),
+                            Ativa = true,
+                            Codigo = "consolidacao",
+                            Parametros = "{\"mesmoLote\":100,\"mesmoProduto\":70,\"vazio\":40,\"outroProduto\":0}",
+                            Peso = 2m
+                        });
+                });
+
             modelBuilder.Entity("Stowise.Domain.Catalogo.Categoria", b =>
                 {
                     b.Property<Guid>("Id")
@@ -204,6 +296,12 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasMaxLength(7)
                         .HasColumnType("character varying(7)")
                         .HasColumnName("cest");
+
+                    b.Property<string>("ClasseAbc")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)")
+                        .HasColumnName("classe_abc");
 
                     b.Property<string>("ClasseArmazenagem")
                         .IsRequired()

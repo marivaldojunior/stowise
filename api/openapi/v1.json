@@ -7453,6 +7453,236 @@
           }
         ]
       }
+    },
+    "/api/v1/armazenagem/sugestoes": {
+      "post": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "summary": "Endereços para guardar o produto, da maior para a menor pontuação, com a nota e a explicação de cada regra. Endereços recusados por zona ou capacidade vêm com os motivos.",
+        "operationId": "SugerirEnderecos",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PedidoSugestaoArmazenagem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SugestaoArmazenagem"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/armazenagem/regras": {
+      "get": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "operationId": "ListarRegrasArmazenagem",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/RegraArmazenagemDetalhe"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/armazenagem/regras/{codigo}": {
+      "put": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "summary": "Muda peso, estado e parâmetros. Uma regra restritiva inativa continua recusando endereços. Exige a versão lida (409 se mudou).",
+        "operationId": "AlterarRegraArmazenagem",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlterarRegraArmazenagem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegraArmazenagemDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
@@ -7582,6 +7812,44 @@
         ],
         "type": "object",
         "properties": {
+          "versao": {
+            "type": [
+              "null",
+              "integer"
+            ],
+            "format": "uint32"
+          }
+        }
+      },
+      "AlterarRegraArmazenagem": {
+        "required": [
+          "peso",
+          "ativa",
+          "parametros",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "peso": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "ativa": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "parametros": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
           "versao": {
             "type": [
               "null",
@@ -8144,6 +8412,13 @@
             "format": "date-time"
           }
         }
+      },
+      "ClasseAbc": {
+        "enum": [
+          "A",
+          "B",
+          "C"
+        ]
       },
       "ClasseArmazenagem": {
         "enum": [
@@ -9028,6 +9303,29 @@
               "number"
             ],
             "format": "double"
+          }
+        }
+      },
+      "EnderecoDescartado": {
+        "required": [
+          "enderecoId",
+          "codigo",
+          "motivos"
+        ],
+        "type": "object",
+        "properties": {
+          "enderecoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "motivos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
@@ -10628,6 +10926,38 @@
           }
         }
       },
+      "NotaRegra": {
+        "required": [
+          "codigo",
+          "peso",
+          "ativa",
+          "nota",
+          "explicacao"
+        ],
+        "type": "object",
+        "properties": {
+          "codigo": {
+            "type": "string"
+          },
+          "peso": {
+            "type": "number",
+            "format": "double"
+          },
+          "ativa": {
+            "type": "boolean"
+          },
+          "nota": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "explicacao": {
+            "type": "string"
+          }
+        }
+      },
       "NovoProdutoNota": {
         "required": [
           "sku",
@@ -11175,6 +11505,69 @@
           },
           "totalPaginas": {
             "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
+      "PedidoSugestaoArmazenagem": {
+        "required": [
+          "produtoId",
+          "embalagemId",
+          "quantidade",
+          "loteId",
+          "validade",
+          "armazemId",
+          "limite"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "quantidade": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "loteId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "armazemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "limite": {
+            "type": [
+              "null",
+              "integer"
+            ],
             "format": "int32"
           }
         }
@@ -12101,6 +12494,72 @@
           }
         }
       },
+      "RegraArmazenagemDetalhe": {
+        "required": [
+          "id",
+          "codigo",
+          "restritiva",
+          "peso",
+          "ativa",
+          "parametros",
+          "parametrosPadrao",
+          "atualizadoEm",
+          "atualizadoPor",
+          "versao"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "restritiva": {
+            "type": "boolean"
+          },
+          "peso": {
+            "type": "number",
+            "format": "double"
+          },
+          "ativa": {
+            "type": "boolean"
+          },
+          "parametros": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "parametrosPadrao": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          "atualizadoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "atualizadoPor": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "versao": {
+            "type": "integer",
+            "format": "uint32"
+          }
+        }
+      },
       "RegrasNormalizacao": {
         "required": [
           "separadorDecimal",
@@ -12729,6 +13188,111 @@
           }
         }
       },
+      "SugestaoArmazenagem": {
+        "required": [
+          "produtoId",
+          "sku",
+          "classeArmazenagem",
+          "classeAbc",
+          "quantidade",
+          "validade",
+          "pesoKg",
+          "volumeCm3",
+          "totalCandidatos",
+          "sugestoes",
+          "totalDescartados",
+          "descartados"
+        ],
+        "type": "object",
+        "properties": {
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "classeArmazenagem": {
+            "$ref": "#/components/schemas/ClasseArmazenagem"
+          },
+          "classeAbc": {
+            "$ref": "#/components/schemas/ClasseAbc"
+          },
+          "quantidade": {
+            "type": "number",
+            "format": "double"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "pesoKg": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "volumeCm3": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "totalCandidatos": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "sugestoes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SugestaoEndereco"
+            }
+          },
+          "totalDescartados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "descartados": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EnderecoDescartado"
+            }
+          }
+        }
+      },
+      "SugestaoEndereco": {
+        "required": [
+          "enderecoId",
+          "codigo",
+          "pontuacao",
+          "notas"
+        ],
+        "type": "object",
+        "properties": {
+          "enderecoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "codigo": {
+            "type": "string"
+          },
+          "pontuacao": {
+            "type": "number",
+            "format": "double"
+          },
+          "notas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotaRegra"
+            }
+          }
+        }
+      },
       "SugestaoIa": {
         "required": [
           "colunas",
@@ -13068,6 +13632,9 @@
     },
     {
       "name": "Recebimentos"
+    },
+    {
+      "name": "Armazenagem"
     }
   ]
 }

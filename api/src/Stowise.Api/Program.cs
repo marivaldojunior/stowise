@@ -71,6 +71,7 @@ v1.MapIaEndpoints();
 v1.MapRfidEndpoints();
 v1.MapNotasFiscaisEndpoints();
 v1.MapRecebimentosEndpoints();
+v1.MapArmazenagemEndpoints();
 
 app.MapPainelWeb();
 
