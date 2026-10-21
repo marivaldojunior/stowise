@@ -343,7 +343,7 @@ Regras de ordem:
 - [x] Job de embeddings de produtos e busca de similares
 - [x] Casamento de itens: de-para, depois GTIN, depois similaridade (`POST /notas-fiscais/analise`, sem gravar)
 - [x] Inferência do fator de conversão (`uCom`/`uTrib`) e do lote (`rastro`), com alertas para a revisão
-- [ ] Efetivação: cria produtos, de-para, Recebimento e itens
+- [x] Efetivação: cria produtos, de-para, Recebimento e itens (`POST /notas-fiscais/efetivacao`, com a decisão de cada item)
 
 **2.3 API — Recebimento e armazenagem**
 
