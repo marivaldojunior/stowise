@@ -25,6 +25,7 @@ internal sealed class RecebimentoConfiguration : IEntityTypeConfiguration<Recebi
 
         builder.HasMany(r => r.Itens).WithOne().HasForeignKey(i => i.RecebimentoId).OnDelete(DeleteBehavior.Cascade);
         builder.Navigation(r => r.Itens).HasField("_itens").UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Ignore(r => r.TemDivergencia);
     }
 }
 
@@ -38,6 +39,8 @@ internal sealed class RecebimentoItemConfiguration : IEntityTypeConfiguration<Re
         builder.Property(i => i.UnidadeNota).HasMaxLength(RecebimentoItem.UnidadeNotaMaxLength);
         builder.Property(i => i.Cfop).HasMaxLength(RecebimentoItem.CfopLength).IsFixedLength();
         builder.Property(i => i.Lotes).HasJsonConversion();
+        builder.Property(i => i.LotesConferidos).HasJsonConversion();
+        builder.Ignore(i => i.Conferido);
         builder.HasIndex(i => new { i.RecebimentoId, i.NumeroItem }).IsUnique();
         builder.HasIndex(i => i.ProdutoId);
 

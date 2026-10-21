@@ -3,12 +3,21 @@ using Stowise.Domain.NotasFiscais;
 
 namespace Stowise.Domain.Recebimentos;
 
-/// <summary>Andamento do recebimento: a conferência física (app) e a armazenagem vêm depois da efetivação da nota.</summary>
+/// <summary>Andamento do recebimento: efetivação da nota → conferência física (app) → armazenagem.</summary>
 public enum StatusRecebimento
 {
-    /// <summary>Nota efetivada; a mercadoria ainda não foi conferida.</summary>
+    /// <summary>Nota efetivada; a mercadoria ainda não chegou ou não começou a ser conferida.</summary>
     AguardandoConferencia,
+
+    /// <summary>A mercadoria chegou e está sendo contada, item a item.</summary>
+    EmConferencia,
+
+    /// <summary>Todos os itens foram contados; o próximo passo é a armazenagem.</summary>
+    Conferido,
 }
+
+/// <summary>Lote contado na conferência, na unidade da nota (ex.: 6 CX do lote L1).</summary>
+public sealed record LoteConferido(string? Numero, decimal Quantidade, DateOnly? Fabricacao, DateOnly? Validade);
 
 /// <summary>Lote informado na nota (rastro), com a quantidade já na unidade base. Imutável.</summary>
 public sealed record LoteRecebido(string Numero, decimal QuantidadeBase, DateOnly? Fabricacao, DateOnly? Validade);
@@ -44,10 +53,18 @@ public sealed class Recebimento : Entity
 
     public DateTimeOffset CriadoEm { get; private set; }
 
+    /// <summary>Quem concluiu a conferência.</summary>
+    public Guid? ConferidoPor { get; private set; }
+
+    public DateTimeOffset? ConferidoEm { get; private set; }
+
     /// <summary>Versão para concorrência otimista (coluna xmin do PostgreSQL).</summary>
     public uint Versao { get; private set; }
 
     public IReadOnlyCollection<RecebimentoItem> Itens => _itens.AsReadOnly();
+
+    /// <summary>Algum item conferido difere da nota (quantidade ou lotes).</summary>
+    public bool TemDivergencia => _itens.Exists(i => i.Divergente);
 
     public static Recebimento Create(
         Guid fornecedorId,
@@ -87,6 +104,60 @@ public sealed class Recebimento : Entity
         };
     }
 
+    /// <summary>A mercadoria chegou: começa a contagem. A data de chegada é a deste momento.</summary>
+    public void StartConferencia(DateTimeOffset agora)
+    {
+        if (Status != StatusRecebimento.AguardandoConferencia)
+        {
+            throw new DomainException("A conferência deste recebimento já começou.");
+        }
+
+        Status = StatusRecebimento.EmConferencia;
+        DataChegada = agora.ToUniversalTime();
+    }
+
+    /// <summary>Registra (ou corrige) a contagem de um item. Só durante a conferência.</summary>
+    /// <param name="quantidade">Quantidade contada na unidade da nota (uCom).</param>
+    /// <param name="controlaLote">O produto exige lote.</param>
+    /// <param name="controlaValidade">O produto exige validade em cada lote.</param>
+    public RecebimentoItem ConferirItem(
+        Guid itemId,
+        decimal quantidade,
+        IReadOnlyList<LoteConferido> lotes,
+        bool controlaLote,
+        bool controlaValidade,
+        Guid usuarioId,
+        DateTimeOffset agora)
+    {
+        if (Status != StatusRecebimento.EmConferencia)
+        {
+            throw new DomainException("Inicie a conferência antes de contar os itens.");
+        }
+
+        var item = _itens.Find(i => i.Id == itemId) ?? throw new DomainException("O item não é deste recebimento.");
+        item.Conferir(quantidade, lotes, controlaLote, controlaValidade, usuarioId, agora);
+        return item;
+    }
+
+    /// <summary>Fecha a conferência quando todos os itens foram contados. Divergências ficam registradas nos itens.</summary>
+    public void FinishConferencia(Guid usuarioId, DateTimeOffset agora)
+    {
+        if (Status != StatusRecebimento.EmConferencia)
+        {
+            throw new DomainException("A conferência deste recebimento não está em andamento.");
+        }
+
+        var faltando = _itens.Where(i => !i.Conferido).Select(i => i.NumeroItem).Order().ToList();
+        if (faltando.Count > 0)
+        {
+            throw new DomainException($"Faltam contar os itens {string.Join(", ", faltando)}.");
+        }
+
+        Status = StatusRecebimento.Conferido;
+        ConferidoPor = usuarioId;
+        ConferidoEm = agora.ToUniversalTime();
+    }
+
     /// <summary>Um item por nItem da nota.</summary>
     public RecebimentoItem AddItem(DadosItemRecebido dados)
     {
@@ -124,6 +195,9 @@ public sealed class RecebimentoItem : Entity
     public const int DescricaoNotaMaxLength = 120;
     public const int UnidadeNotaMaxLength = 6;
     public const int CfopLength = 4;
+
+    /// <summary>Tamanho do nLote na NF-e 4.00.</summary>
+    public const int LoteNumeroMaxLength = 20;
 
     private RecebimentoItem()
     {
@@ -191,6 +265,74 @@ public sealed class RecebimentoItem : Entity
     public decimal ValorUnitario { get; private set; }
 
     public IReadOnlyList<LoteRecebido> Lotes { get; private set; } = [];
+
+    /// <summary>Quantidade contada na conferência, na unidade base; nula até a contagem.</summary>
+    public decimal? QuantidadeConferida { get; private set; }
+
+    /// <summary>Lotes contados, na unidade base.</summary>
+    public IReadOnlyList<LoteRecebido> LotesConferidos { get; private set; } = [];
+
+    /// <summary>A contagem difere da nota: quantidade, ou número e quantidade dos lotes.</summary>
+    public bool Divergente { get; private set; }
+
+    public Guid? ConferidoPor { get; private set; }
+
+    public DateTimeOffset? ConferidoEm { get; private set; }
+
+    public bool Conferido => QuantidadeConferida is not null;
+
+    internal void Conferir(
+        decimal quantidade,
+        IReadOnlyList<LoteConferido> lotes,
+        bool controlaLote,
+        bool controlaValidade,
+        Guid usuarioId,
+        DateTimeOffset agora)
+    {
+        ArgumentNullException.ThrowIfNull(lotes);
+        Guard.NotNegative(quantidade, "Quantidade contada");
+
+        if (controlaLote && quantidade > 0 && lotes.Count == 0)
+        {
+            throw new DomainException($"O produto do item {NumeroItem} controla lote: informe os lotes contados.");
+        }
+
+        if (lotes.Count > 0 && lotes.Sum(l => l.Quantidade) != quantidade)
+        {
+            throw new DomainException($"A soma dos lotes do item {NumeroItem} deve ser igual à quantidade contada.");
+        }
+
+        var conferidos = new List<LoteRecebido>(lotes.Count);
+        foreach (var lote in lotes)
+        {
+            var numero = Guard.Required(lote.Numero, "Número do lote", LoteNumeroMaxLength);
+            Guard.Positive(lote.Quantidade, "Quantidade do lote");
+            if (controlaValidade && lote.Validade is null)
+            {
+                throw new DomainException($"O produto do item {NumeroItem} controla validade: informe a validade do lote {numero}.");
+            }
+
+            if (conferidos.Exists(c => string.Equals(c.Numero, numero, StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new DomainException($"O lote {numero} aparece duas vezes no item {NumeroItem}.");
+            }
+
+            conferidos.Add(new LoteRecebido(numero, ParaBase(lote.Quantidade), lote.Fabricacao, lote.Validade));
+        }
+
+        QuantidadeConferida = ParaBase(quantidade);
+        LotesConferidos = conferidos;
+        Divergente = QuantidadeConferida != Quantidade || (Lotes.Count > 0 && !MesmosLotes(Lotes, conferidos));
+        ConferidoPor = usuarioId;
+        ConferidoEm = agora.ToUniversalTime();
+    }
+
+
+    private decimal ParaBase(decimal quantidadeNota) => Math.Round(quantidadeNota * FatorConversao, 4, MidpointRounding.AwayFromZero);
+
+    private static bool MesmosLotes(IReadOnlyList<LoteRecebido> nota, List<LoteRecebido> contados) =>
+        nota.Count == contados.Count
+        && nota.All(n => contados.Any(c => string.Equals(c.Numero, n.Numero, StringComparison.OrdinalIgnoreCase) && c.QuantidadeBase == n.QuantidadeBase));
 }
 
 /// <summary>XML original da NF-e, guardado para auditoria (SPEC, seção 4), numa tabela própria.</summary>

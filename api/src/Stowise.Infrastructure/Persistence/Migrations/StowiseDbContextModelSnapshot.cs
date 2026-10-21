@@ -1430,6 +1430,14 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnName("chave_acesso")
                         .IsFixedLength();
 
+                    b.Property<DateTimeOffset?>("ConferidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("conferido_em");
+
+                    b.Property<Guid?>("ConferidoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conferido_por");
+
                     b.Property<DateTimeOffset>("CriadoEm")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("criado_em");
@@ -1505,11 +1513,23 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasColumnType("character varying(60)")
                         .HasColumnName("codigo_fornecedor");
 
+                    b.Property<DateTimeOffset?>("ConferidoEm")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("conferido_em");
+
+                    b.Property<Guid?>("ConferidoPor")
+                        .HasColumnType("uuid")
+                        .HasColumnName("conferido_por");
+
                     b.Property<string>("DescricaoNota")
                         .IsRequired()
                         .HasMaxLength(120)
                         .HasColumnType("character varying(120)")
                         .HasColumnName("descricao_nota");
+
+                    b.Property<bool>("Divergente")
+                        .HasColumnType("boolean")
+                        .HasColumnName("divergente");
 
                     b.Property<Guid>("EmbalagemId")
                         .HasColumnType("uuid")
@@ -1524,6 +1544,11 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasColumnType("jsonb")
                         .HasColumnName("lotes");
+
+                    b.Property<string>("LotesConferidos")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("lotes_conferidos");
 
                     b.Property<int>("NumeroItem")
                         .HasColumnType("integer")
@@ -1541,6 +1566,11 @@ namespace Stowise.Infrastructure.Persistence.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)")
                         .HasColumnName("quantidade");
+
+                    b.Property<decimal?>("QuantidadeConferida")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)")
+                        .HasColumnName("quantidade_conferida");
 
                     b.Property<decimal>("QuantidadeNota")
                         .HasPrecision(18, 4)
