@@ -17,6 +17,7 @@ import 'package:stowise_api/src/model/paged_result_of_tarefa_armazenagem_resumo.
 import 'package:stowise_api/src/model/pedido_sugestao_armazenagem.dart';
 import 'package:stowise_api/src/model/problem_details.dart';
 import 'package:stowise_api/src/model/regra_armazenagem_detalhe.dart';
+import 'package:stowise_api/src/model/resumo_curva_abc.dart';
 import 'package:stowise_api/src/model/status_tarefa_armazenagem.dart';
 import 'package:stowise_api/src/model/sugestao_armazenagem.dart';
 import 'package:stowise_api/src/model/tarefa_armazenagem_detalhe.dart';
@@ -487,6 +488,86 @@ class ArmazenagemApi {
     }
 
     return Response<TarefaArmazenagemDetalhe>(
+      data: _responseData,
+      headers: _response.headers,
+      isRedirect: _response.isRedirect,
+      requestOptions: _response.requestOptions,
+      redirects: _response.redirects,
+      statusCode: _response.statusCode,
+      statusMessage: _response.statusMessage,
+      extra: _response.extra,
+    );
+  }
+
+  /// Recalcula agora a curva ABC (o job roda todo dia às 3h UTC): giro &#x3D; número de saídas de cada produto nos últimos 90 dias. A até 80% do giro acumulado, B até 95%, o resto C.
+  ///
+  ///
+  /// Parameters:
+  /// * [cancelToken] - A [CancelToken] that can be used to cancel the operation
+  /// * [headers] - Can be used to add additional headers to the request
+  /// * [extras] - Can be used to add flags to the request
+  /// * [validateStatus] - A [ValidateStatus] callback that can be used to determine request success based on the HTTP status of the response
+  /// * [onSendProgress] - A [ProgressCallback] that can be used to get the send progress
+  /// * [onReceiveProgress] - A [ProgressCallback] that can be used to get the receive progress
+  ///
+  /// Returns a [Future] containing a [Response] with a [ResumoCurvaAbc] as data
+  /// Throws [DioException] if API call or serialization fails
+  Future<Response<ResumoCurvaAbc>> recalcularCurvaAbc({
+    CancelToken? cancelToken,
+    Map<String, dynamic>? headers,
+    Map<String, dynamic>? extra,
+    ValidateStatus? validateStatus,
+    ProgressCallback? onSendProgress,
+    ProgressCallback? onReceiveProgress,
+  }) async {
+    final _path = r'/api/v1/armazenagem/curva-abc';
+    final _options = Options(
+      method: r'POST',
+      headers: <String, dynamic>{
+        ...?headers,
+      },
+      extra: <String, dynamic>{
+        'secure': <Map<String, String>>[
+          {
+            'type': 'http',
+            'scheme': 'bearer',
+            'name': 'Bearer',
+          },
+        ],
+        ...?extra,
+      },
+      validateStatus: validateStatus,
+    );
+
+    final _response = await _dio.request<Object>(
+      _path,
+      options: _options,
+      cancelToken: cancelToken,
+      onSendProgress: onSendProgress,
+      onReceiveProgress: onReceiveProgress,
+    );
+
+    ResumoCurvaAbc? _responseData;
+
+    try {
+      final rawResponse = _response.data;
+      _responseData = rawResponse == null
+          ? null
+          : _serializers.deserialize(
+              rawResponse,
+              specifiedType: const FullType(ResumoCurvaAbc),
+            ) as ResumoCurvaAbc;
+    } catch (error, stackTrace) {
+      throw DioException(
+        requestOptions: _response.requestOptions,
+        response: _response,
+        type: DioExceptionType.unknown,
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
+    return Response<ResumoCurvaAbc>(
       data: _responseData,
       headers: _response.headers,
       isRedirect: _response.isRedirect,

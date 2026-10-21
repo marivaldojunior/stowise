@@ -159,6 +159,7 @@ export * from './renomearArmazem';
 export * from './renomearTemplate';
 export * from './reservaDetalhe';
 export * from './resolverLeiturasRfid';
+export * from './resumoCurvaAbc';
 export * from './resumoSaldoLote';
 export * from './resumoSaldoProduto';
 export * from './saldoItem';

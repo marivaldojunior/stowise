@@ -69,6 +69,13 @@ public static class ArmazenagemEndpoints
             .ProducesProblem(StatusCodes.Status409Conflict)
             .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
+        group.MapPost("/curva-abc", async (ICurvaAbcService curva, CancellationToken ct) => TypedResults.Ok(await curva.RecalcularAsync(ct)))
+            .RequireAuthorization(Politicas.Gestao)
+            .WithName("RecalcularCurvaAbc")
+            .WithSummary("Recalcula agora a curva ABC (o job roda todo dia às 3h UTC): giro = número de saídas de cada produto nos últimos 90 dias. A até 80% do giro acumulado, B até 95%, o resto C.")
+            .Produces<ResumoCurvaAbc>()
+            .ProducesProblem(StatusCodes.Status403Forbidden);
+
         return app;
     }
 }

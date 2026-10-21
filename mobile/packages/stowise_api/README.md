@@ -73,6 +73,7 @@ Class | Method | HTTP request | Description
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**listarRegrasArmazenagem**](doc/ArmazenagemApi.md#listarregrasarmazenagem) | **GET** /api/v1/armazenagem/regras | 
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**listarTarefasArmazenagem**](doc/ArmazenagemApi.md#listartarefasarmazenagem) | **GET** /api/v1/armazenagem/tarefas | Mais antigas primeiro. Tarefas nascem na conclusão da conferência, uma por item e lote contados.
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**obterTarefaArmazenagem**](doc/ArmazenagemApi.md#obtertarefaarmazenagem) | **GET** /api/v1/armazenagem/tarefas/{id} | A tarefa com o snapshot da sugestão: nota, peso e explicação de cada regra.
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**recalcularCurvaAbc**](doc/ArmazenagemApi.md#recalcularcurvaabc) | **POST** /api/v1/armazenagem/curva-abc | Recalcula agora a curva ABC (o job roda todo dia às 3h UTC): giro &#x3D; número de saídas de cada produto nos últimos 90 dias. A até 80% do giro acumulado, B até 95%, o resto C.
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**sugerirEnderecos**](doc/ArmazenagemApi.md#sugerirenderecos) | **POST** /api/v1/armazenagem/sugestoes | Endereços para guardar o produto, da maior para a menor pontuação, com a nota e a explicação de cada regra. Endereços recusados por zona ou capacidade vêm com os motivos.
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**login**](doc/AutenticaoApi.md#login) | **POST** /api/v1/auth/login | 
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**logout**](doc/AutenticaoApi.md#logout) | **POST** /api/v1/auth/logout | 
@@ -301,6 +302,7 @@ Class | Method | HTTP request | Description
  - [RenomearTemplate](doc/RenomearTemplate.md)
  - [ReservaDetalhe](doc/ReservaDetalhe.md)
  - [ResolverLeiturasRfid](doc/ResolverLeiturasRfid.md)
+ - [ResumoCurvaAbc](doc/ResumoCurvaAbc.md)
  - [ResumoSaldoLote](doc/ResumoSaldoLote.md)
  - [ResumoSaldoProduto](doc/ResumoSaldoProduto.md)
  - [SaldoItem](doc/SaldoItem.md)

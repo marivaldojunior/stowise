@@ -125,6 +125,7 @@ import type {
   RenomearTemplate,
   ReservaDetalhe,
   ResolverLeiturasRfid,
+  ResumoCurvaAbc,
   ResumoSaldoProduto,
   SalvarCategoria,
   SalvarCotaIa,
@@ -9024,6 +9025,80 @@ export const useSugerirEnderecos = <TError = ErrorType<HttpValidationProblemDeta
         TContext
       > => {
       return useMutation(getSugerirEnderecosMutationOptions(options), queryClient);
+    }
+
+export const getRecalcularCurvaAbcUrl = () => {
+
+
+
+
+  return `/api/v1/armazenagem/curva-abc`
+}
+
+/**
+ * @summary Recalcula agora a curva ABC (o job roda todo dia às 3h UTC): giro = número de saídas de cada produto nos últimos 90 dias. A até 80% do giro acumulado, B até 95%, o resto C.
+ */
+export const recalcularCurvaAbc = async ( options?: Parameters<typeof apiFetch>[1]): Promise<ResumoCurvaAbc> => {
+
+  return apiFetch<ResumoCurvaAbc>(getRecalcularCurvaAbcUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getRecalcularCurvaAbcMutationKey = () => ['recalcularCurvaAbc'] as const;
+
+export const getRecalcularCurvaAbcMutationOptions = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recalcularCurvaAbc>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof recalcularCurvaAbc>>, TError,void, TContext> => {
+
+const mutationKey = getRecalcularCurvaAbcMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof recalcularCurvaAbc>>, void> = () => {
+
+
+          return  recalcularCurvaAbc(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RecalcularCurvaAbcMutationResult = NonNullable<Awaited<ReturnType<typeof recalcularCurvaAbc>>>
+
+    export type RecalcularCurvaAbcMutationError = ErrorType<ProblemDetails>
+
+
+    /**
+ * @summary Recalcula agora a curva ABC (o job roda todo dia às 3h UTC): giro = número de saídas de cada produto nos últimos 90 dias. A até 80% do giro acumulado, B até 95%, o resto C.
+ */
+export const useRecalcularCurvaAbc = <TError = ErrorType<ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof recalcularCurvaAbc>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof recalcularCurvaAbc>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getRecalcularCurvaAbcMutationOptions(options), queryClient);
     }
 
 export const getListarTarefasArmazenagemUrl = (params?: ListarTarefasArmazenagemParams,) => {

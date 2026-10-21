@@ -148,6 +148,7 @@ export 'package:stowise_api/src/model/renomear_armazem.dart';
 export 'package:stowise_api/src/model/renomear_template.dart';
 export 'package:stowise_api/src/model/reserva_detalhe.dart';
 export 'package:stowise_api/src/model/resolver_leituras_rfid.dart';
+export 'package:stowise_api/src/model/resumo_curva_abc.dart';
 export 'package:stowise_api/src/model/resumo_saldo_lote.dart';
 export 'package:stowise_api/src/model/resumo_saldo_produto.dart';
 export 'package:stowise_api/src/model/saldo_item.dart';

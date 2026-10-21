@@ -7530,6 +7530,52 @@
         ]
       }
     },
+    "/api/v1/armazenagem/curva-abc": {
+      "post": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "summary": "Recalcula agora a curva ABC (o job roda todo dia às 3h UTC): giro = número de saídas de cada produto nos últimos 90 dias. A até 80% do giro acumulado, B até 95%, o resto C.",
+        "operationId": "RecalcularCurvaAbc",
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResumoCurvaAbc"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/armazenagem/tarefas": {
       "get": {
         "tags": [
@@ -13104,6 +13150,38 @@
             "items": {
               "type": "string"
             }
+          }
+        }
+      },
+      "ResumoCurvaAbc": {
+        "required": [
+          "desde",
+          "classeA",
+          "classeB",
+          "classeC",
+          "alterados"
+        ],
+        "type": "object",
+        "properties": {
+          "desde": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "classeA": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "classeB": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "classeC": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "alterados": {
+            "type": "integer",
+            "format": "int32"
           }
         }
       },

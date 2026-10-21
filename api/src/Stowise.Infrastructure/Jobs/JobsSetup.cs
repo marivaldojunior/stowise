@@ -4,7 +4,9 @@ using Hangfire.PostgreSql;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Stowise.Application.Armazenagem;
 using Stowise.Application.Importacoes;
+using Stowise.Infrastructure.Armazenagem;
 using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Importacoes;
 
@@ -81,6 +83,8 @@ internal static class JobsSetup
         services.AddScoped<IFilaTrabalhos, HangfireFilaTrabalhos>();
         services.AddScoped<ImportacaoJobs>();
         services.AddScoped<EmbeddingsJobs>();
+        services.AddScoped<CurvaAbcJobs>();
+        services.AddScoped<ICurvaAbcService>(sp => sp.GetRequiredService<CurvaAbcJobs>());
         services.TryAddScoped<INotificadorImportacao, NotificadorImportacaoNulo>();
         return services;
     }

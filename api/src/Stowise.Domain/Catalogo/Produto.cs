@@ -36,7 +36,7 @@ public sealed class Produto : Entity
 
     public ClasseArmazenagem ClasseArmazenagem { get; private set; }
 
-    /// <summary>Giro na curva ABC. Produto novo entra como C; o job de recálculo muda a classe.</summary>
+    /// <summary>Giro na curva ABC. Produto novo entra como C; o job de recálculo (<c>CurvaAbcJobs</c>) grava a classe em lote.</summary>
     public ClasseAbc ClasseAbc { get; private set; }
 
     public bool ControlaLote { get; private set; }
@@ -154,9 +154,6 @@ public sealed class Produto : Entity
 
     private void RefreshStatusCadastro() =>
         StatusCadastro = _embalagens.TrueForAll(e => e.TemMedidasCompletas) ? StatusCadastro.Completo : StatusCadastro.Incompleto;
-
-    /// <summary>Usado pelo job de recálculo da curva ABC.</summary>
-    public void SetClasseAbc(ClasseAbc classe) => ClasseAbc = classe;
 
     public void Deactivate() => Ativo = false;
 

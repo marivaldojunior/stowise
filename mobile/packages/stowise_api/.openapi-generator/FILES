@@ -138,6 +138,7 @@ doc/RenomearArmazem.md
 doc/RenomearTemplate.md
 doc/ReservaDetalhe.md
 doc/ResolverLeiturasRfid.md
+doc/ResumoCurvaAbc.md
 doc/ResumoSaldoLote.md
 doc/ResumoSaldoProduto.md
 doc/SaldoItem.md
@@ -314,6 +315,7 @@ lib/src/model/renomear_armazem.dart
 lib/src/model/renomear_template.dart
 lib/src/model/reserva_detalhe.dart
 lib/src/model/resolver_leituras_rfid.dart
+lib/src/model/resumo_curva_abc.dart
 lib/src/model/resumo_saldo_lote.dart
 lib/src/model/resumo_saldo_produto.dart
 lib/src/model/saldo_item.dart
@@ -481,6 +483,7 @@ test/renomear_armazem_test.dart
 test/renomear_template_test.dart
 test/reserva_detalhe_test.dart
 test/resolver_leituras_rfid_test.dart
+test/resumo_curva_abc_test.dart
 test/resumo_saldo_lote_test.dart
 test/resumo_saldo_produto_test.dart
 test/rfid_api_test.dart

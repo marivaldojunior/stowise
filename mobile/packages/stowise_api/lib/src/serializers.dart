@@ -139,6 +139,7 @@ import 'package:stowise_api/src/model/renomear_armazem.dart';
 import 'package:stowise_api/src/model/renomear_template.dart';
 import 'package:stowise_api/src/model/reserva_detalhe.dart';
 import 'package:stowise_api/src/model/resolver_leituras_rfid.dart';
+import 'package:stowise_api/src/model/resumo_curva_abc.dart';
 import 'package:stowise_api/src/model/resumo_saldo_lote.dart';
 import 'package:stowise_api/src/model/resumo_saldo_produto.dart';
 import 'package:stowise_api/src/model/saldo_item.dart';
@@ -297,6 +298,7 @@ part 'serializers.g.dart';
   RenomearTemplate,
   ReservaDetalhe,
   ResolverLeiturasRfid,
+  ResumoCurvaAbc,
   ResumoSaldoLote,
   ResumoSaldoProduto,
   SaldoItem,

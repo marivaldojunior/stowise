@@ -32,6 +32,16 @@ public class ArmazenagemEndpointsTests(StowiseApiFactory factory) : IClassFixtur
         Assert.Equal(HttpStatusCode.Forbidden, alteracao.StatusCode);
     }
 
+    [Fact]
+    public async Task Operator_cannot_recalculate_the_abc_curve()
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var response = await client.PostAsync(new Uri("/api/v1/armazenagem/curva-abc", UriKind.Relative), null);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
     [Theory]
     [InlineData(null, "produtoId")]
     [InlineData(0, "quantidade")]
