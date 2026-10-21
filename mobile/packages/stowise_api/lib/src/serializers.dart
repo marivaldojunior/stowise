@@ -16,6 +16,7 @@ import 'package:stowise_api/src/model/date.dart';
 
 import 'package:stowise_api/src/model/acao_linha.dart';
 import 'package:stowise_api/src/model/adicionar_embalagem.dart';
+import 'package:stowise_api/src/model/alerta_item_nota.dart';
 import 'package:stowise_api/src/model/alterar_limites_cota_ia.dart';
 import 'package:stowise_api/src/model/analise_nota_fiscal.dart';
 import 'package:stowise_api/src/model/armazem_detalhe.dart';
@@ -37,6 +38,7 @@ import 'package:stowise_api/src/model/coluna_sugerida.dart';
 import 'package:stowise_api/src/model/confirmar_mapeamento.dart';
 import 'package:stowise_api/src/model/consumir_reserva.dart';
 import 'package:stowise_api/src/model/contagem_rfid.dart';
+import 'package:stowise_api/src/model/conversao_item.dart';
 import 'package:stowise_api/src/model/cota_ia_detalhe.dart';
 import 'package:stowise_api/src/model/criar_armazem.dart';
 import 'package:stowise_api/src/model/criar_endereco.dart';
@@ -73,12 +75,14 @@ import 'package:stowise_api/src/model/layout_arquivo.dart';
 import 'package:stowise_api/src/model/leitura_rfid.dart';
 import 'package:stowise_api/src/model/leituras_rfid_resolvidas.dart';
 import 'package:stowise_api/src/model/login_request.dart';
+import 'package:stowise_api/src/model/lote_inferido.dart';
 import 'package:stowise_api/src/model/lote_informado.dart';
 import 'package:stowise_api/src/model/lote_nota.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
 import 'package:stowise_api/src/model/metodo_similaridade.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
 import 'package:stowise_api/src/model/origem_casamento.dart';
+import 'package:stowise_api/src/model/origem_fator.dart';
 import 'package:stowise_api/src/model/paged_result_of_cadastro_incompleto.dart';
 import 'package:stowise_api/src/model/paged_result_of_chamada_ia_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_endereco_detalhe.dart';
@@ -142,6 +146,7 @@ part 'serializers.g.dart';
 @SerializersFor([
   AcaoLinha,
   AdicionarEmbalagem,
+  AlertaItemNota,
   AlterarLimitesCotaIa,
   AnaliseNotaFiscal,
   ArmazemDetalhe,
@@ -163,6 +168,7 @@ part 'serializers.g.dart';
   ConfirmarMapeamento,
   ConsumirReserva,
   ContagemRfid,
+  ConversaoItem,
   CotaIaDetalhe,
   CriarArmazem,
   CriarEndereco,
@@ -199,12 +205,14 @@ part 'serializers.g.dart';
   LeituraRfid,
   LeiturasRfidResolvidas,
   LoginRequest,
+  LoteInferido,
   LoteInformado,
   LoteNota,
   MapeamentoColuna,
   MetodoSimilaridade,
   MovimentacaoDetalhe,
   OrigemCasamento,
+  OrigemFator,
   PagedResultOfCadastroIncompleto,
   PagedResultOfChamadaIaDetalhe,
   PagedResultOfEnderecoDetalhe,

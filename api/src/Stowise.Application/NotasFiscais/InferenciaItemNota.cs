@@ -43,12 +43,15 @@ public sealed record ConversaoItem(decimal? Fator, OrigemFator Origem, decimal? 
 public sealed record LoteInferido(string Numero, decimal QuantidadeNota, decimal? QuantidadeBase, DateOnly? Fabricacao, DateOnly? Validade);
 
 /// <summary>O que o catálogo já sabe do produto casado, para conferir a nota.</summary>
-/// <param name="FatorCadastro">Fator do de-para ou da embalagem casada.</param>
+/// <param name="FatorCadastro">
+/// Fator do de-para ou da embalagem casada pela unidade comercial; nulo quando a embalagem casada é a da unidade
+/// tributável (cEANTrib), que não diz nada sobre a unidade comercial.
+/// </param>
 public sealed record ProdutoParaInferencia(
     string UnidadeBase,
     bool ControlaLote,
     bool ControlaValidade,
-    decimal FatorCadastro,
+    decimal? FatorCadastro,
     OrigemFator OrigemCadastro);
 
 public sealed record InferenciaItem(ConversaoItem Conversao, IReadOnlyList<LoteInferido> Lotes, IReadOnlyList<AlertaItemNota> Alertas);
@@ -129,7 +132,7 @@ public static class InferenciaItemNota
         var fatorNota = FatorDaNota(item, produto?.UnidadeBase);
         if (fatorNota is { } fator)
         {
-            if (produto is not null && produto.FatorCadastro != fator)
+            if (produto?.FatorCadastro is { } cadastro && cadastro != fator)
             {
                 alertas.Add(AlertaItemNota.FatorDivergente);
             }
@@ -137,9 +140,9 @@ public static class InferenciaItemNota
             return new ConversaoItem(fator, OrigemFator.Nota, item.QuantidadeTributavel);
         }
 
-        return produto is null
-            ? new ConversaoItem(null, OrigemFator.Desconhecido, null)
-            : new ConversaoItem(produto.FatorCadastro, produto.OrigemCadastro, Base(item.QuantidadeComercial, produto.FatorCadastro));
+        return produto?.FatorCadastro is { } fatorCadastro
+            ? new ConversaoItem(fatorCadastro, produto.OrigemCadastro, Base(item.QuantidadeComercial, fatorCadastro))
+            : new ConversaoItem(null, OrigemFator.Desconhecido, null);
     }
 
     /// <summary>

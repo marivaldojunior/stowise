@@ -14,6 +14,12 @@ class _$CasamentoItem extends CasamentoItem {
   @override
   final String descricao;
   @override
+  final String unidadeBase;
+  @override
+  final bool controlaLote;
+  @override
+  final bool controlaValidade;
+  @override
   final String embalagemId;
   @override
   final TipoEmbalagem tipoEmbalagem;
@@ -21,6 +27,8 @@ class _$CasamentoItem extends CasamentoItem {
   final double fatorConversao;
   @override
   final String? produtoFornecedorId;
+  @override
+  final bool? porGtinTributavel;
 
   factory _$CasamentoItem([void Function(CasamentoItemBuilder)? updates]) =>
       (CasamentoItemBuilder()..update(updates))._build();
@@ -29,10 +37,14 @@ class _$CasamentoItem extends CasamentoItem {
       {required this.produtoId,
       required this.sku,
       required this.descricao,
+      required this.unidadeBase,
+      required this.controlaLote,
+      required this.controlaValidade,
       required this.embalagemId,
       required this.tipoEmbalagem,
       required this.fatorConversao,
-      this.produtoFornecedorId})
+      this.produtoFornecedorId,
+      this.porGtinTributavel})
       : super._();
   @override
   CasamentoItem rebuild(void Function(CasamentoItemBuilder) updates) => (toBuilder()..update(updates)).build();
@@ -47,10 +59,14 @@ class _$CasamentoItem extends CasamentoItem {
         produtoId == other.produtoId &&
         sku == other.sku &&
         descricao == other.descricao &&
+        unidadeBase == other.unidadeBase &&
+        controlaLote == other.controlaLote &&
+        controlaValidade == other.controlaValidade &&
         embalagemId == other.embalagemId &&
         tipoEmbalagem == other.tipoEmbalagem &&
         fatorConversao == other.fatorConversao &&
-        produtoFornecedorId == other.produtoFornecedorId;
+        produtoFornecedorId == other.produtoFornecedorId &&
+        porGtinTributavel == other.porGtinTributavel;
   }
 
   @override
@@ -59,10 +75,14 @@ class _$CasamentoItem extends CasamentoItem {
     _$hash = $jc(_$hash, produtoId.hashCode);
     _$hash = $jc(_$hash, sku.hashCode);
     _$hash = $jc(_$hash, descricao.hashCode);
+    _$hash = $jc(_$hash, unidadeBase.hashCode);
+    _$hash = $jc(_$hash, controlaLote.hashCode);
+    _$hash = $jc(_$hash, controlaValidade.hashCode);
     _$hash = $jc(_$hash, embalagemId.hashCode);
     _$hash = $jc(_$hash, tipoEmbalagem.hashCode);
     _$hash = $jc(_$hash, fatorConversao.hashCode);
     _$hash = $jc(_$hash, produtoFornecedorId.hashCode);
+    _$hash = $jc(_$hash, porGtinTributavel.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -73,10 +93,14 @@ class _$CasamentoItem extends CasamentoItem {
           ..add('produtoId', produtoId)
           ..add('sku', sku)
           ..add('descricao', descricao)
+          ..add('unidadeBase', unidadeBase)
+          ..add('controlaLote', controlaLote)
+          ..add('controlaValidade', controlaValidade)
           ..add('embalagemId', embalagemId)
           ..add('tipoEmbalagem', tipoEmbalagem)
           ..add('fatorConversao', fatorConversao)
-          ..add('produtoFornecedorId', produtoFornecedorId))
+          ..add('produtoFornecedorId', produtoFornecedorId)
+          ..add('porGtinTributavel', porGtinTributavel))
         .toString();
   }
 }
@@ -96,6 +120,18 @@ class CasamentoItemBuilder implements Builder<CasamentoItem, CasamentoItemBuilde
   String? get descricao => _$this._descricao;
   set descricao(String? descricao) => _$this._descricao = descricao;
 
+  String? _unidadeBase;
+  String? get unidadeBase => _$this._unidadeBase;
+  set unidadeBase(String? unidadeBase) => _$this._unidadeBase = unidadeBase;
+
+  bool? _controlaLote;
+  bool? get controlaLote => _$this._controlaLote;
+  set controlaLote(bool? controlaLote) => _$this._controlaLote = controlaLote;
+
+  bool? _controlaValidade;
+  bool? get controlaValidade => _$this._controlaValidade;
+  set controlaValidade(bool? controlaValidade) => _$this._controlaValidade = controlaValidade;
+
   String? _embalagemId;
   String? get embalagemId => _$this._embalagemId;
   set embalagemId(String? embalagemId) => _$this._embalagemId = embalagemId;
@@ -112,6 +148,10 @@ class CasamentoItemBuilder implements Builder<CasamentoItem, CasamentoItemBuilde
   String? get produtoFornecedorId => _$this._produtoFornecedorId;
   set produtoFornecedorId(String? produtoFornecedorId) => _$this._produtoFornecedorId = produtoFornecedorId;
 
+  bool? _porGtinTributavel;
+  bool? get porGtinTributavel => _$this._porGtinTributavel;
+  set porGtinTributavel(bool? porGtinTributavel) => _$this._porGtinTributavel = porGtinTributavel;
+
   CasamentoItemBuilder() {
     CasamentoItem._defaults(this);
   }
@@ -122,10 +162,14 @@ class CasamentoItemBuilder implements Builder<CasamentoItem, CasamentoItemBuilde
       _produtoId = $v.produtoId;
       _sku = $v.sku;
       _descricao = $v.descricao;
+      _unidadeBase = $v.unidadeBase;
+      _controlaLote = $v.controlaLote;
+      _controlaValidade = $v.controlaValidade;
       _embalagemId = $v.embalagemId;
       _tipoEmbalagem = $v.tipoEmbalagem;
       _fatorConversao = $v.fatorConversao;
       _produtoFornecedorId = $v.produtoFornecedorId;
+      _porGtinTributavel = $v.porGtinTributavel;
       _$v = null;
     }
     return this;
@@ -150,10 +194,15 @@ class CasamentoItemBuilder implements Builder<CasamentoItem, CasamentoItemBuilde
           produtoId: BuiltValueNullFieldError.checkNotNull(produtoId, r'CasamentoItem', 'produtoId'),
           sku: BuiltValueNullFieldError.checkNotNull(sku, r'CasamentoItem', 'sku'),
           descricao: BuiltValueNullFieldError.checkNotNull(descricao, r'CasamentoItem', 'descricao'),
+          unidadeBase: BuiltValueNullFieldError.checkNotNull(unidadeBase, r'CasamentoItem', 'unidadeBase'),
+          controlaLote: BuiltValueNullFieldError.checkNotNull(controlaLote, r'CasamentoItem', 'controlaLote'),
+          controlaValidade:
+              BuiltValueNullFieldError.checkNotNull(controlaValidade, r'CasamentoItem', 'controlaValidade'),
           embalagemId: BuiltValueNullFieldError.checkNotNull(embalagemId, r'CasamentoItem', 'embalagemId'),
           tipoEmbalagem: BuiltValueNullFieldError.checkNotNull(tipoEmbalagem, r'CasamentoItem', 'tipoEmbalagem'),
           fatorConversao: BuiltValueNullFieldError.checkNotNull(fatorConversao, r'CasamentoItem', 'fatorConversao'),
           produtoFornecedorId: produtoFornecedorId,
+          porGtinTributavel: porGtinTributavel,
         );
     replace(_$result);
     return _$result;

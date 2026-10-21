@@ -7,8 +7,11 @@
  * Erros seguem o padrão ProblemDetails (RFC 9457) e sempre trazem `traceId`.
  * OpenAPI spec version: 1.0
  */
+import type { AlertaItemNota } from './alertaItemNota';
 import type { CasamentoItem } from './casamentoItem';
+import type { ConversaoItem } from './conversaoItem';
 import type { ItemNota } from './itemNota';
+import type { LoteInferido } from './loteInferido';
 import type { MetodoSimilaridade } from './metodoSimilaridade';
 import type { OrigemCasamento } from './origemCasamento';
 import type { ProdutoSimilar } from './produtoSimilar';
@@ -20,4 +23,7 @@ export interface ItemAnalisado {
   metodoSugestoes: null | MetodoSimilaridade;
   sugestoes: ProdutoSimilar[];
   requerConfirmacao: boolean;
+  conversao: ConversaoItem;
+  lotes: LoteInferido[];
+  alertas: AlertaItemNota[];
 }

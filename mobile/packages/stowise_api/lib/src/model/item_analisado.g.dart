@@ -19,6 +19,12 @@ class _$ItemAnalisado extends ItemAnalisado {
   final BuiltList<ProdutoSimilar> sugestoes;
   @override
   final bool requerConfirmacao;
+  @override
+  final ConversaoItem conversao;
+  @override
+  final BuiltList<LoteInferido> lotes;
+  @override
+  final BuiltList<AlertaItemNota> alertas;
 
   factory _$ItemAnalisado([void Function(ItemAnalisadoBuilder)? updates]) =>
       (ItemAnalisadoBuilder()..update(updates))._build();
@@ -29,7 +35,10 @@ class _$ItemAnalisado extends ItemAnalisado {
       this.casamento,
       this.metodoSugestoes,
       required this.sugestoes,
-      required this.requerConfirmacao})
+      required this.requerConfirmacao,
+      required this.conversao,
+      required this.lotes,
+      required this.alertas})
       : super._();
   @override
   ItemAnalisado rebuild(void Function(ItemAnalisadoBuilder) updates) => (toBuilder()..update(updates)).build();
@@ -46,7 +55,10 @@ class _$ItemAnalisado extends ItemAnalisado {
         casamento == other.casamento &&
         metodoSugestoes == other.metodoSugestoes &&
         sugestoes == other.sugestoes &&
-        requerConfirmacao == other.requerConfirmacao;
+        requerConfirmacao == other.requerConfirmacao &&
+        conversao == other.conversao &&
+        lotes == other.lotes &&
+        alertas == other.alertas;
   }
 
   @override
@@ -58,6 +70,9 @@ class _$ItemAnalisado extends ItemAnalisado {
     _$hash = $jc(_$hash, metodoSugestoes.hashCode);
     _$hash = $jc(_$hash, sugestoes.hashCode);
     _$hash = $jc(_$hash, requerConfirmacao.hashCode);
+    _$hash = $jc(_$hash, conversao.hashCode);
+    _$hash = $jc(_$hash, lotes.hashCode);
+    _$hash = $jc(_$hash, alertas.hashCode);
     _$hash = $jf(_$hash);
     return _$hash;
   }
@@ -70,7 +85,10 @@ class _$ItemAnalisado extends ItemAnalisado {
           ..add('casamento', casamento)
           ..add('metodoSugestoes', metodoSugestoes)
           ..add('sugestoes', sugestoes)
-          ..add('requerConfirmacao', requerConfirmacao))
+          ..add('requerConfirmacao', requerConfirmacao)
+          ..add('conversao', conversao)
+          ..add('lotes', lotes)
+          ..add('alertas', alertas))
         .toString();
   }
 }
@@ -102,6 +120,18 @@ class ItemAnalisadoBuilder implements Builder<ItemAnalisado, ItemAnalisadoBuilde
   bool? get requerConfirmacao => _$this._requerConfirmacao;
   set requerConfirmacao(bool? requerConfirmacao) => _$this._requerConfirmacao = requerConfirmacao;
 
+  ConversaoItemBuilder? _conversao;
+  ConversaoItemBuilder get conversao => _$this._conversao ??= ConversaoItemBuilder();
+  set conversao(ConversaoItemBuilder? conversao) => _$this._conversao = conversao;
+
+  ListBuilder<LoteInferido>? _lotes;
+  ListBuilder<LoteInferido> get lotes => _$this._lotes ??= ListBuilder<LoteInferido>();
+  set lotes(ListBuilder<LoteInferido>? lotes) => _$this._lotes = lotes;
+
+  ListBuilder<AlertaItemNota>? _alertas;
+  ListBuilder<AlertaItemNota> get alertas => _$this._alertas ??= ListBuilder<AlertaItemNota>();
+  set alertas(ListBuilder<AlertaItemNota>? alertas) => _$this._alertas = alertas;
+
   ItemAnalisadoBuilder() {
     ItemAnalisado._defaults(this);
   }
@@ -115,6 +145,9 @@ class ItemAnalisadoBuilder implements Builder<ItemAnalisado, ItemAnalisadoBuilde
       _metodoSugestoes = $v.metodoSugestoes;
       _sugestoes = $v.sugestoes.toBuilder();
       _requerConfirmacao = $v.requerConfirmacao;
+      _conversao = $v.conversao.toBuilder();
+      _lotes = $v.lotes.toBuilder();
+      _alertas = $v.alertas.toBuilder();
       _$v = null;
     }
     return this;
@@ -145,6 +178,9 @@ class ItemAnalisadoBuilder implements Builder<ItemAnalisado, ItemAnalisadoBuilde
             sugestoes: sugestoes.build(),
             requerConfirmacao:
                 BuiltValueNullFieldError.checkNotNull(requerConfirmacao, r'ItemAnalisado', 'requerConfirmacao'),
+            conversao: conversao.build(),
+            lotes: lotes.build(),
+            alertas: alertas.build(),
           );
     } catch (_) {
       late String _$failedField;
@@ -157,6 +193,13 @@ class ItemAnalisadoBuilder implements Builder<ItemAnalisado, ItemAnalisadoBuilde
 
         _$failedField = 'sugestoes';
         sugestoes.build();
+
+        _$failedField = 'conversao';
+        conversao.build();
+        _$failedField = 'lotes';
+        lotes.build();
+        _$failedField = 'alertas';
+        alertas.build();
       } catch (e) {
         throw BuiltValueNestedFieldError(r'ItemAnalisado', _$failedField, e.toString());
       }

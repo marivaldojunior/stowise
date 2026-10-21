@@ -13,9 +13,13 @@ export interface CasamentoItem {
   produtoId: string;
   sku: string;
   descricao: string;
+  unidadeBase: string;
+  controlaLote: boolean;
+  controlaValidade: boolean;
   embalagemId: string;
   tipoEmbalagem: TipoEmbalagem;
   fatorConversao: number;
   /** @nullable */
   produtoFornecedorId: string | null;
+  porGtinTributavel?: boolean;
 }

@@ -62,12 +62,20 @@ public sealed class AnaliseNotaFiscalFlowTests : IDisposable
         Assert.Equal(12m, refrigerante.Casamento.FatorConversao);
         Assert.True(refrigerante.RequerConfirmacao);
 
+        // 10 CX = 120 UN: o fator da nota confere com o da caixa, e o lote L2610A vira 120 UN.
+        Assert.Equal(new ConversaoItem(12m, OrigemFator.Nota, 120m), refrigerante.Conversao);
+        Assert.Equal(120m, Assert.Single(refrigerante.Lotes).QuantidadeBase);
+        Assert.Empty(refrigerante.Alertas);
+
         var copos = analise.Itens[1];
         Assert.Equal(OrigemCasamento.Similaridade, copos.Origem);
         Assert.Null(copos.Casamento);
         Assert.Equal(MetodoSimilaridade.Trigramas, copos.MetodoSugestoes);
         Assert.Equal(copo.Id, copos.Sugestoes[0].Id);
         Assert.True(copos.RequerConfirmacao);
+
+        // Sem produto casado, a unidade tributável (UN) é a base: 5 PCT = 500 UN.
+        Assert.Equal(new ConversaoItem(100m, OrigemFator.Nota, 500m), copos.Conversao);
     }
 
     [DockerFact]
@@ -88,6 +96,7 @@ public sealed class AnaliseNotaFiscalFlowTests : IDisposable
         Assert.Equal(OrigemCasamento.DePara, copos.Origem);
         Assert.Equal(vinculo.Id, copos.Casamento!.ProdutoFornecedorId);
         Assert.Equal(100m, copos.Casamento.FatorConversao);
+        Assert.Empty(copos.Alertas);
         Assert.False(copos.RequerConfirmacao);
 
         // Sem nada parecido no catálogo, o refrigerante fica sem candidato.

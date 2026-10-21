@@ -42,19 +42,19 @@ internal sealed class AnaliseNotaFiscalService(StowiseDbContext db, ILeitorNfe l
         {
             if (dePara.TryGetValue(item.CodigoFornecedor, out var vinculo))
             {
-                itens.Add(new ItemAnalisado(item, OrigemCasamento.DePara, vinculo, null, [], RequerConfirmacao: false));
+                itens.Add(Analisado(nota, item, OrigemCasamento.DePara, vinculo, null, []));
             }
             else if (Gtin14(item.Gtin) is { } gtin && porGtin.TryGetValue(gtin, out var comercial))
             {
-                itens.Add(new ItemAnalisado(item, OrigemCasamento.Gtin, comercial, null, [], RequerConfirmacao: true));
+                itens.Add(Analisado(nota, item, OrigemCasamento.Gtin, comercial, null, []));
             }
             else if (Gtin14(item.GtinTributavel) is { } gtinTrib && porGtin.TryGetValue(gtinTrib, out var tributavel))
             {
-                itens.Add(new ItemAnalisado(item, OrigemCasamento.Gtin, tributavel, null, [], RequerConfirmacao: true));
+                itens.Add(Analisado(nota, item, OrigemCasamento.Gtin, tributavel with { PorGtinTributavel = true }, null, []));
             }
             else
             {
-                itens.Add(await SugestoesAsync(item, cancellationToken));
+                itens.Add(await SugestoesAsync(nota, item, cancellationToken));
             }
         }
 
@@ -69,14 +69,36 @@ internal sealed class AnaliseNotaFiscalService(StowiseDbContext db, ILeitorNfe l
             itens);
     }
 
-    private async Task<ItemAnalisado> SugestoesAsync(ItemNota item, CancellationToken cancellationToken)
+    private async Task<ItemAnalisado> SugestoesAsync(NotaFiscalLida nota, ItemNota item, CancellationToken cancellationToken)
     {
         var texto = item.Descricao.Length > LimitesSimilares.TextoMaximo ? item.Descricao[..LimitesSimilares.TextoMaximo] : item.Descricao;
         var busca = await similares.FindAsync(texto, SugestoesPorItem, cancellationToken);
         var encontrados = busca.IsSuccess ? busca.Value : null;
         return encontrados is { Produtos.Count: > 0 }
-            ? new ItemAnalisado(item, OrigemCasamento.Similaridade, null, encontrados.Metodo, encontrados.Produtos, RequerConfirmacao: true)
-            : new ItemAnalisado(item, OrigemCasamento.SemCandidato, null, encontrados?.Metodo, [], RequerConfirmacao: true);
+            ? Analisado(nota, item, OrigemCasamento.Similaridade, null, encontrados.Metodo, encontrados.Produtos)
+            : Analisado(nota, item, OrigemCasamento.SemCandidato, null, encontrados?.Metodo, []);
+    }
+
+    /// <summary>Junta o casamento com a inferência do fator e dos lotes (<see cref="InferenciaItemNota"/>).</summary>
+    private static ItemAnalisado Analisado(
+        NotaFiscalLida nota,
+        ItemNota item,
+        OrigemCasamento origem,
+        CasamentoItem? casamento,
+        MetodoSimilaridade? metodo,
+        IReadOnlyList<ProdutoSimilar> sugestoes)
+    {
+        var produto = casamento is null
+            ? null
+            : new ProdutoParaInferencia(
+                casamento.UnidadeBase,
+                casamento.ControlaLote,
+                casamento.ControlaValidade,
+                casamento.PorGtinTributavel ? null : casamento.FatorConversao,
+                casamento.ProdutoFornecedorId is null ? OrigemFator.Embalagem : OrigemFator.DePara);
+        var inferencia = InferenciaItemNota.Infer(item, nota.DataEmissao, produto);
+        var requerConfirmacao = origem != OrigemCasamento.DePara || inferencia.Alertas.Count > 0;
+        return new ItemAnalisado(item, origem, casamento, metodo, sugestoes, requerConfirmacao, inferencia.Conversao, inferencia.Lotes, inferencia.Alertas);
     }
 
     private async Task<Dictionary<string, CasamentoItem>> DeParaAsync(Guid fornecedorId, IReadOnlyList<ItemNota> itens, CancellationToken cancellationToken)
@@ -86,12 +108,12 @@ internal sealed class AnaliseNotaFiscalService(StowiseDbContext db, ILeitorNfe l
             from v in db.ProdutoFornecedores.AsNoTracking().Where(v => v.FornecedorId == fornecedorId && codigos.Contains(v.CodigoFornecedor))
             join p in db.Produtos on v.ProdutoId equals p.Id
             join e in db.ProdutoEmbalagens on v.EmbalagemId equals e.Id
-            select new { v.CodigoFornecedor, v.Id, v.ProdutoId, p.Sku, p.Descricao, v.EmbalagemId, e.Tipo, v.FatorConversao })
+            select new { v.CodigoFornecedor, v.Id, v.ProdutoId, p.Sku, p.Descricao, p.UnidadeBase, p.ControlaLote, p.ControlaValidade, v.EmbalagemId, e.Tipo, v.FatorConversao })
             .ToListAsync(cancellationToken);
 
         return linhas.ToDictionary(
             x => x.CodigoFornecedor,
-            x => new CasamentoItem(x.ProdutoId, x.Sku, x.Descricao, x.EmbalagemId, x.Tipo, x.FatorConversao, x.Id),
+            x => new CasamentoItem(x.ProdutoId, x.Sku, x.Descricao, x.UnidadeBase, x.ControlaLote, x.ControlaValidade, x.EmbalagemId, x.Tipo, x.FatorConversao, x.Id),
             StringComparer.Ordinal);
     }
 
@@ -112,7 +134,7 @@ internal sealed class AnaliseNotaFiscalService(StowiseDbContext db, ILeitorNfe l
         var linhas = await (
             from e in db.ProdutoEmbalagens.AsNoTracking().Where(e => e.Gtin != null && formas.Contains(e.Gtin))
             join p in db.Produtos on e.ProdutoId equals p.Id
-            select new { Gtin = e.Gtin!, p.Id, p.Sku, p.Descricao, EmbalagemId = e.Id, e.Tipo, e.FatorConversao })
+            select new { Gtin = e.Gtin!, p.Id, p.Sku, p.Descricao, p.UnidadeBase, p.ControlaLote, p.ControlaValidade, EmbalagemId = e.Id, e.Tipo, e.FatorConversao })
             .ToListAsync(cancellationToken);
 
         return linhas
@@ -120,7 +142,7 @@ internal sealed class AnaliseNotaFiscalService(StowiseDbContext db, ILeitorNfe l
             .ToDictionary(g => g.Key, g =>
             {
                 var x = g.First();
-                return new CasamentoItem(x.Id, x.Sku, x.Descricao, x.EmbalagemId, x.Tipo, x.FatorConversao, null);
+                return new CasamentoItem(x.Id, x.Sku, x.Descricao, x.UnidadeBase, x.ControlaLote, x.ControlaValidade, x.EmbalagemId, x.Tipo, x.FatorConversao, null);
             });
     }
 

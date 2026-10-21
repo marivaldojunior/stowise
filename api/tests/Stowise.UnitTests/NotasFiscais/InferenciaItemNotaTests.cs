@@ -56,6 +56,18 @@ public class InferenciaItemNotaTests
     }
 
     [Fact]
+    public void Package_matched_by_the_taxable_gtin_is_not_compared_with_the_invoice_factor()
+    {
+        var produto = new ProdutoParaInferencia("UN", false, false, FatorCadastro: null, OrigemFator.Embalagem);
+
+        var resultado = InferenciaItemNota.Infer(Item("CX", 10, "UN", 120), Emissao, produto);
+
+        Assert.Equal(12m, resultado.Conversao.Fator);
+        Assert.Empty(resultado.Alertas);
+        Assert.Equal(OrigemFator.Desconhecido, InferenciaItemNota.Infer(Item("CX", 10, "CX", 10), Emissao, produto).Conversao.Origem);
+    }
+
+    [Fact]
     public void Without_a_matched_product_the_taxable_unit_becomes_the_base()
     {
         var resultado = InferenciaItemNota.Infer(Item("PCT", 5, "UN", 500), Emissao, produto: null);
@@ -107,7 +119,7 @@ public class InferenciaItemNotaTests
 
     private static ProdutoParaInferencia Produto(
         string unidadeBase,
-        decimal fator,
+        decimal? fator,
         bool controlaLote = false,
         bool controlaValidade = false,
         OrigemFator origem = OrigemFator.Embalagem) =>

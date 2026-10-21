@@ -7008,6 +7008,15 @@
           }
         }
       },
+      "AlertaItemNota": {
+        "enum": [
+          "FatorDivergente",
+          "LotesNaoFecham",
+          "LoteFaltando",
+          "ValidadeFaltando",
+          "LoteVencido"
+        ]
+      },
       "AlterarLimitesCotaIa": {
         "required": [
           "limiteChamadasDia",
@@ -7415,6 +7424,9 @@
           "produtoId",
           "sku",
           "descricao",
+          "unidadeBase",
+          "controlaLote",
+          "controlaValidade",
           "embalagemId",
           "tipoEmbalagem",
           "fatorConversao",
@@ -7431,6 +7443,15 @@
           },
           "descricao": {
             "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "controlaLote": {
+            "type": "boolean"
+          },
+          "controlaValidade": {
+            "type": "boolean"
           },
           "embalagemId": {
             "type": "string",
@@ -7449,6 +7470,10 @@
               "string"
             ],
             "format": "uuid"
+          },
+          "porGtinTributavel": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -7762,6 +7787,33 @@
           },
           "quantidadeBase": {
             "type": "number",
+            "format": "double"
+          }
+        }
+      },
+      "ConversaoItem": {
+        "required": [
+          "fator",
+          "origem",
+          "quantidadeBase"
+        ],
+        "type": "object",
+        "properties": {
+          "fator": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "origem": {
+            "$ref": "#/components/schemas/OrigemFator"
+          },
+          "quantidadeBase": {
+            "type": [
+              "null",
+              "number"
+            ],
             "format": "double"
           }
         }
@@ -9284,7 +9336,10 @@
           "casamento",
           "metodoSugestoes",
           "sugestoes",
-          "requerConfirmacao"
+          "requerConfirmacao",
+          "conversao",
+          "lotes",
+          "alertas"
         ],
         "type": "object",
         "properties": {
@@ -9322,6 +9377,21 @@
           },
           "requerConfirmacao": {
             "type": "boolean"
+          },
+          "conversao": {
+            "$ref": "#/components/schemas/ConversaoItem"
+          },
+          "lotes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LoteInferido"
+            }
+          },
+          "alertas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertaItemNota"
+            }
           }
         }
       },
@@ -9546,6 +9616,46 @@
           }
         }
       },
+      "LoteInferido": {
+        "required": [
+          "numero",
+          "quantidadeNota",
+          "quantidadeBase",
+          "fabricacao",
+          "validade"
+        ],
+        "type": "object",
+        "properties": {
+          "numero": {
+            "type": "string"
+          },
+          "quantidadeNota": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantidadeBase": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "fabricacao": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "validade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          }
+        }
+      },
       "LoteInformado": {
         "required": [
           "numero",
@@ -9738,6 +9848,14 @@
           "Gtin",
           "Similaridade",
           "SemCandidato"
+        ]
+      },
+      "OrigemFator": {
+        "enum": [
+          "Nota",
+          "DePara",
+          "Embalagem",
+          "Desconhecido"
         ]
       },
       "PagedResultOfCadastroIncompleto": {

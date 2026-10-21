@@ -4,6 +4,7 @@ README.md
 analysis_options.yaml
 doc/AcaoLinha.md
 doc/AdicionarEmbalagem.md
+doc/AlertaItemNota.md
 doc/AlterarLimitesCotaIa.md
 doc/AnaliseNotaFiscal.md
 doc/ArmazemDetalhe.md
@@ -27,6 +28,7 @@ doc/ColunaSugerida.md
 doc/ConfirmarMapeamento.md
 doc/ConsumirReserva.md
 doc/ContagemRfid.md
+doc/ConversaoItem.md
 doc/CotaIaDetalhe.md
 doc/CriarArmazem.md
 doc/CriarEndereco.md
@@ -68,6 +70,7 @@ doc/LayoutArquivo.md
 doc/LeituraRfid.md
 doc/LeiturasRfidResolvidas.md
 doc/LoginRequest.md
+doc/LoteInferido.md
 doc/LoteInformado.md
 doc/LoteNota.md
 doc/MapeamentoColuna.md
@@ -75,6 +78,7 @@ doc/MetodoSimilaridade.md
 doc/MovimentacaoDetalhe.md
 doc/NotasFiscaisApi.md
 doc/OrigemCasamento.md
+doc/OrigemFator.md
 doc/PagedResultOfCadastroIncompleto.md
 doc/PagedResultOfChamadaIaDetalhe.md
 doc/PagedResultOfEnderecoDetalhe.md
@@ -154,6 +158,7 @@ lib/src/auth/oauth.dart
 lib/src/date_serializer.dart
 lib/src/model/acao_linha.dart
 lib/src/model/adicionar_embalagem.dart
+lib/src/model/alerta_item_nota.dart
 lib/src/model/alterar_limites_cota_ia.dart
 lib/src/model/analise_nota_fiscal.dart
 lib/src/model/armazem_detalhe.dart
@@ -175,6 +180,7 @@ lib/src/model/coluna_sugerida.dart
 lib/src/model/confirmar_mapeamento.dart
 lib/src/model/consumir_reserva.dart
 lib/src/model/contagem_rfid.dart
+lib/src/model/conversao_item.dart
 lib/src/model/cota_ia_detalhe.dart
 lib/src/model/criar_armazem.dart
 lib/src/model/criar_endereco.dart
@@ -212,12 +218,14 @@ lib/src/model/layout_arquivo.dart
 lib/src/model/leitura_rfid.dart
 lib/src/model/leituras_rfid_resolvidas.dart
 lib/src/model/login_request.dart
+lib/src/model/lote_inferido.dart
 lib/src/model/lote_informado.dart
 lib/src/model/lote_nota.dart
 lib/src/model/mapeamento_coluna.dart
 lib/src/model/metodo_similaridade.dart
 lib/src/model/movimentacao_detalhe.dart
 lib/src/model/origem_casamento.dart
+lib/src/model/origem_fator.dart
 lib/src/model/paged_result_of_cadastro_incompleto.dart
 lib/src/model/paged_result_of_chamada_ia_detalhe.dart
 lib/src/model/paged_result_of_endereco_detalhe.dart
@@ -280,6 +288,7 @@ lib/stowise_api.dart
 pubspec.yaml
 test/acao_linha_test.dart
 test/adicionar_embalagem_test.dart
+test/alerta_item_nota_test.dart
 test/alterar_limites_cota_ia_test.dart
 test/analise_nota_fiscal_test.dart
 test/armazem_detalhe_test.dart
@@ -303,6 +312,7 @@ test/coluna_sugerida_test.dart
 test/confirmar_mapeamento_test.dart
 test/consumir_reserva_test.dart
 test/contagem_rfid_test.dart
+test/conversao_item_test.dart
 test/cota_ia_detalhe_test.dart
 test/criar_armazem_test.dart
 test/criar_endereco_test.dart
@@ -344,6 +354,7 @@ test/layout_arquivo_test.dart
 test/leitura_rfid_test.dart
 test/leituras_rfid_resolvidas_test.dart
 test/login_request_test.dart
+test/lote_inferido_test.dart
 test/lote_informado_test.dart
 test/lote_nota_test.dart
 test/mapeamento_coluna_test.dart
@@ -351,6 +362,7 @@ test/metodo_similaridade_test.dart
 test/movimentacao_detalhe_test.dart
 test/notas_fiscais_api_test.dart
 test/origem_casamento_test.dart
+test/origem_fator_test.dart
 test/paged_result_of_cadastro_incompleto_test.dart
 test/paged_result_of_chamada_ia_detalhe_test.dart
 test/paged_result_of_endereco_detalhe_test.dart

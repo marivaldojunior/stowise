@@ -3,10 +3,13 @@
 //
 
 // ignore_for_file: unused_element
+import 'package:stowise_api/src/model/conversao_item.dart';
 import 'package:stowise_api/src/model/item_nota.dart';
 import 'package:stowise_api/src/model/metodo_similaridade.dart';
+import 'package:stowise_api/src/model/alerta_item_nota.dart';
 import 'package:stowise_api/src/model/origem_casamento.dart';
 import 'package:stowise_api/src/model/casamento_item.dart';
+import 'package:stowise_api/src/model/lote_inferido.dart';
 import 'package:built_collection/built_collection.dart';
 import 'package:stowise_api/src/model/produto_similar.dart';
 import 'package:built_value/built_value.dart';
@@ -23,6 +26,9 @@ part 'item_analisado.g.dart';
 /// * [metodoSugestoes]
 /// * [sugestoes]
 /// * [requerConfirmacao]
+/// * [conversao]
+/// * [lotes]
+/// * [alertas]
 @BuiltValue()
 abstract class ItemAnalisado implements Built<ItemAnalisado, ItemAnalisadoBuilder> {
   @BuiltValueField(wireName: r'item')
@@ -44,6 +50,15 @@ abstract class ItemAnalisado implements Built<ItemAnalisado, ItemAnalisadoBuilde
 
   @BuiltValueField(wireName: r'requerConfirmacao')
   bool get requerConfirmacao;
+
+  @BuiltValueField(wireName: r'conversao')
+  ConversaoItem get conversao;
+
+  @BuiltValueField(wireName: r'lotes')
+  BuiltList<LoteInferido> get lotes;
+
+  @BuiltValueField(wireName: r'alertas')
+  BuiltList<AlertaItemNota> get alertas;
 
   ItemAnalisado._();
 
@@ -101,6 +116,21 @@ class _$ItemAnalisadoSerializer implements PrimitiveSerializer<ItemAnalisado> {
     yield serializers.serialize(
       object.requerConfirmacao,
       specifiedType: const FullType(bool),
+    );
+    yield r'conversao';
+    yield serializers.serialize(
+      object.conversao,
+      specifiedType: const FullType(ConversaoItem),
+    );
+    yield r'lotes';
+    yield serializers.serialize(
+      object.lotes,
+      specifiedType: const FullType(BuiltList, [FullType(LoteInferido)]),
+    );
+    yield r'alertas';
+    yield serializers.serialize(
+      object.alertas,
+      specifiedType: const FullType(BuiltList, [FullType(AlertaItemNota)]),
     );
   }
 
@@ -168,6 +198,27 @@ class _$ItemAnalisadoSerializer implements PrimitiveSerializer<ItemAnalisado> {
             specifiedType: const FullType(bool),
           ) as bool;
           result.requerConfirmacao = valueDes;
+          break;
+        case r'conversao':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(ConversaoItem),
+          ) as ConversaoItem;
+          result.conversao.replace(valueDes);
+          break;
+        case r'lotes':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(LoteInferido)]),
+          ) as BuiltList<LoteInferido>;
+          result.lotes.replace(valueDes);
+          break;
+        case r'alertas':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(BuiltList, [FullType(AlertaItemNota)]),
+          ) as BuiltList<AlertaItemNota>;
+          result.alertas.replace(valueDes);
           break;
         default:
           unhandled.add(key);

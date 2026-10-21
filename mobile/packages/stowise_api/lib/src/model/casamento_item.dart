@@ -15,10 +15,14 @@ part 'casamento_item.g.dart';
 /// * [produtoId]
 /// * [sku]
 /// * [descricao]
+/// * [unidadeBase]
+/// * [controlaLote]
+/// * [controlaValidade]
 /// * [embalagemId]
 /// * [tipoEmbalagem]
 /// * [fatorConversao]
 /// * [produtoFornecedorId]
+/// * [porGtinTributavel]
 @BuiltValue()
 abstract class CasamentoItem implements Built<CasamentoItem, CasamentoItemBuilder> {
   @BuiltValueField(wireName: r'produtoId')
@@ -29,6 +33,15 @@ abstract class CasamentoItem implements Built<CasamentoItem, CasamentoItemBuilde
 
   @BuiltValueField(wireName: r'descricao')
   String get descricao;
+
+  @BuiltValueField(wireName: r'unidadeBase')
+  String get unidadeBase;
+
+  @BuiltValueField(wireName: r'controlaLote')
+  bool get controlaLote;
+
+  @BuiltValueField(wireName: r'controlaValidade')
+  bool get controlaValidade;
 
   @BuiltValueField(wireName: r'embalagemId')
   String get embalagemId;
@@ -43,12 +56,15 @@ abstract class CasamentoItem implements Built<CasamentoItem, CasamentoItemBuilde
   @BuiltValueField(wireName: r'produtoFornecedorId')
   String? get produtoFornecedorId;
 
+  @BuiltValueField(wireName: r'porGtinTributavel')
+  bool? get porGtinTributavel;
+
   CasamentoItem._();
 
   factory CasamentoItem([void updates(CasamentoItemBuilder b)]) = _$CasamentoItem;
 
   @BuiltValueHook(initializeBuilder: true)
-  static void _defaults(CasamentoItemBuilder b) => b;
+  static void _defaults(CasamentoItemBuilder b) => b..porGtinTributavel = false;
 
   @BuiltValueSerializer(custom: true)
   static Serializer<CasamentoItem> get serializer => _$CasamentoItemSerializer();
@@ -81,6 +97,21 @@ class _$CasamentoItemSerializer implements PrimitiveSerializer<CasamentoItem> {
       object.descricao,
       specifiedType: const FullType(String),
     );
+    yield r'unidadeBase';
+    yield serializers.serialize(
+      object.unidadeBase,
+      specifiedType: const FullType(String),
+    );
+    yield r'controlaLote';
+    yield serializers.serialize(
+      object.controlaLote,
+      specifiedType: const FullType(bool),
+    );
+    yield r'controlaValidade';
+    yield serializers.serialize(
+      object.controlaValidade,
+      specifiedType: const FullType(bool),
+    );
     yield r'embalagemId';
     yield serializers.serialize(
       object.embalagemId,
@@ -103,6 +134,13 @@ class _$CasamentoItemSerializer implements PrimitiveSerializer<CasamentoItem> {
             object.produtoFornecedorId,
             specifiedType: const FullType.nullable(String),
           );
+    if (object.porGtinTributavel != null) {
+      yield r'porGtinTributavel';
+      yield serializers.serialize(
+        object.porGtinTributavel,
+        specifiedType: const FullType(bool),
+      );
+    }
   }
 
   @override
@@ -147,6 +185,27 @@ class _$CasamentoItemSerializer implements PrimitiveSerializer<CasamentoItem> {
           ) as String;
           result.descricao = valueDes;
           break;
+        case r'unidadeBase':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(String),
+          ) as String;
+          result.unidadeBase = valueDes;
+          break;
+        case r'controlaLote':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.controlaLote = valueDes;
+          break;
+        case r'controlaValidade':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.controlaValidade = valueDes;
+          break;
         case r'embalagemId':
           final valueDes = serializers.deserialize(
             value,
@@ -175,6 +234,13 @@ class _$CasamentoItemSerializer implements PrimitiveSerializer<CasamentoItem> {
           ) as String?;
           if (valueDes == null) continue;
           result.produtoFornecedorId = valueDes;
+          break;
+        case r'porGtinTributavel':
+          final valueDes = serializers.deserialize(
+            value,
+            specifiedType: const FullType(bool),
+          ) as bool;
+          result.porGtinTributavel = valueDes;
           break;
         default:
           unhandled.add(key);
