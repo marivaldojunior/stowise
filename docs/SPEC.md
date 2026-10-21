@@ -347,7 +347,7 @@ Regras de ordem:
 
 **2.3 API — Recebimento e armazenagem**
 
-- [ ] Fluxo de status do recebimento e conferência
+- [x] Fluxo de status do recebimento e conferência (`/recebimentos`; a conferência não mexe no saldo)
 - [ ] Motor de pontuação: interface de regra e regras de capacidade, zona, curva ABC, FEFO e consolidação
 - [ ] Geração de TarefaArmazenagem com snapshot da pontuação; confirmação e divergência
 - [ ] Job de recálculo da curva ABC
