@@ -19,6 +19,17 @@ public class RecebimentoTests
     }
 
     [Fact]
+    public void Issue_date_is_stored_in_utc()
+    {
+        var emissao = new DateTimeOffset(2026, 10, 20, 9, 30, 0, TimeSpan.FromHours(-3));
+
+        var recebimento = Recebimento.Create(Guid.NewGuid(), Chave, 1234, 1, emissao, Guid.NewGuid(), Agora);
+
+        Assert.Equal(TimeSpan.Zero, recebimento.DataEmissao.Offset);
+        Assert.Equal(emissao, recebimento.DataEmissao);
+    }
+
+    [Fact]
     public void Item_keeps_the_invoice_values_and_the_converted_quantity()
     {
         var recebimento = Novo();

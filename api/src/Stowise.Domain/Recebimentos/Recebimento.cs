@@ -79,10 +79,11 @@ public sealed class Recebimento : Entity
             ChaveAcesso = chave.Valor,
             Numero = numero,
             Serie = serie,
-            DataEmissao = dataEmissao,
+            // A nota traz o fuso do emitente (ex.: -03:00); o banco guarda instantes em UTC. O fuso original fica no XML.
+            DataEmissao = dataEmissao.ToUniversalTime(),
             Status = StatusRecebimento.AguardandoConferencia,
             CriadoPor = criadoPor,
-            CriadoEm = agora,
+            CriadoEm = agora.ToUniversalTime(),
         };
     }
 
