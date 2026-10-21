@@ -77,6 +77,10 @@ function comStatus(produto: Omit<ProdutoDetalhe, 'statusCadastro'>): ProdutoDeta
   return { ...produto, statusCadastro: statusDoCadastro(produto.embalagens) }
 }
 
+/** Alguns produtos ficam incompletos, como os que chegam pela NF-e (sem peso ou medidas), para a fila de cadastros. */
+const CAIXA_SEM_MEDIDAS = new Set([1, 8, 22])
+const UNIDADE_SEM_PESO = new Set([19])
+
 export const produtos: ProdutoDetalhe[] = CATALOGO.map(([sku, descricao, unidade, categoriaId, classe, peso], i) => comStatus({
   id: id('prod', i + 1),
   sku,
@@ -97,7 +101,7 @@ export const produtos: ProdutoDetalhe[] = CATALOGO.map(([sku, descricao, unidade
       fatorConversao: 1,
       unidadeBase: true,
       gtin: `789100000${String(i + 1).padStart(4, '0')}`,
-      pesoKg: peso,
+      pesoKg: UNIDADE_SEM_PESO.has(i) ? null : peso,
       alturaCm: 20,
       larguraCm: 12,
       comprimentoCm: 6,
@@ -112,9 +116,9 @@ export const produtos: ProdutoDetalhe[] = CATALOGO.map(([sku, descricao, unidade
             unidadeBase: false,
             gtin: `1789100000${String(i + 1).padStart(4, '0')}`,
             pesoKg: Math.round(peso * 12 * 100 + 40) / 100,
-            alturaCm: 30,
-            larguraCm: 40,
-            comprimentoCm: 25,
+            alturaCm: CAIXA_SEM_MEDIDAS.has(i) ? null : 30,
+            larguraCm: CAIXA_SEM_MEDIDAS.has(i) ? null : 40,
+            comprimentoCm: CAIXA_SEM_MEDIDAS.has(i) ? null : 25,
           },
         ]),
   ],

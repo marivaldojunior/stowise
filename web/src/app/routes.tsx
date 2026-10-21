@@ -6,6 +6,7 @@ import { LoginPage } from '../pages/LoginPage'
 import { NaoEncontradaPage } from '../pages/NaoEncontradaPage'
 import { AppLayout, ErroDaRota } from './AppLayout'
 import {
+  CadastrosIncompletosPage,
   CatalogoPage,
   EnderecosPage,
   ExtratoPage,
@@ -39,6 +40,7 @@ export const routes: RouteObject[] = [
           </ExigePerfil>
         ),
       },
+      { path: 'catalogo/incompletos', element: <CadastrosIncompletosPage /> },
       { path: 'catalogo/:id', element: <ProdutoPage /> },
       { path: 'enderecos', element: <EnderecosPage /> },
       { path: 'estoque', element: <SaldosPage /> },

@@ -13,3 +13,11 @@ export const ROTULO_EMBALAGEM: Record<TipoEmbalagem, string> = {
   Caixa: 'Caixa',
   Palete: 'Palete',
 }
+
+/** Nomes das medidas que a API devolve em `faltando` (o nome do campo). */
+export const ROTULO_MEDIDA: Record<string, string> = {
+  pesoKg: 'peso',
+  alturaCm: 'altura',
+  larguraCm: 'largura',
+  comprimentoCm: 'comprimento',
+}

@@ -5,6 +5,9 @@ import { lazy } from 'react'
  * login ficam no pacote principal, porque são a primeira tela.
  */
 export const CatalogoPage = lazy(() => import('../pages/CatalogoPage').then((m) => ({ default: m.CatalogoPage })))
+export const CadastrosIncompletosPage = lazy(() =>
+  import('../pages/CadastrosIncompletosPage').then((m) => ({ default: m.CadastrosIncompletosPage })),
+)
 export const NovoProdutoPage = lazy(() => import('../pages/ProdutoPage').then((m) => ({ default: m.NovoProdutoPage })))
 export const ProdutoPage = lazy(() => import('../pages/ProdutoPage').then((m) => ({ default: m.ProdutoPage })))
 export const EnderecosPage = lazy(() => import('../pages/EnderecosPage').then((m) => ({ default: m.EnderecosPage })))

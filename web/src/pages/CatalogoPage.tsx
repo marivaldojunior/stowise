@@ -1,4 +1,4 @@
-import { Plus } from 'lucide-react'
+import { PackageSearch, Plus } from 'lucide-react'
 import { Link, useNavigate } from 'react-router'
 import { falhaDe } from '@/api/falha'
 import { useListarCategorias, useListarProdutos } from '@/api/gerado/stowise'
@@ -42,13 +42,20 @@ export function CatalogoPage() {
         titulo="Catálogo"
         descricao="Produtos, unidades e embalagens."
         acoes={
-          temPerfil(...PERFIS_GESTAO) && (
-            <Button asChild>
-              <Link to="/catalogo/novo">
-                <Plus /> Novo produto
+          <>
+            <Button variant="outline" asChild>
+              <Link to="/catalogo/incompletos">
+                <PackageSearch /> Cadastros incompletos
               </Link>
             </Button>
-          )
+            {temPerfil(...PERFIS_GESTAO) && (
+              <Button asChild>
+                <Link to="/catalogo/novo">
+                  <Plus /> Novo produto
+                </Link>
+              </Button>
+            )}
+          </>
         }
       />
 
