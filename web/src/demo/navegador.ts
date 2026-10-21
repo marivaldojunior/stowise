@@ -3,11 +3,13 @@ import { setupWorker } from 'msw/browser'
 import type {
   AuthResponse,
   CriarProduto,
+  EfetivarNotaFiscal,
   EnderecoDetalhe,
   ImportacaoDetalhe,
   ProdutoDetalhe,
   UsuarioDetalhe,
 } from '@/api/gerado/modelos'
+import { ANALISE_EXEMPLO } from '@/features/notasFiscais/exemplo'
 import {
   armazem,
   categorias,
@@ -29,6 +31,9 @@ import {
 
 const CHAVE_SESSAO = 'stowise-demo-usuario'
 const LATENCIA_MS = 250
+
+/** Chaves das NF-e já efetivadas nesta sessão (a mesma nota não entra duas vezes, como na API). */
+const notasEfetivadas = new Set<string>()
 
 const CAMPOS = [
   ['sku', 'Código interno do produto (único).', true],
@@ -205,6 +210,58 @@ const handlers = [
     novo.statusCadastro = statusDoCadastro(novo.embalagens)
     produtos.unshift(novo)
     return HttpResponse.json(novo, { status: 201 })
+  }),
+  // NF-e: qualquer XML vira a análise da nota de exemplo; a efetivação cria os produtos novos (Incompletos).
+  http.post('/api/v1/notas-fiscais/analise', () => HttpResponse.json(ANALISE_EXEMPLO)),
+  http.post('/api/v1/notas-fiscais/efetivacao', async ({ request }) => {
+    const corpo = (await request.json()) as EfetivarNotaFiscal
+    if (notasEfetivadas.has(ANALISE_EXEMPLO.chaveAcesso)) {
+      return problema(409, 'Esta NF-e já foi efetivada.')
+    }
+
+    const itens = (corpo.itens ?? []).map((decisao) => {
+      const analisado = ANALISE_EXEMPLO.itens.find((i) => i.item.numeroItem === decisao.numeroItem)!
+      let produtoId = decisao.produtoId ?? analisado.casamento?.produtoId ?? ''
+      let embalagemId = decisao.embalagemId ?? analisado.casamento?.embalagemId ?? ''
+      if (decisao.acao === 'CriarProduto') {
+        produtoId = `prod-nfe-${produtos.length + 1}`
+        embalagemId = `emb-nfe-${produtos.length + 1}`
+        produtos.unshift({
+          id: produtoId,
+          sku: decisao.novoProduto?.sku ?? '',
+          descricao: decisao.novoProduto?.descricao ?? analisado.item.descricao,
+          unidadeBase: analisado.item.unidadeTributavel,
+          classeArmazenagem: decisao.novoProduto?.classeArmazenagem ?? 'Normal',
+          controlaLote: analisado.lotes.length > 0,
+          controlaValidade: analisado.lotes.some((l) => l.validade !== null),
+          ncm: analisado.item.ncm,
+          cest: analisado.item.cest,
+          categoriaId: null,
+          ativo: true,
+          statusCadastro: 'Incompleto',
+          versao: 1,
+          embalagens: [
+            { id: embalagemId, tipo: 'Unidade', fatorConversao: 1, unidadeBase: true, gtin: analisado.item.gtinTributavel, pesoKg: null, alturaCm: null, larguraCm: null, comprimentoCm: null },
+          ],
+        })
+      }
+
+      const fator = decisao.fatorConversao ?? analisado.conversao.fator ?? 1
+      return { numeroItem: decisao.numeroItem, produtoId, embalagemId, produtoFornecedorId: `pf-${decisao.numeroItem}`, fatorConversao: fator, quantidade: analisado.item.quantidadeComercial * fator }
+    })
+    notasEfetivadas.add(ANALISE_EXEMPLO.chaveAcesso)
+    return HttpResponse.json(
+      {
+        recebimentoId: 'rec-demo-1',
+        fornecedorId: 'forn-demo-1',
+        fornecedorCriado: true,
+        produtosCriados: (corpo.itens ?? []).filter((i) => i.acao === 'CriarProduto').length,
+        vinculosCriados: itens.length,
+        vinculosAtualizados: 0,
+        itens,
+      },
+      { status: 201 },
+    )
   }),
   http.put('/api/v1/produtos/:id', async ({ params, request }) => {
     const produto = buscarProduto(params.id)

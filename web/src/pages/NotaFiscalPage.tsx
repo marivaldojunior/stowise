@@ -201,6 +201,11 @@ function EnvioXml({ enviando, erro, onArquivo }: { enviando: boolean; erro: stri
       >
         <FileCode2 className="size-8 text-muted-foreground" aria-hidden />
         <p className="text-sm text-muted-foreground">Arraste o XML da NF-e (versão 4.00) para cá, ou escolha no computador.</p>
+        {import.meta.env.MODE === 'demo' && (
+          <a href="/demo/nfe-exemplo.xml" download className="text-sm font-medium text-primary hover:underline">
+            Baixar uma NF-e de exemplo
+          </a>
+        )}
         <input
           ref={entrada}
           type="file"

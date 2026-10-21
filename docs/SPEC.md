@@ -356,7 +356,7 @@ Regras de ordem:
 **2.4 Web — NF-e e operação**
 
 - [x] Fila de cadastros incompletos
-- [ ] Upload de NF-e e revisão do casamento de itens com as sugestões
+- [x] Upload de NF-e e revisão do casamento de itens com as sugestões
 - [ ] Recebimentos e acompanhamento das tarefas de armazenagem
 - [ ] Tela de divergências de armazenagem
 - [ ] Configuração dos pesos das regras de armazenagem

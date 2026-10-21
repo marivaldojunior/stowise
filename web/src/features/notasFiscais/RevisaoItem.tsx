@@ -1,5 +1,5 @@
 import { useId } from 'react'
-import type { AlertaItemNota, ClasseArmazenagem, ItemAnalisado, OrigemCasamento } from '@/api/gerado/modelos'
+import type { AlertaItemNota, ClasseArmazenagem, ItemAnalisado, OrigemCasamento, OrigemFator } from '@/api/gerado/modelos'
 import { useObterProduto } from '@/api/gerado/stowise'
 import { Campo } from '@/components/Campo'
 import { Situacao } from '@/components/Situacao'
@@ -16,6 +16,13 @@ const ROTULO_ORIGEM: Record<OrigemCasamento, { texto: string; tom: 'sucesso' | '
   Gtin: { texto: 'GTIN do catálogo', tom: 'info' },
   Similaridade: { texto: 'Parecidos pela descrição', tom: 'aviso' },
   SemCandidato: { texto: 'Produto novo', tom: 'neutro' },
+}
+
+const ORIGEM_FATOR: Record<OrigemFator, string> = {
+  Nota: 'pelas quantidades da nota',
+  DePara: 'do de-para do fornecedor',
+  Embalagem: 'da embalagem do catálogo',
+  Desconhecido: 'desconhecido',
 }
 
 const ROTULO_ALERTA: Record<AlertaItemNota, string> = {
@@ -146,15 +153,21 @@ export function RevisaoItem({ item, decisao, erro, onMudar }: Props) {
           </div>
         )}
 
-        <div className="max-w-xs">
+        <div className="flex max-w-xs flex-col gap-1.5">
           <Campo
             id={`${id}-fator`}
-            rotulo={`Fator: ${nota.unidadeTributavel} em 1 ${nota.unidadeComercial} (vazio: o inferido)`}
+            rotulo="Fator de conversão"
             inputMode="decimal"
             value={decisao.fator}
-            placeholder={item.conversao.fator === null ? 'obrigatório' : String(item.conversao.fator).replace('.', ',')}
+            aria-describedby={`${id}-fator-ajuda`}
             onChange={(e) => mudar({ fator: e.target.value })}
           />
+          <p id={`${id}-fator-ajuda`} className="text-xs text-muted-foreground">
+            Unidades base do produto em 1 {nota.unidadeComercial}.{' '}
+            {item.conversao.fator === null
+              ? 'Obrigatório: a nota não permite inferir.'
+              : `Vazio: ${formatarNumero(item.conversao.fator)}, ${ORIGEM_FATOR[item.conversao.origem]}.`}
+          </p>
         </div>
       </fieldset>
 

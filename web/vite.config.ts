@@ -7,10 +7,12 @@ import { defineConfig } from 'vitest/config'
 
 /**
  * Modo demonstração (`npm run dev:demo`): o MSW responde no navegador, sem a API. O service worker do MSW vem do
- * pacote instalado e só é servido aqui, no servidor de desenvolvimento: ele nunca entra no build de produção.
+ * pacote instalado e só é servido aqui, no servidor de desenvolvimento: ele nunca entra no build de produção. O XML
+ * de exemplo da NF-e (o mesmo dos testes da API) também só existe aqui, para a tela de notas fiscais.
  */
 function demonstracao(): Plugin {
   const worker = path.resolve(import.meta.dirname, 'node_modules/msw/lib/mockServiceWorker.js')
+  const nfe = path.resolve(import.meta.dirname, '../api/tests/Stowise.IntegrationTests/NotasFiscais/Exemplos/nfe-autorizada.xml')
   return {
     name: 'stowise-demonstracao',
     apply: 'serve',
@@ -18,6 +20,11 @@ function demonstracao(): Plugin {
       server.middlewares.use('/mockServiceWorker.js', (_req, res) => {
         res.setHeader('Content-Type', 'text/javascript')
         res.end(readFileSync(worker))
+      })
+      server.middlewares.use('/demo/nfe-exemplo.xml', (_req, res) => {
+        res.setHeader('Content-Type', 'application/xml')
+        res.setHeader('Content-Disposition', 'attachment; filename="nfe-exemplo.xml"')
+        res.end(readFileSync(nfe))
       })
     },
   }
