@@ -61,6 +61,26 @@ public class ArmazenagemEndpointsTests(StowiseApiFactory factory) : IClassFixtur
         await AssertValidacaoAsync(response, faltando);
     }
 
+    [Fact]
+    public async Task Anonymous_cannot_list_tasks()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync(new Uri("/api/v1/armazenagem/tarefas", UriKind.Relative));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Confirmation_needs_the_address()
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var response = await client.PostAsJsonAsync($"/api/v1/armazenagem/tarefas/{Guid.CreateVersion7()}/confirmacao", new { motivoDivergencia = "x" });
+
+        await AssertValidacaoAsync(response, "enderecoId");
+    }
+
     private static async Task AssertValidacaoAsync(HttpResponseMessage response, string campo)
     {
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

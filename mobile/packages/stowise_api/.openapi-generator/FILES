@@ -32,6 +32,7 @@ doc/ColunaArquivo.md
 doc/ColunaSugerida.md
 doc/ConferirItemRecebimento.md
 doc/ConfirmarMapeamento.md
+doc/ConfirmarTarefaArmazenagem.md
 doc/ConsumirReserva.md
 doc/ContagemRfid.md
 doc/ConversaoItem.md
@@ -107,6 +108,7 @@ doc/PagedResultOfRecebimentoResumo.md
 doc/PagedResultOfReservaDetalhe.md
 doc/PagedResultOfSaldoItem.md
 doc/PagedResultOfSaldoNaData.md
+doc/PagedResultOfTarefaArmazenagemResumo.md
 doc/PagedResultOfTemplateDetalhe.md
 doc/PagedResultOfUsuarioDetalhe.md
 doc/PedidoSugestaoArmazenagem.md
@@ -149,10 +151,13 @@ doc/StatusImportacao.md
 doc/StatusLinha.md
 doc/StatusRecebimento.md
 doc/StatusReserva.md
+doc/StatusTarefaArmazenagem.md
 doc/SugerirMapeamento.md
 doc/SugestaoArmazenagem.md
 doc/SugestaoEndereco.md
 doc/SugestaoIa.md
+doc/TarefaArmazenagemDetalhe.md
+doc/TarefaArmazenagemResumo.md
 doc/TemplateDetalhe.md
 doc/TipoEmbalagem.md
 doc/TipoImportacao.md
@@ -210,6 +215,7 @@ lib/src/model/coluna_arquivo.dart
 lib/src/model/coluna_sugerida.dart
 lib/src/model/conferir_item_recebimento.dart
 lib/src/model/confirmar_mapeamento.dart
+lib/src/model/confirmar_tarefa_armazenagem.dart
 lib/src/model/consumir_reserva.dart
 lib/src/model/contagem_rfid.dart
 lib/src/model/conversao_item.dart
@@ -280,6 +286,7 @@ lib/src/model/paged_result_of_recebimento_resumo.dart
 lib/src/model/paged_result_of_reserva_detalhe.dart
 lib/src/model/paged_result_of_saldo_item.dart
 lib/src/model/paged_result_of_saldo_na_data.dart
+lib/src/model/paged_result_of_tarefa_armazenagem_resumo.dart
 lib/src/model/paged_result_of_template_detalhe.dart
 lib/src/model/paged_result_of_usuario_detalhe.dart
 lib/src/model/pedido_sugestao_armazenagem.dart
@@ -320,10 +327,13 @@ lib/src/model/status_importacao.dart
 lib/src/model/status_linha.dart
 lib/src/model/status_recebimento.dart
 lib/src/model/status_reserva.dart
+lib/src/model/status_tarefa_armazenagem.dart
 lib/src/model/sugerir_mapeamento.dart
 lib/src/model/sugestao_armazenagem.dart
 lib/src/model/sugestao_endereco.dart
 lib/src/model/sugestao_ia.dart
+lib/src/model/tarefa_armazenagem_detalhe.dart
+lib/src/model/tarefa_armazenagem_resumo.dart
 lib/src/model/template_detalhe.dart
 lib/src/model/tipo_embalagem.dart
 lib/src/model/tipo_importacao.dart
@@ -366,6 +376,7 @@ test/coluna_arquivo_test.dart
 test/coluna_sugerida_test.dart
 test/conferir_item_recebimento_test.dart
 test/confirmar_mapeamento_test.dart
+test/confirmar_tarefa_armazenagem_test.dart
 test/consumir_reserva_test.dart
 test/contagem_rfid_test.dart
 test/conversao_item_test.dart
@@ -441,6 +452,7 @@ test/paged_result_of_recebimento_resumo_test.dart
 test/paged_result_of_reserva_detalhe_test.dart
 test/paged_result_of_saldo_item_test.dart
 test/paged_result_of_saldo_na_data_test.dart
+test/paged_result_of_tarefa_armazenagem_resumo_test.dart
 test/paged_result_of_template_detalhe_test.dart
 test/paged_result_of_usuario_detalhe_test.dart
 test/pedido_sugestao_armazenagem_test.dart
@@ -483,10 +495,13 @@ test/status_importacao_test.dart
 test/status_linha_test.dart
 test/status_recebimento_test.dart
 test/status_reserva_test.dart
+test/status_tarefa_armazenagem_test.dart
 test/sugerir_mapeamento_test.dart
 test/sugestao_armazenagem_test.dart
 test/sugestao_endereco_test.dart
 test/sugestao_ia_test.dart
+test/tarefa_armazenagem_detalhe_test.dart
+test/tarefa_armazenagem_resumo_test.dart
 test/template_detalhe_test.dart
 test/tipo_embalagem_test.dart
 test/tipo_importacao_test.dart

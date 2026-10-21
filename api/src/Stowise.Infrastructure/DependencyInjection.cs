@@ -66,6 +66,7 @@ public static class DependencyInjection
         services.AddSingleton(MotorArmazenagem.Padrao());
         services.AddScoped<PlanejadorArmazenagem>();
         services.AddScoped<IArmazenagemService, ArmazenagemService>();
+        services.AddScoped<ITarefaArmazenagemService, TarefaArmazenagemService>();
         services.AddScoped<IArmazemService, ArmazemService>();
         services.AddScoped<IEnderecoService, EnderecoService>();
         services.AddScoped<IMovimentacaoService, MovimentacaoService>();

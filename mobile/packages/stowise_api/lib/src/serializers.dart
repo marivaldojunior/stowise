@@ -41,6 +41,7 @@ import 'package:stowise_api/src/model/coluna_arquivo.dart';
 import 'package:stowise_api/src/model/coluna_sugerida.dart';
 import 'package:stowise_api/src/model/conferir_item_recebimento.dart';
 import 'package:stowise_api/src/model/confirmar_mapeamento.dart';
+import 'package:stowise_api/src/model/confirmar_tarefa_armazenagem.dart';
 import 'package:stowise_api/src/model/consumir_reserva.dart';
 import 'package:stowise_api/src/model/contagem_rfid.dart';
 import 'package:stowise_api/src/model/conversao_item.dart';
@@ -110,6 +111,7 @@ import 'package:stowise_api/src/model/paged_result_of_recebimento_resumo.dart';
 import 'package:stowise_api/src/model/paged_result_of_reserva_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_item.dart';
 import 'package:stowise_api/src/model/paged_result_of_saldo_na_data.dart';
+import 'package:stowise_api/src/model/paged_result_of_tarefa_armazenagem_resumo.dart';
 import 'package:stowise_api/src/model/paged_result_of_template_detalhe.dart';
 import 'package:stowise_api/src/model/paged_result_of_usuario_detalhe.dart';
 import 'package:stowise_api/src/model/pedido_sugestao_armazenagem.dart';
@@ -150,10 +152,13 @@ import 'package:stowise_api/src/model/status_importacao.dart';
 import 'package:stowise_api/src/model/status_linha.dart';
 import 'package:stowise_api/src/model/status_recebimento.dart';
 import 'package:stowise_api/src/model/status_reserva.dart';
+import 'package:stowise_api/src/model/status_tarefa_armazenagem.dart';
 import 'package:stowise_api/src/model/sugerir_mapeamento.dart';
 import 'package:stowise_api/src/model/sugestao_armazenagem.dart';
 import 'package:stowise_api/src/model/sugestao_endereco.dart';
 import 'package:stowise_api/src/model/sugestao_ia.dart';
+import 'package:stowise_api/src/model/tarefa_armazenagem_detalhe.dart';
+import 'package:stowise_api/src/model/tarefa_armazenagem_resumo.dart';
 import 'package:stowise_api/src/model/template_detalhe.dart';
 import 'package:stowise_api/src/model/tipo_embalagem.dart';
 import 'package:stowise_api/src/model/tipo_importacao.dart';
@@ -194,6 +199,7 @@ part 'serializers.g.dart';
   ColunaSugerida,
   ConferirItemRecebimento,
   ConfirmarMapeamento,
+  ConfirmarTarefaArmazenagem,
   ConsumirReserva,
   ContagemRfid,
   ConversaoItem,
@@ -263,6 +269,7 @@ part 'serializers.g.dart';
   PagedResultOfReservaDetalhe,
   PagedResultOfSaldoItem,
   PagedResultOfSaldoNaData,
+  PagedResultOfTarefaArmazenagemResumo,
   PagedResultOfTemplateDetalhe,
   PagedResultOfUsuarioDetalhe,
   PedidoSugestaoArmazenagem,
@@ -303,10 +310,13 @@ part 'serializers.g.dart';
   StatusLinha,
   StatusRecebimento,
   StatusReserva,
+  StatusTarefaArmazenagem,
   SugerirMapeamento,
   SugestaoArmazenagem,
   SugestaoEndereco,
   SugestaoIa,
+  TarefaArmazenagemDetalhe,
+  TarefaArmazenagemResumo,
   TemplateDetalhe,
   TipoEmbalagem,
   TipoImportacao,

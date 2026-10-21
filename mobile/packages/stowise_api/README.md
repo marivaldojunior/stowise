@@ -69,7 +69,10 @@ All URIs are relative to *http://localhost*
 Class | Method | HTTP request | Description
 ------------ | ------------- | ------------- | -------------
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**alterarRegraArmazenagem**](doc/ArmazenagemApi.md#alterarregraarmazenagem) | **PUT** /api/v1/armazenagem/regras/{codigo} | Muda peso, estado e parâmetros. Uma regra restritiva inativa continua recusando endereços. Exige a versão lida (409 se mudou).
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**confirmarTarefaArmazenagem**](doc/ArmazenagemApi.md#confirmartarefaarmazenagem) | **POST** /api/v1/armazenagem/tarefas/{id}/confirmacao | Registra onde a mercadoria foi guardada e faz a entrada no estoque. Fora do endereço sugerido, o motivo é obrigatório e a tarefa fica Divergente. Repetir a mesma confirmação não duplica a entrada.
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**listarRegrasArmazenagem**](doc/ArmazenagemApi.md#listarregrasarmazenagem) | **GET** /api/v1/armazenagem/regras | 
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**listarTarefasArmazenagem**](doc/ArmazenagemApi.md#listartarefasarmazenagem) | **GET** /api/v1/armazenagem/tarefas | Mais antigas primeiro. Tarefas nascem na conclusão da conferência, uma por item e lote contados.
+[*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**obterTarefaArmazenagem**](doc/ArmazenagemApi.md#obtertarefaarmazenagem) | **GET** /api/v1/armazenagem/tarefas/{id} | A tarefa com o snapshot da sugestão: nota, peso e explicação de cada regra.
 [*ArmazenagemApi*](doc/ArmazenagemApi.md) | [**sugerirEnderecos**](doc/ArmazenagemApi.md#sugerirenderecos) | **POST** /api/v1/armazenagem/sugestoes | Endereços para guardar o produto, da maior para a menor pontuação, com a nota e a explicação de cada regra. Endereços recusados por zona ou capacidade vêm com os motivos.
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**login**](doc/AutenticaoApi.md#login) | **POST** /api/v1/auth/login | 
 [*AutenticaoApi*](doc/AutenticaoApi.md) | [**logout**](doc/AutenticaoApi.md#logout) | **POST** /api/v1/auth/logout | 
@@ -200,6 +203,7 @@ Class | Method | HTTP request | Description
  - [ColunaSugerida](doc/ColunaSugerida.md)
  - [ConferirItemRecebimento](doc/ConferirItemRecebimento.md)
  - [ConfirmarMapeamento](doc/ConfirmarMapeamento.md)
+ - [ConfirmarTarefaArmazenagem](doc/ConfirmarTarefaArmazenagem.md)
  - [ConsumirReserva](doc/ConsumirReserva.md)
  - [ContagemRfid](doc/ContagemRfid.md)
  - [ConversaoItem](doc/ConversaoItem.md)
@@ -269,6 +273,7 @@ Class | Method | HTTP request | Description
  - [PagedResultOfReservaDetalhe](doc/PagedResultOfReservaDetalhe.md)
  - [PagedResultOfSaldoItem](doc/PagedResultOfSaldoItem.md)
  - [PagedResultOfSaldoNaData](doc/PagedResultOfSaldoNaData.md)
+ - [PagedResultOfTarefaArmazenagemResumo](doc/PagedResultOfTarefaArmazenagemResumo.md)
  - [PagedResultOfTemplateDetalhe](doc/PagedResultOfTemplateDetalhe.md)
  - [PagedResultOfUsuarioDetalhe](doc/PagedResultOfUsuarioDetalhe.md)
  - [PedidoSugestaoArmazenagem](doc/PedidoSugestaoArmazenagem.md)
@@ -309,10 +314,13 @@ Class | Method | HTTP request | Description
  - [StatusLinha](doc/StatusLinha.md)
  - [StatusRecebimento](doc/StatusRecebimento.md)
  - [StatusReserva](doc/StatusReserva.md)
+ - [StatusTarefaArmazenagem](doc/StatusTarefaArmazenagem.md)
  - [SugerirMapeamento](doc/SugerirMapeamento.md)
  - [SugestaoArmazenagem](doc/SugestaoArmazenagem.md)
  - [SugestaoEndereco](doc/SugestaoEndereco.md)
  - [SugestaoIa](doc/SugestaoIa.md)
+ - [TarefaArmazenagemDetalhe](doc/TarefaArmazenagemDetalhe.md)
+ - [TarefaArmazenagemResumo](doc/TarefaArmazenagemResumo.md)
  - [TemplateDetalhe](doc/TemplateDetalhe.md)
  - [TipoEmbalagem](doc/TipoEmbalagem.md)
  - [TipoImportacao](doc/TipoImportacao.md)

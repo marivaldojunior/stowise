@@ -46,6 +46,7 @@ import type {
   CategoriaDetalhe,
   ConferirItemRecebimento,
   ConfirmarMapeamento,
+  ConfirmarTarefaArmazenagem,
   ConsumirReserva,
   CotaIaDetalhe,
   CriarArmazem,
@@ -80,6 +81,7 @@ import type {
   ListarRecebimentosParams,
   ListarReservasParams,
   ListarSaldosParams,
+  ListarTarefasArmazenagemParams,
   ListarTemplatesImportacaoParams,
   ListarUsuariosParams,
   LoginRequest,
@@ -101,6 +103,7 @@ import type {
   PagedResultOfReservaDetalhe,
   PagedResultOfSaldoItem,
   PagedResultOfSaldoNaData,
+  PagedResultOfTarefaArmazenagemResumo,
   PagedResultOfTemplateDetalhe,
   PagedResultOfUsuarioDetalhe,
   PedidoSugestaoArmazenagem,
@@ -128,6 +131,7 @@ import type {
   SalvarZona,
   SugerirMapeamento,
   SugestaoArmazenagem,
+  TarefaArmazenagemDetalhe,
   TemplateDetalhe,
   UsoCotaIa,
   UsuarioDetalhe,
@@ -9020,6 +9024,304 @@ export const useSugerirEnderecos = <TError = ErrorType<HttpValidationProblemDeta
         TContext
       > => {
       return useMutation(getSugerirEnderecosMutationOptions(options), queryClient);
+    }
+
+export const getListarTarefasArmazenagemUrl = (params?: ListarTarefasArmazenagemParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/v1/armazenagem/tarefas?${stringifiedParams}` : `/api/v1/armazenagem/tarefas`
+}
+
+/**
+ * @summary Mais antigas primeiro. Tarefas nascem na conclusão da conferência, uma por item e lote contados.
+ */
+export const listarTarefasArmazenagem = async (params?: ListarTarefasArmazenagemParams, options?: Parameters<typeof apiFetch>[1]): Promise<PagedResultOfTarefaArmazenagemResumo> => {
+
+  return apiFetch<PagedResultOfTarefaArmazenagemResumo>(getListarTarefasArmazenagemUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListarTarefasArmazenagemQueryKey = (params?: ListarTarefasArmazenagemParams,) => {
+    return [
+    `/api/v1/armazenagem/tarefas`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getListarTarefasArmazenagemQueryOptions = <TData = Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError = ErrorType<ProblemDetails>>(params?: ListarTarefasArmazenagemParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListarTarefasArmazenagemQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listarTarefasArmazenagem>>> = ({ signal }) => listarTarefasArmazenagem(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ListarTarefasArmazenagemQueryResult = NonNullable<Awaited<ReturnType<typeof listarTarefasArmazenagem>>>
+export type ListarTarefasArmazenagemQueryError = ErrorType<ProblemDetails>
+
+
+export function useListarTarefasArmazenagem<TData = Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ params: undefined |  ListarTarefasArmazenagemParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarTarefasArmazenagem>>,
+          TError,
+          Awaited<ReturnType<typeof listarTarefasArmazenagem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarTarefasArmazenagem<TData = Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarTarefasArmazenagemParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof listarTarefasArmazenagem>>,
+          TError,
+          Awaited<ReturnType<typeof listarTarefasArmazenagem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useListarTarefasArmazenagem<TData = Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarTarefasArmazenagemParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Mais antigas primeiro. Tarefas nascem na conclusão da conferência, uma por item e lote contados.
+ */
+
+export function useListarTarefasArmazenagem<TData = Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ params?: ListarTarefasArmazenagemParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listarTarefasArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getListarTarefasArmazenagemQueryOptions(params,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getObterTarefaArmazenagemUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/armazenagem/tarefas/${id}`
+}
+
+/**
+ * @summary A tarefa com o snapshot da sugestão: nota, peso e explicação de cada regra.
+ */
+export const obterTarefaArmazenagem = async (id: string, options?: Parameters<typeof apiFetch>[1]): Promise<TarefaArmazenagemDetalhe> => {
+
+  return apiFetch<TarefaArmazenagemDetalhe>(getObterTarefaArmazenagemUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getObterTarefaArmazenagemQueryKey = (id: string,) => {
+    return [
+    `/api/v1/armazenagem/tarefas/${id}`
+    ] as const;
+    }
+
+
+export const getObterTarefaArmazenagemQueryOptions = <TData = Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError = ErrorType<ProblemDetails>>(id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getObterTarefaArmazenagemQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof obterTarefaArmazenagem>>> = ({ signal }) => obterTarefaArmazenagem(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type ObterTarefaArmazenagemQueryResult = NonNullable<Awaited<ReturnType<typeof obterTarefaArmazenagem>>>
+export type ObterTarefaArmazenagemQueryError = ErrorType<ProblemDetails>
+
+
+export function useObterTarefaArmazenagem<TData = Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterTarefaArmazenagem>>,
+          TError,
+          Awaited<ReturnType<typeof obterTarefaArmazenagem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterTarefaArmazenagem<TData = Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof obterTarefaArmazenagem>>,
+          TError,
+          Awaited<ReturnType<typeof obterTarefaArmazenagem>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useObterTarefaArmazenagem<TData = Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary A tarefa com o snapshot da sugestão: nota, peso e explicação de cada regra.
+ */
+
+export function useObterTarefaArmazenagem<TData = Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError = ErrorType<ProblemDetails>>(
+ id: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof obterTarefaArmazenagem>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getObterTarefaArmazenagemQueryOptions(id,options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getConfirmarTarefaArmazenagemUrl = (id: string,) => {
+
+
+
+
+  return `/api/v1/armazenagem/tarefas/${id}/confirmacao`
+}
+
+/**
+ * @summary Registra onde a mercadoria foi guardada e faz a entrada no estoque. Fora do endereço sugerido, o motivo é obrigatório e a tarefa fica Divergente. Repetir a mesma confirmação não duplica a entrada.
+ */
+export const confirmarTarefaArmazenagem = async (id: string,
+    confirmarTarefaArmazenagemBody: ConfirmarTarefaArmazenagem, options?: Parameters<typeof apiFetch>[1]): Promise<TarefaArmazenagemDetalhe> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<TarefaArmazenagemDetalhe>(getConfirmarTarefaArmazenagemUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(confirmarTarefaArmazenagemBody)
+  }
+);}
+
+
+
+
+
+export const getConfirmarTarefaArmazenagemMutationKey = () => ['confirmarTarefaArmazenagem'] as const;
+
+export const getConfirmarTarefaArmazenagemMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmarTarefaArmazenagem>>, TError,ConfirmarTarefaArmazenagemMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof confirmarTarefaArmazenagem>>, TError,ConfirmarTarefaArmazenagemMutationVariables, TContext> => {
+
+const mutationKey = getConfirmarTarefaArmazenagemMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof confirmarTarefaArmazenagem>>, ConfirmarTarefaArmazenagemMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  confirmarTarefaArmazenagem(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ConfirmarTarefaArmazenagemMutationResult = NonNullable<Awaited<ReturnType<typeof confirmarTarefaArmazenagem>>>
+    export type ConfirmarTarefaArmazenagemMutationBody = BodyType<ConfirmarTarefaArmazenagem>
+    export type ConfirmarTarefaArmazenagemMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type ConfirmarTarefaArmazenagemMutationVariables = {id: string;data: BodyType<ConfirmarTarefaArmazenagem>}
+
+    /**
+ * @summary Registra onde a mercadoria foi guardada e faz a entrada no estoque. Fora do endereço sugerido, o motivo é obrigatório e a tarefa fica Divergente. Repetir a mesma confirmação não duplica a entrada.
+ */
+export const useConfirmarTarefaArmazenagem = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof confirmarTarefaArmazenagem>>, TError,ConfirmarTarefaArmazenagemMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof confirmarTarefaArmazenagem>>,
+        TError,
+        ConfirmarTarefaArmazenagemMutationVariables,
+        TContext
+      > => {
+      return useMutation(getConfirmarTarefaArmazenagemMutationOptions(options), queryClient);
     }
 
 export const getListarRegrasArmazenagemUrl = () => {

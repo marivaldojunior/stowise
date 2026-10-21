@@ -7530,6 +7530,229 @@
         ]
       }
     },
+    "/api/v1/armazenagem/tarefas": {
+      "get": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "summary": "Mais antigas primeiro. Tarefas nascem na conclusão da conferência, uma por item e lote contados.",
+        "operationId": "ListarTarefasArmazenagem",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/StatusTarefaArmazenagem"
+            }
+          },
+          {
+            "name": "recebimentoId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "pagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tamanhoPagina",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PagedResultOfTarefaArmazenagemResumo"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/armazenagem/tarefas/{id}": {
+      "get": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "summary": "A tarefa com o snapshot da sugestão: nota, peso e explicação de cada regra.",
+        "operationId": "ObterTarefaArmazenagem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TarefaArmazenagemDetalhe"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/armazenagem/tarefas/{id}/confirmacao": {
+      "post": {
+        "tags": [
+          "Armazenagem"
+        ],
+        "summary": "Registra onde a mercadoria foi guardada e faz a entrada no estoque. Fora do endereço sugerido, o motivo é obrigatório e a tarefa fica Divergente. Repetir a mesma confirmação não duplica a entrada.",
+        "operationId": "ConfirmarTarefaArmazenagem",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConfirmarTarefaArmazenagem"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TarefaArmazenagemDetalhe"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
+    },
     "/api/v1/armazenagem/regras": {
       "get": {
         "tags": [
@@ -8546,6 +8769,44 @@
                 "$ref": "#/components/schemas/RegrasNormalizacao"
               }
             ]
+          }
+        }
+      },
+      "ConfirmarTarefaArmazenagem": {
+        "required": [
+          "enderecoId",
+          "motivoDivergencia",
+          "dispositivoId",
+          "ocorridoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "enderecoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "motivoDivergencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "dispositivoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "ocorridoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -11443,6 +11704,39 @@
           }
         }
       },
+      "PagedResultOfTarefaArmazenagemResumo": {
+        "required": [
+          "itens",
+          "pagina",
+          "tamanhoPagina",
+          "total"
+        ],
+        "type": "object",
+        "properties": {
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TarefaArmazenagemResumo"
+            }
+          },
+          "pagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "tamanhoPagina": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "total": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "totalPaginas": {
+            "type": "integer",
+            "format": "int32"
+          }
+        }
+      },
       "PagedResultOfTemplateDetalhe": {
         "required": [
           "itens",
@@ -13173,6 +13467,13 @@
           "Consumida"
         ]
       },
+      "StatusTarefaArmazenagem": {
+        "enum": [
+          "Pendente",
+          "Concluida",
+          "Divergente"
+        ]
+      },
       "SugerirMapeamento": {
         "required": [
           "versao"
@@ -13323,6 +13624,165 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "TarefaArmazenagemDetalhe": {
+        "required": [
+          "tarefa",
+          "notas",
+          "regrasVersao",
+          "enderecoConfirmadoId",
+          "movimentacaoId",
+          "concluidoPor"
+        ],
+        "type": "object",
+        "properties": {
+          "tarefa": {
+            "$ref": "#/components/schemas/TarefaArmazenagemResumo"
+          },
+          "notas": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotaRegra"
+            }
+          },
+          "regrasVersao": {
+            "type": "string"
+          },
+          "enderecoConfirmadoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "movimentacaoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "concluidoPor": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "TarefaArmazenagemResumo": {
+        "required": [
+          "id",
+          "recebimentoId",
+          "numeroNota",
+          "produtoId",
+          "sku",
+          "descricao",
+          "unidadeBase",
+          "loteNumero",
+          "loteValidade",
+          "quantidade",
+          "enderecoSugeridoId",
+          "enderecoSugerido",
+          "pontuacao",
+          "status",
+          "enderecoConfirmado",
+          "motivoDivergencia",
+          "criadoEm",
+          "concluidoEm"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "recebimentoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "numeroNota": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "descricao": {
+            "type": "string"
+          },
+          "unidadeBase": {
+            "type": "string"
+          },
+          "loteNumero": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loteValidade": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date"
+          },
+          "quantidade": {
+            "type": "number",
+            "format": "double"
+          },
+          "enderecoSugeridoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "enderecoSugerido": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "pontuacao": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "status": {
+            "$ref": "#/components/schemas/StatusTarefaArmazenagem"
+          },
+          "enderecoConfirmado": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "motivoDivergencia": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "criadoEm": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "concluidoEm": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
