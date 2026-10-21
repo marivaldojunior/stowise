@@ -115,6 +115,12 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
             return AppError.BusinessRule($"O fornecedor tem {vinculos} produto(s) vinculado(s). Remova os vínculos antes de excluir.");
         }
 
+        var recebimentos = await db.Recebimentos.CountAsync(r => r.FornecedorId == id, cancellationToken);
+        if (recebimentos > 0)
+        {
+            return AppError.BusinessRule($"O fornecedor tem {recebimentos} recebimento(s). Fornecedor com nota recebida não pode ser excluído.");
+        }
+
         db.Fornecedores.Remove(fornecedor);
         await db.SaveChangesAsync(cancellationToken);
         return Result.Success();
@@ -249,6 +255,12 @@ internal sealed class FornecedorService(StowiseDbContext db, TimeProvider clock)
 
     public async Task<Result> DeleteProdutoAsync(Guid fornecedorId, Guid vinculoId, CancellationToken cancellationToken = default)
     {
+        var usos = await db.Recebimentos.SelectMany(r => r.Itens).CountAsync(i => i.ProdutoFornecedorId == vinculoId, cancellationToken);
+        if (usos > 0)
+        {
+            return AppError.BusinessRule($"O vínculo foi usado em {usos} item(ns) de recebimento e não pode ser removido. Troque o produto do vínculo, se precisar.");
+        }
+
         var removidos = await db.ProdutoFornecedores
             .Where(v => v.Id == vinculoId && v.FornecedorId == fornecedorId)
             .ExecuteDeleteAsync(cancellationToken);

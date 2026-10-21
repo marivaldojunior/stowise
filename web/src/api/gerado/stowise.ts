@@ -3811,6 +3811,9 @@ export const getDesvincularProdutoDoFornecedorUrl = (id: string,
   return `/api/v1/fornecedores/${id}/produtos/${vinculoId}`
 }
 
+/**
+ * @summary Vínculo já usado num recebimento não pode ser removido (422).
+ */
 export const desvincularProdutoDoFornecedor = async (id: string,
     vinculoId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
 
@@ -3861,7 +3864,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DesvincularProdutoDoFornecedorMutationError = ErrorType<ProblemDetails>
     export type DesvincularProdutoDoFornecedorMutationVariables = {id: string;vinculoId: string}
 
-    export const useDesvincularProdutoDoFornecedor = <TError = ErrorType<ProblemDetails>,
+    /**
+ * @summary Vínculo já usado num recebimento não pode ser removido (422).
+ */
+export const useDesvincularProdutoDoFornecedor = <TError = ErrorType<ProblemDetails>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>, TError,DesvincularProdutoDoFornecedorMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof desvincularProdutoDoFornecedor>>,

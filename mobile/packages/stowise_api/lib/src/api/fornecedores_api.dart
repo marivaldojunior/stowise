@@ -340,7 +340,7 @@ class FornecedoresApi {
     );
   }
 
-  /// desvincularProdutoDoFornecedor
+  /// Vínculo já usado num recebimento não pode ser removido (422).
   ///
   ///
   /// Parameters:

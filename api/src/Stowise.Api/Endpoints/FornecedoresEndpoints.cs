@@ -96,8 +96,10 @@ public static class FornecedoresEndpoints
         escrita.MapDelete("/{id:guid}/produtos/{vinculoId:guid}", async (Guid id, Guid vinculoId, IFornecedorService fornecedores, CancellationToken ct) =>
                 (await fornecedores.DeleteProdutoAsync(id, vinculoId, ct)).ToNoContent())
             .WithName("DesvincularProdutoDoFornecedor")
+            .WithSummary("Vínculo já usado num recebimento não pode ser removido (422).")
             .Produces(StatusCodes.Status204NoContent)
-            .ProducesProblem(StatusCodes.Status404NotFound);
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
 
         return app;
     }

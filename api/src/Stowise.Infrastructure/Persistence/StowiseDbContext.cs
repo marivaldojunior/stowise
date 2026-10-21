@@ -7,6 +7,7 @@ using Stowise.Domain.Estrutura;
 using Stowise.Domain.Fornecedores;
 using Stowise.Domain.Ia;
 using Stowise.Domain.Importacoes;
+using Stowise.Domain.Recebimentos;
 using Stowise.Domain.Rfid;
 using Stowise.Infrastructure.Catalogo;
 using Stowise.Infrastructure.Identity;
@@ -35,6 +36,10 @@ public sealed class StowiseDbContext(DbContextOptions<StowiseDbContext> options)
     internal DbSet<ProdutoEmbedding> ProdutoEmbeddings => Set<ProdutoEmbedding>();
 
     public DbSet<ProdutoFornecedor> ProdutoFornecedores => Set<ProdutoFornecedor>();
+
+    public DbSet<Recebimento> Recebimentos => Set<Recebimento>();
+
+    public DbSet<XmlRecebimento> XmlsRecebimento => Set<XmlRecebimento>();
 
     public DbSet<Lote> Lotes => Set<Lote>();
 

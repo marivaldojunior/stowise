@@ -278,6 +278,12 @@ internal sealed class ProdutoService(StowiseDbContext db) : IProdutoService
             return AppError.BusinessRule($"A embalagem está vinculada a {vinculos} código(s) de fornecedor. Troque a embalagem desses vínculos antes de remover.");
         }
 
+        var recebidos = await db.Recebimentos.SelectMany(r => r.Itens).CountAsync(i => i.EmbalagemId == embalagemId, cancellationToken);
+        if (recebidos > 0)
+        {
+            return AppError.BusinessRule($"A embalagem aparece em {recebidos} item(ns) de recebimento e não pode ser removida.");
+        }
+
         produto.RemoveEmbalagem(embalagemId);
         return await SaveAsync(produto, cancellationToken);
     }
