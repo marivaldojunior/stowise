@@ -21,7 +21,7 @@ Depois da conferência, cada item do recebimento precisa de um endereço (SPEC, 
 4. **As cinco regras.**
    - **Zona** (restritiva): a classe da zona é a do produto. Peso inicial 0, porque ela só restringe.
    - **Capacidade** (restritiva): o peso e o volume depois de guardar cabem até `ocupacaoMaxima`% (padrão 100). A nota é a ocupação depois de guardar, para preferir o endereço mais justo. Sem peso e sem medidas no cadastro, a regra não se aplica e a explicação manda conferir.
-   - **Curva ABC**: A perto da expedição, B no meio e C longe, pela distância comparada entre os candidatos. Produto novo entra como C até o job de recálculo.
+   - **Curva ABC**: A perto da expedição, B no meio e C longe, pela distância comparada entre os candidatos. Produto novo entra como C até o job de recálculo. O job (todo dia às 3h UTC) mede o giro pelo **número de saídas** em 90 dias, e não pela quantidade: produtos têm unidades diferentes, e o que pesa na distância é quantas vezes o produto é separado. A classe A vai até 80% das saídas acumuladas e a B até 95%.
    - **FEFO**: não misturar validades diferentes do mesmo produto num endereço (tolerância em `toleranciaDias`). Isso evita que o lote que vence antes fique escondido.
    - **Consolidação**: mesmo lote (100), mesmo produto em outro lote (70), endereço vazio (40), só outros produtos (0), todos parametrizáveis.
 5. **Medidas da carga.** O peso e o volume por unidade base vêm da maior embalagem que tem o dado (`MedidasUnitarias`). O estoque que já está no endereço usa a mesma conta.
