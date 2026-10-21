@@ -15,4 +15,5 @@ export const SaldosPage = lazy(() => import('../pages/SaldosPage').then((m) => (
 export const ExtratoPage = lazy(() => import('../pages/ExtratoPage').then((m) => ({ default: m.ExtratoPage })))
 export const ImportacoesPage = lazy(() => import('../pages/ImportacoesPage').then((m) => ({ default: m.ImportacoesPage })))
 export const ImportacaoPage = lazy(() => import('../pages/ImportacaoPage').then((m) => ({ default: m.ImportacaoPage })))
+export const NotaFiscalPage = lazy(() => import('../pages/NotaFiscalPage').then((m) => ({ default: m.NotaFiscalPage })))
 export const UsuariosPage = lazy(() => import('../pages/UsuariosPage').then((m) => ({ default: m.UsuariosPage })))

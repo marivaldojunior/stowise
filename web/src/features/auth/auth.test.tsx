@@ -207,8 +207,8 @@ describe('sair', () => {
 describe('perfis', () => {
   it.each([
     [['Operador'], ['Início', 'Catálogo', 'Endereços', 'Estoque']],
-    [['Gestor'], ['Início', 'Catálogo', 'Endereços', 'Estoque', 'Importações']],
-    [['Admin'], ['Início', 'Catálogo', 'Endereços', 'Estoque', 'Importações', 'Uso de IA', 'Usuários']],
+    [['Gestor'], ['Início', 'Catálogo', 'Endereços', 'Estoque', 'Notas fiscais', 'Importações']],
+    [['Admin'], ['Início', 'Catálogo', 'Endereços', 'Estoque', 'Notas fiscais', 'Importações', 'Uso de IA', 'Usuários']],
   ])('o menu de %j mostra só as seções permitidas', async (perfis, esperado) => {
     usarSessao(perfis)
     renderRoute('/')

@@ -12,6 +12,7 @@ import {
   ExtratoPage,
   ImportacaoPage,
   ImportacoesPage,
+  NotaFiscalPage,
   NovoProdutoPage,
   ProdutoPage,
   SaldosPage,
@@ -58,6 +59,14 @@ export const routes: RouteObject[] = [
         element: (
           <ExigePerfil perfis={PERFIS_GESTAO}>
             <ImportacaoPage />
+          </ExigePerfil>
+        ),
+      },
+      {
+        path: 'notas-fiscais',
+        element: (
+          <ExigePerfil perfis={PERFIS_GESTAO}>
+            <NotaFiscalPage />
           </ExigePerfil>
         ),
       },
