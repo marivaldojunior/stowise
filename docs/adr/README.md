@@ -13,5 +13,8 @@ Uma decisão por arquivo, numerada em sequência (`NNNN-titulo-curto.md`), a par
 | [0007](0007-jobs-em-background.md) | Jobs em background com Hangfire e armazenamento no PostgreSQL | Aceito |
 | [0008](0008-arquitetura-do-app.md) | App Flutter com Riverpod, go_router, flavors e cliente gerado do contrato | Aceito |
 | [0009](0009-deploy-de-demonstracao.md) | Demonstração numa só imagem (API + painel) no Render, com o banco no Neon | Aceito |
+| [0010](0010-etiquetas-rfid.md) | Etiquetas RFID em SGTIN-96 (GS1), contando unidades, com o leitor atrás de uma porta no app | Aceito |
+| [0011](0011-embeddings-e-similares.md) | Embeddings dos produtos com um só modelo e busca de similares com fallback por trigramas | Aceito |
+| [0012](0012-motor-de-armazenagem.md) | Motor de armazenagem por pontuação de regras, sem LLM, com restrições que não se desligam | Aceito |
 
 Decisões já previstas no [SPEC](../SPEC.md#decisões-de-arquitetura-adrs), a registrar quando forem implementadas: quantidades na unidade base, relacional no núcleo e `jsonb` no staging, snapshot das decisões automáticas, IA só sugere, aprendizado por confirmação e pipeline de RAG.

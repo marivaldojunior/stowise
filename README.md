@@ -90,6 +90,7 @@ Cada decisão tem um ADR em [`docs/adr/`](docs/adr) com o contexto e as alternat
 | [0009](docs/adr/0009-deploy-de-demonstracao.md) | Demonstração numa só imagem no Render, banco no Neon | Custo zero e uma só origem (sem CORS), ao custo de a primeira visita acordar o serviço (cerca de 30 s) |
 | [0010](docs/adr/0010-etiquetas-rfid.md) | Etiquetas RFID em SGTIN-96 (GS1), contando unidades, com o leitor atrás de uma porta no app | Funciona com etiquetas de fornecedores e coletores em modo teclado, ao custo de não rastrear cada unidade e de um plugin por fabricante |
 | [0011](docs/adr/0011-embeddings-e-similares.md) | Embeddings dos produtos com um só modelo e busca de similares com fallback por trigramas | Casamento por sentido, não só por letras, ao custo de gerar todos os vetores de novo ao trocar de modelo |
+| [0012](docs/adr/0012-motor-de-armazenagem.md) | Motor de armazenagem por pontuação de regras, sem LLM; zona e capacidade recusam endereços mesmo inativas | Sugestão explicável e reproduzível, com pesos ajustáveis, ao custo de decidir item a item, sem otimizar o recebimento inteiro |
 
 ## Pré-requisitos
 

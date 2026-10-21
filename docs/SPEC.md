@@ -223,6 +223,7 @@ Regras: o usuário só recebe trechos de documentos permitidos ao seu perfil, e 
 14. **Etiquetas RFID em SGTIN-96 (GS1)**: o RFID conta unidades da embalagem do GTIN, sem rastrear cada unidade; série única pela sequência do banco; leitor atrás da porta `LeitorRfid` no app ([ADR-0010](adr/0010-etiquetas-rfid.md))
 15. **Celular primeiro no app**: toda funcionalidade do app funciona num celular comum, com a câmera como leitor; leitor físico (modo teclado), RFID UHF e SDKs de coletores são extras opcionais, nunca obrigatórios
 16. **Embeddings com um só modelo** (768 dimensões, sem fallback entre modelos) e busca de similares com fallback por trigramas ([ADR-0011](adr/0011-embeddings-e-similares.md))
+17. **Motor de armazenagem por pontuação de regras**, sem LLM: zona e capacidade recusam endereços mesmo inativas; as outras regras dão uma média ponderada de 0 a 100, com a explicação de cada nota ([ADR-0012](adr/0012-motor-de-armazenagem.md))
 
 ## Plano de tarefas
 
@@ -348,7 +349,7 @@ Regras de ordem:
 **2.3 API — Recebimento e armazenagem**
 
 - [x] Fluxo de status do recebimento e conferência (`/recebimentos`; a conferência não mexe no saldo)
-- [ ] Motor de pontuação: interface de regra e regras de capacidade, zona, curva ABC, FEFO e consolidação
+- [x] Motor de pontuação: interface de regra e regras de capacidade, zona, curva ABC, FEFO e consolidação
 - [ ] Geração de TarefaArmazenagem com snapshot da pontuação; confirmação e divergência
 - [ ] Job de recálculo da curva ABC
 
