@@ -54,6 +54,7 @@ import type {
   CriarUsuarioRequest,
   DimensoesEnderecoComando,
   EfetivarImportacao,
+  EfetivarNotaFiscal,
   EmbalagemMedidas,
   EnderecoDetalhe,
   EtiquetasRfidGeradas,
@@ -79,6 +80,7 @@ import type {
   ListarUsuariosParams,
   LoginRequest,
   MovimentacaoDetalhe,
+  NotaFiscalEfetivada,
   ObterExtratoParams,
   ObterMinhaCotaIaParams,
   ObterSaldoNaDataParams,
@@ -8361,5 +8363,93 @@ export const useAnalisarNotaFiscal = <TError = ErrorType<HttpValidationProblemDe
         TContext
       > => {
       return useMutation(getAnalisarNotaFiscalMutationOptions(options), queryClient);
+    }
+
+export const getEfetivarNotaFiscalUrl = () => {
+
+
+
+
+  return `/api/v1/notas-fiscais/efetivacao`
+}
+
+/**
+ * @summary Grava a nota revisada: refaz a análise, aplica a decisão de cada item e cria o fornecedor novo, os produtos novos (Incompletos), os de-para e o recebimento. Nota já recebida: 409.
+ */
+export const efetivarNotaFiscal = async (efetivarNotaFiscalBody: EfetivarNotaFiscal, options?: Parameters<typeof apiFetch>[1]): Promise<NotaFiscalEfetivada> => {
+
+    const getHeaders = (h?: NonNullable<RequestInit['headers']>): Record<string, string | readonly string[]> => {
+    if (!h) return {};
+    if (h instanceof Headers) return Object.fromEntries(h.entries());
+    if (Symbol.iterator in h) {
+      return Object.fromEntries(
+        Array.from(h as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string]),
+      );
+    }
+    const headers: Record<string, string | readonly string[]> = {};
+    for (const [name, value] of Object.entries<string | readonly string[] | undefined>(h)) {
+      if (value !== undefined) headers[name] = value;
+    }
+    return headers;
+  };
+return apiFetch<NotaFiscalEfetivada>(getEfetivarNotaFiscalUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...getHeaders(options?.headers) },
+    body: JSON.stringify(efetivarNotaFiscalBody)
+  }
+);}
+
+
+
+
+
+export const getEfetivarNotaFiscalMutationKey = () => ['efetivarNotaFiscal'] as const;
+
+export const getEfetivarNotaFiscalMutationOptions = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof efetivarNotaFiscal>>, TError,EfetivarNotaFiscalMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof efetivarNotaFiscal>>, TError,EfetivarNotaFiscalMutationVariables, TContext> => {
+
+const mutationKey = getEfetivarNotaFiscalMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof efetivarNotaFiscal>>, EfetivarNotaFiscalMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  efetivarNotaFiscal(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type EfetivarNotaFiscalMutationResult = NonNullable<Awaited<ReturnType<typeof efetivarNotaFiscal>>>
+    export type EfetivarNotaFiscalMutationBody = BodyType<EfetivarNotaFiscal>
+    export type EfetivarNotaFiscalMutationError = ErrorType<HttpValidationProblemDetails | ProblemDetails>
+    export type EfetivarNotaFiscalMutationVariables = {data: BodyType<EfetivarNotaFiscal>}
+
+    /**
+ * @summary Grava a nota revisada: refaz a análise, aplica a decisão de cada item e cria o fornecedor novo, os produtos novos (Incompletos), os de-para e o recebimento. Nota já recebida: 409.
+ */
+export const useEfetivarNotaFiscal = <TError = ErrorType<HttpValidationProblemDetails | ProblemDetails>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof efetivarNotaFiscal>>, TError,EfetivarNotaFiscalMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof efetivarNotaFiscal>>,
+        TError,
+        EfetivarNotaFiscalMutationVariables,
+        TContext
+      > => {
+      return useMutation(getEfetivarNotaFiscalMutationOptions(options), queryClient);
     }
 

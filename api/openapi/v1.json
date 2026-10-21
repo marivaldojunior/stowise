@@ -6943,10 +6943,113 @@
           }
         ]
       }
+    },
+    "/api/v1/notas-fiscais/efetivacao": {
+      "post": {
+        "tags": [
+          "Notas fiscais"
+        ],
+        "summary": "Grava a nota revisada: refaz a análise, aplica a decisão de cada item e cria o fornecedor novo, os produtos novos (Incompletos), os de-para e o recebimento. Nota já recebida: 409.",
+        "operationId": "EfetivarNotaFiscal",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EfetivarNotaFiscal"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotaFiscalEfetivada"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HttpValidationProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Unprocessable Entity",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "Bearer": []
+          }
+        ]
+      }
     }
   },
   "components": {
     "schemas": {
+      "AcaoItemNota": {
+        "enum": [
+          "Confirmar",
+          "Vincular",
+          "CriarProduto"
+        ]
+      },
       "AcaoLinha": {
         "enum": [
           "Criar",
@@ -8231,6 +8334,53 @@
           }
         }
       },
+      "DecisaoItemNota": {
+        "required": [
+          "numeroItem",
+          "acao"
+        ],
+        "type": "object",
+        "properties": {
+          "numeroItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "acao": {
+            "$ref": "#/components/schemas/AcaoItemNota"
+          },
+          "produtoId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "fatorConversao": {
+            "type": [
+              "null",
+              "number"
+            ],
+            "format": "double"
+          },
+          "novoProduto": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/NovoProdutoNota"
+              }
+            ]
+          }
+        }
+      },
       "DimensoesEnderecoComando": {
         "required": [
           "capacidadePesoKg",
@@ -8290,6 +8440,30 @@
               "integer"
             ],
             "format": "uint32"
+          }
+        }
+      },
+      "EfetivarNotaFiscal": {
+        "required": [
+          "xml",
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "xml": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "itens": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/DecisaoItemNota"
+            }
           }
         }
       },
@@ -9406,6 +9580,43 @@
           }
         }
       },
+      "ItemEfetivado": {
+        "required": [
+          "numeroItem",
+          "produtoId",
+          "embalagemId",
+          "produtoFornecedorId",
+          "fatorConversao",
+          "quantidade"
+        ],
+        "type": "object",
+        "properties": {
+          "numeroItem": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "produtoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "embalagemId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "produtoFornecedorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fatorConversao": {
+            "type": "number",
+            "format": "double"
+          },
+          "quantidade": {
+            "type": "number",
+            "format": "double"
+          }
+        }
+      },
       "ItemNota": {
         "required": [
           "numeroItem",
@@ -9850,6 +10061,89 @@
               "string"
             ],
             "format": "uuid"
+          }
+        }
+      },
+      "NotaFiscalEfetivada": {
+        "required": [
+          "recebimentoId",
+          "fornecedorId",
+          "fornecedorCriado",
+          "produtosCriados",
+          "vinculosCriados",
+          "vinculosAtualizados",
+          "itens"
+        ],
+        "type": "object",
+        "properties": {
+          "recebimentoId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fornecedorId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "fornecedorCriado": {
+            "type": "boolean"
+          },
+          "produtosCriados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "vinculosCriados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "vinculosAtualizados": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "itens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemEfetivado"
+            }
+          }
+        }
+      },
+      "NovoProdutoNota": {
+        "required": [
+          "sku",
+          "descricao",
+          "categoriaId",
+          "classeArmazenagem"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "descricao": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "categoriaId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "classeArmazenagem": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ClasseArmazenagem"
+              }
+            ]
           }
         }
       },

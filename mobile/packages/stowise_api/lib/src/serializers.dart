@@ -14,6 +14,7 @@ import 'package:built_value/iso_8601_date_time_serializer.dart';
 import 'package:stowise_api/src/date_serializer.dart';
 import 'package:stowise_api/src/model/date.dart';
 
+import 'package:stowise_api/src/model/acao_item_nota.dart';
 import 'package:stowise_api/src/model/acao_linha.dart';
 import 'package:stowise_api/src/model/adicionar_embalagem.dart';
 import 'package:stowise_api/src/model/alerta_item_nota.dart';
@@ -47,8 +48,10 @@ import 'package:stowise_api/src/model/criar_produto.dart';
 import 'package:stowise_api/src/model/criar_produto_fornecedor.dart';
 import 'package:stowise_api/src/model/criar_reserva.dart';
 import 'package:stowise_api/src/model/criar_usuario_request.dart';
+import 'package:stowise_api/src/model/decisao_item_nota.dart';
 import 'package:stowise_api/src/model/dimensoes_endereco_comando.dart';
 import 'package:stowise_api/src/model/efetivar_importacao.dart';
+import 'package:stowise_api/src/model/efetivar_nota_fiscal.dart';
 import 'package:stowise_api/src/model/embalagem_detalhe.dart';
 import 'package:stowise_api/src/model/embalagem_medidas.dart';
 import 'package:stowise_api/src/model/endereco_detalhe.dart';
@@ -70,6 +73,7 @@ import 'package:stowise_api/src/model/importacao_linha_detalhe.dart';
 import 'package:stowise_api/src/model/importacao_resumo.dart';
 import 'package:stowise_api/src/model/importar_produtos_request.dart';
 import 'package:stowise_api/src/model/item_analisado.dart';
+import 'package:stowise_api/src/model/item_efetivado.dart';
 import 'package:stowise_api/src/model/item_nota.dart';
 import 'package:stowise_api/src/model/layout_arquivo.dart';
 import 'package:stowise_api/src/model/leitura_rfid.dart';
@@ -81,6 +85,8 @@ import 'package:stowise_api/src/model/lote_nota.dart';
 import 'package:stowise_api/src/model/mapeamento_coluna.dart';
 import 'package:stowise_api/src/model/metodo_similaridade.dart';
 import 'package:stowise_api/src/model/movimentacao_detalhe.dart';
+import 'package:stowise_api/src/model/nota_fiscal_efetivada.dart';
+import 'package:stowise_api/src/model/novo_produto_nota.dart';
 import 'package:stowise_api/src/model/origem_casamento.dart';
 import 'package:stowise_api/src/model/origem_fator.dart';
 import 'package:stowise_api/src/model/paged_result_of_cadastro_incompleto.dart';
@@ -144,6 +150,7 @@ import 'package:stowise_api/src/model/zona_detalhe.dart';
 part 'serializers.g.dart';
 
 @SerializersFor([
+  AcaoItemNota,
   AcaoLinha,
   AdicionarEmbalagem,
   AlertaItemNota,
@@ -177,8 +184,10 @@ part 'serializers.g.dart';
   CriarProdutoFornecedor,
   CriarReserva,
   CriarUsuarioRequest,
+  DecisaoItemNota,
   DimensoesEnderecoComando,
   EfetivarImportacao,
+  EfetivarNotaFiscal,
   EmbalagemDetalhe,
   EmbalagemMedidas,
   EnderecoDetalhe,
@@ -200,6 +209,7 @@ part 'serializers.g.dart';
   ImportacaoResumo,
   ImportarProdutosRequest,
   ItemAnalisado,
+  ItemEfetivado,
   ItemNota,
   LayoutArquivo,
   LeituraRfid,
@@ -211,6 +221,8 @@ part 'serializers.g.dart';
   MapeamentoColuna,
   MetodoSimilaridade,
   MovimentacaoDetalhe,
+  NotaFiscalEfetivada,
+  NovoProdutoNota,
   OrigemCasamento,
   OrigemFator,
   PagedResultOfCadastroIncompleto,

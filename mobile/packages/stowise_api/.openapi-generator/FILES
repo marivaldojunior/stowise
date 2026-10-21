@@ -2,6 +2,7 @@
 .openapi-generator-ignore
 README.md
 analysis_options.yaml
+doc/AcaoItemNota.md
 doc/AcaoLinha.md
 doc/AdicionarEmbalagem.md
 doc/AlertaItemNota.md
@@ -37,8 +38,10 @@ doc/CriarProduto.md
 doc/CriarProdutoFornecedor.md
 doc/CriarReserva.md
 doc/CriarUsuarioRequest.md
+doc/DecisaoItemNota.md
 doc/DimensoesEnderecoComando.md
 doc/EfetivarImportacao.md
+doc/EfetivarNotaFiscal.md
 doc/EmbalagemDetalhe.md
 doc/EmbalagemMedidas.md
 doc/EnderecoDetalhe.md
@@ -65,6 +68,7 @@ doc/ImportacaoResumo.md
 doc/ImportaoApi.md
 doc/ImportarProdutosRequest.md
 doc/ItemAnalisado.md
+doc/ItemEfetivado.md
 doc/ItemNota.md
 doc/LayoutArquivo.md
 doc/LeituraRfid.md
@@ -76,7 +80,9 @@ doc/LoteNota.md
 doc/MapeamentoColuna.md
 doc/MetodoSimilaridade.md
 doc/MovimentacaoDetalhe.md
+doc/NotaFiscalEfetivada.md
 doc/NotasFiscaisApi.md
+doc/NovoProdutoNota.md
 doc/OrigemCasamento.md
 doc/OrigemFator.md
 doc/PagedResultOfCadastroIncompleto.md
@@ -156,6 +162,7 @@ lib/src/auth/basic_auth.dart
 lib/src/auth/bearer_auth.dart
 lib/src/auth/oauth.dart
 lib/src/date_serializer.dart
+lib/src/model/acao_item_nota.dart
 lib/src/model/acao_linha.dart
 lib/src/model/adicionar_embalagem.dart
 lib/src/model/alerta_item_nota.dart
@@ -190,8 +197,10 @@ lib/src/model/criar_produto_fornecedor.dart
 lib/src/model/criar_reserva.dart
 lib/src/model/criar_usuario_request.dart
 lib/src/model/date.dart
+lib/src/model/decisao_item_nota.dart
 lib/src/model/dimensoes_endereco_comando.dart
 lib/src/model/efetivar_importacao.dart
+lib/src/model/efetivar_nota_fiscal.dart
 lib/src/model/embalagem_detalhe.dart
 lib/src/model/embalagem_medidas.dart
 lib/src/model/endereco_detalhe.dart
@@ -213,6 +222,7 @@ lib/src/model/importacao_linha_detalhe.dart
 lib/src/model/importacao_resumo.dart
 lib/src/model/importar_produtos_request.dart
 lib/src/model/item_analisado.dart
+lib/src/model/item_efetivado.dart
 lib/src/model/item_nota.dart
 lib/src/model/layout_arquivo.dart
 lib/src/model/leitura_rfid.dart
@@ -224,6 +234,8 @@ lib/src/model/lote_nota.dart
 lib/src/model/mapeamento_coluna.dart
 lib/src/model/metodo_similaridade.dart
 lib/src/model/movimentacao_detalhe.dart
+lib/src/model/nota_fiscal_efetivada.dart
+lib/src/model/novo_produto_nota.dart
 lib/src/model/origem_casamento.dart
 lib/src/model/origem_fator.dart
 lib/src/model/paged_result_of_cadastro_incompleto.dart
@@ -286,6 +298,7 @@ lib/src/model/zona_detalhe.dart
 lib/src/serializers.dart
 lib/stowise_api.dart
 pubspec.yaml
+test/acao_item_nota_test.dart
 test/acao_linha_test.dart
 test/adicionar_embalagem_test.dart
 test/alerta_item_nota_test.dart
@@ -321,8 +334,10 @@ test/criar_produto_fornecedor_test.dart
 test/criar_produto_test.dart
 test/criar_reserva_test.dart
 test/criar_usuario_request_test.dart
+test/decisao_item_nota_test.dart
 test/dimensoes_endereco_comando_test.dart
 test/efetivar_importacao_test.dart
+test/efetivar_nota_fiscal_test.dart
 test/embalagem_detalhe_test.dart
 test/embalagem_medidas_test.dart
 test/endereco_detalhe_test.dart
@@ -349,6 +364,7 @@ test/importacao_resumo_test.dart
 test/importao_api_test.dart
 test/importar_produtos_request_test.dart
 test/item_analisado_test.dart
+test/item_efetivado_test.dart
 test/item_nota_test.dart
 test/layout_arquivo_test.dart
 test/leitura_rfid_test.dart
@@ -360,7 +376,9 @@ test/lote_nota_test.dart
 test/mapeamento_coluna_test.dart
 test/metodo_similaridade_test.dart
 test/movimentacao_detalhe_test.dart
+test/nota_fiscal_efetivada_test.dart
 test/notas_fiscais_api_test.dart
+test/novo_produto_nota_test.dart
 test/origem_casamento_test.dart
 test/origem_fator_test.dart
 test/paged_result_of_cadastro_incompleto_test.dart

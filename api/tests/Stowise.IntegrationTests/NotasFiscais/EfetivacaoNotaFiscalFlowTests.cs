@@ -124,6 +124,28 @@ public sealed class EfetivacaoNotaFiscalFlowTests : IDisposable
         Assert.False(await db.ProdutoFornecedores.AnyAsync());
     }
 
+    [DockerFact]
+    public async Task Endpoint_posts_the_reviewed_invoice()
+    {
+        var token = await LoginAsync();
+        var xml = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "NotasFiscais", "Exemplos", "nfe-autorizada.xml"));
+
+        var response = await SendAsync(token, HttpMethod.Post, "/api/v1/notas-fiscais/efetivacao", new
+        {
+            xml,
+            itens = new object[]
+            {
+                new { numeroItem = 1, acao = "CriarProduto", novoProduto = new { sku = "COLA-2L" } },
+                new { numeroItem = 2, acao = "CriarProduto", novoProduto = new { sku = "COPO-200", descricao = "Copo descartável 200ml" } },
+            },
+        });
+
+        Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+        var efetivada = (await response.Content.ReadFromJsonAsync<NotaFiscalEfetivada>(Json))!;
+        Assert.Equal(2, efetivada.ProdutosCriados);
+        Assert.Equal([120m, 500m], efetivada.Itens.Select(i => i.Quantidade));
+    }
+
     private async Task<Result<NotaFiscalEfetivada>> EfetivarAsync(params DecisaoItemNota[] decisoes)
     {
         var xml = await File.ReadAllTextAsync(Path.Combine(AppContext.BaseDirectory, "NotasFiscais", "Exemplos", "nfe-autorizada.xml"));

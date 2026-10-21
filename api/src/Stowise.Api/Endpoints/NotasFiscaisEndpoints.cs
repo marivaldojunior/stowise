@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Stowise.Api.Common;
 using Stowise.Application.Auth;
 using Stowise.Application.Common;
@@ -5,7 +6,7 @@ using Stowise.Application.NotasFiscais;
 
 namespace Stowise.Api.Endpoints;
 
-/// <summary>NF-e de entrada (SPEC, 2.2). A análise não grava nada; a efetivação, com a revisão, vem depois. Só Admin e Gestor.</summary>
+/// <summary>NF-e de entrada (SPEC, 2.2): a análise propõe o casamento sem gravar nada; a efetivação grava a nota revisada. Só Admin e Gestor.</summary>
 public static class NotasFiscaisEndpoints
 {
     /// <summary>Uma NF-e com 990 itens fica bem abaixo disso.</summary>
@@ -27,7 +28,27 @@ public static class NotasFiscaisEndpoints
             .Produces<AnaliseNotaFiscal>()
             .ProducesValidationProblem();
 
+        group.MapPost("/efetivacao", EfetivarAsync)
+            .WithName("EfetivarNotaFiscal")
+            .WithSummary("Grava a nota revisada: refaz a análise, aplica a decisão de cada item e cria o fornecedor novo, os produtos novos (Incompletos), os de-para e o recebimento. Nota já recebida: 409.")
+            .Produces<NotaFiscalEfetivada>(StatusCodes.Status201Created)
+            .ProducesValidationProblem()
+            .ProducesProblem(StatusCodes.Status404NotFound)
+            .ProducesProblem(StatusCodes.Status409Conflict)
+            .ProducesProblem(StatusCodes.Status422UnprocessableEntity);
+
         return app;
+    }
+
+    private static async Task<IResult> EfetivarAsync(EfetivarNotaFiscal comando, IEfetivacaoNotaFiscal efetivacao, ClaimsPrincipal user, CancellationToken ct)
+    {
+        if (comando.Xml?.Length > TamanhoMaximoBytes)
+        {
+            return AppError.Validation("xml", $"O XML deve ter no máximo {TamanhoMaximoBytes / 1024 / 1024} MB.").ToProblem();
+        }
+
+        return (await efetivacao.EfetivarAsync(comando, user.GetUsuarioId(), ct))
+            .ToHttpResult(e => TypedResults.Created((string?)null, e));
     }
 
     private static async Task<IResult> AnalyzeAsync(IFormFile? arquivo, IAnaliseNotaFiscal analise, CancellationToken ct)

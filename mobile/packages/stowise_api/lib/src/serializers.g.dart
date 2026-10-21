@@ -7,6 +7,7 @@ part of 'serializers.dart';
 // **************************************************************************
 
 Serializers _$serializers = (Serializers().toBuilder()
+      ..add(AcaoItemNota.serializer)
       ..add(AcaoLinha.serializer)
       ..add(AdicionarEmbalagem.serializer)
       ..add(AlertaItemNota.serializer)
@@ -40,8 +41,10 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(CriarProdutoFornecedor.serializer)
       ..add(CriarReserva.serializer)
       ..add(CriarUsuarioRequest.serializer)
+      ..add(DecisaoItemNota.serializer)
       ..add(DimensoesEnderecoComando.serializer)
       ..add(EfetivarImportacao.serializer)
+      ..add(EfetivarNotaFiscal.serializer)
       ..add(EmbalagemDetalhe.serializer)
       ..add(EmbalagemMedidas.serializer)
       ..add(EnderecoDetalhe.serializer)
@@ -63,6 +66,7 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(ImportacaoResumo.serializer)
       ..add(ImportarProdutosRequest.serializer)
       ..add(ItemAnalisado.serializer)
+      ..add(ItemEfetivado.serializer)
       ..add(ItemNota.serializer)
       ..add(LayoutArquivo.serializer)
       ..add(LeituraRfid.serializer)
@@ -74,6 +78,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..add(MapeamentoColuna.serializer)
       ..add(MetodoSimilaridade.serializer)
       ..add(MovimentacaoDetalhe.serializer)
+      ..add(NotaFiscalEfetivada.serializer)
+      ..add(NovoProdutoNota.serializer)
       ..add(OrigemCasamento.serializer)
       ..add(OrigemFator.serializer)
       ..add(PagedResultOfCadastroIncompleto.serializer)
@@ -149,6 +155,8 @@ Serializers _$serializers = (Serializers().toBuilder()
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ColunaSugerida)]), () => ListBuilder<ColunaSugerida>())
       ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(DecisaoItemNota)]), () => ListBuilder<DecisaoItemNota>())
+      ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(EmbalagemDetalhe)]), () => ListBuilder<EmbalagemDetalhe>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(EnderecoDetalhe)]), () => ListBuilder<EnderecoDetalhe>())
@@ -164,6 +172,8 @@ Serializers _$serializers = (Serializers().toBuilder()
           const FullType(BuiltList, const [const FullType(ImportacaoResumo)]), () => ListBuilder<ImportacaoResumo>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(ItemAnalisado)]), () => ListBuilder<ItemAnalisado>())
+      ..addBuilderFactory(
+          const FullType(BuiltList, const [const FullType(ItemEfetivado)]), () => ListBuilder<ItemEfetivado>())
       ..addBuilderFactory(
           const FullType(BuiltList, const [const FullType(LeituraRfid)]), () => ListBuilder<LeituraRfid>())
       ..addBuilderFactory(

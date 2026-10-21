@@ -53,6 +53,28 @@ public class NotasFiscaisEndpointsTests(StowiseApiFactory factory) : IClassFixtu
         await AssertValidacaoAsync(response, "xml");
     }
 
+    [Fact]
+    public async Task Operator_cannot_post_an_invoice()
+    {
+        using var client = ClientWith(Perfis.Operador);
+
+        var response = await client.PostAsJsonAsync("/api/v1/notas-fiscais/efetivacao", new { xml = "<NFe/>", itens = Array.Empty<object>() });
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("<html>não é nota</html>")]
+    public async Task Posting_needs_a_valid_invoice_xml(string? xml)
+    {
+        using var client = ClientWith(Perfis.Gestor);
+
+        var response = await client.PostAsJsonAsync("/api/v1/notas-fiscais/efetivacao", new { xml, itens = Array.Empty<object>() });
+
+        await AssertValidacaoAsync(response, "xml");
+    }
+
     internal static MultipartFormDataContent Arquivo(string xml)
     {
         var conteudo = new ByteArrayContent(Encoding.UTF8.GetBytes(xml));

@@ -149,6 +149,7 @@ Class | Method | HTTP request | Description
 [*ImportaoApi*](doc/ImportaoApi.md) | [**renomearTemplateImportacao**](doc/ImportaoApi.md#renomeartemplateimportacao) | **PUT** /api/v1/importacoes/templates/{id} | 
 [*ImportaoApi*](doc/ImportaoApi.md) | [**sugerirMapeamentoImportacao**](doc/ImportaoApi.md#sugerirmapeamentoimportacao) | **POST** /api/v1/importacoes/{id}/sugestao | Pede à IA a sugestão de mapeamento e de regras de normalização (a partir do cabeçalho e da amostra). A sugestão é só uma proposta: confirme em PUT /mapeamento. Sem IA ou com cota atingida, o mapeamento segue manual.
 [*NotasFiscaisApi*](doc/NotasFiscaisApi.md) | [**analisarNotaFiscal**](doc/NotasFiscaisApi.md#analisarnotafiscal) | **POST** /api/v1/notas-fiscais/analise | Lê o XML da NF-e 4.00 (schema, chave e protocolo) e casa cada item: de-para do fornecedor, GTIN e similaridade da descrição. Não grava nada.
+[*NotasFiscaisApi*](doc/NotasFiscaisApi.md) | [**efetivarNotaFiscal**](doc/NotasFiscaisApi.md#efetivarnotafiscal) | **POST** /api/v1/notas-fiscais/efetivacao | Grava a nota revisada: refaz a análise, aplica a decisão de cada item e cria o fornecedor novo, os produtos novos (Incompletos), os de-para e o recebimento. Nota já recebida: 409.
 [*RFIDApi*](doc/RFIDApi.md) | [**gerarEtiquetasRfid**](doc/RFIDApi.md#geraretiquetasrfid) | **POST** /api/v1/rfid/etiquetas | Gera EPCs SGTIN-96 (até 500) para gravar nas etiquetas de uma embalagem com GTIN, com séries únicas.
 [*RFIDApi*](doc/RFIDApi.md) | [**resolverLeiturasRfid**](doc/RFIDApi.md#resolverleiturasrfid) | **POST** /api/v1/rfid/leituras | Resolve EPCs lidos (até 1000, repetidos contam uma vez) em produtos, embalagens e quantidades. Não grava nada.
 [*UsuriosApi*](doc/UsuriosApi.md) | [**atualizarUsuario**](doc/UsuriosApi.md#atualizarusuario) | **PUT** /api/v1/usuarios/{id} | 
@@ -163,6 +164,7 @@ Class | Method | HTTP request | Description
 
 ## Documentation For Models
 
+ - [AcaoItemNota](doc/AcaoItemNota.md)
  - [AcaoLinha](doc/AcaoLinha.md)
  - [AdicionarEmbalagem](doc/AdicionarEmbalagem.md)
  - [AlertaItemNota](doc/AlertaItemNota.md)
@@ -196,8 +198,10 @@ Class | Method | HTTP request | Description
  - [CriarProdutoFornecedor](doc/CriarProdutoFornecedor.md)
  - [CriarReserva](doc/CriarReserva.md)
  - [CriarUsuarioRequest](doc/CriarUsuarioRequest.md)
+ - [DecisaoItemNota](doc/DecisaoItemNota.md)
  - [DimensoesEnderecoComando](doc/DimensoesEnderecoComando.md)
  - [EfetivarImportacao](doc/EfetivarImportacao.md)
+ - [EfetivarNotaFiscal](doc/EfetivarNotaFiscal.md)
  - [EmbalagemDetalhe](doc/EmbalagemDetalhe.md)
  - [EmbalagemMedidas](doc/EmbalagemMedidas.md)
  - [EnderecoDetalhe](doc/EnderecoDetalhe.md)
@@ -219,6 +223,7 @@ Class | Method | HTTP request | Description
  - [ImportacaoResumo](doc/ImportacaoResumo.md)
  - [ImportarProdutosRequest](doc/ImportarProdutosRequest.md)
  - [ItemAnalisado](doc/ItemAnalisado.md)
+ - [ItemEfetivado](doc/ItemEfetivado.md)
  - [ItemNota](doc/ItemNota.md)
  - [LayoutArquivo](doc/LayoutArquivo.md)
  - [LeituraRfid](doc/LeituraRfid.md)
@@ -230,6 +235,8 @@ Class | Method | HTTP request | Description
  - [MapeamentoColuna](doc/MapeamentoColuna.md)
  - [MetodoSimilaridade](doc/MetodoSimilaridade.md)
  - [MovimentacaoDetalhe](doc/MovimentacaoDetalhe.md)
+ - [NotaFiscalEfetivada](doc/NotaFiscalEfetivada.md)
+ - [NovoProdutoNota](doc/NovoProdutoNota.md)
  - [OrigemCasamento](doc/OrigemCasamento.md)
  - [OrigemFator](doc/OrigemFator.md)
  - [PagedResultOfCadastroIncompleto](doc/PagedResultOfCadastroIncompleto.md)

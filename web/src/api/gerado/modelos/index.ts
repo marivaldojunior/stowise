@@ -8,6 +8,7 @@
  * OpenAPI spec version: 1.0
  */
 
+export * from './acaoItemNota';
 export * from './acaoLinha';
 export * from './adicionarEmbalagem';
 export * from './alertaItemNota';
@@ -43,8 +44,10 @@ export * from './criarProduto';
 export * from './criarProdutoFornecedor';
 export * from './criarReserva';
 export * from './criarUsuarioRequest';
+export * from './decisaoItemNota';
 export * from './dimensoesEnderecoComando';
 export * from './efetivarImportacao';
+export * from './efetivarNotaFiscal';
 export * from './embalagemDetalhe';
 export * from './embalagemMedidas';
 export * from './enderecoDetalhe';
@@ -69,6 +72,7 @@ export * from './importacaoLinhaDetalheDadosNormalizados';
 export * from './importacaoResumo';
 export * from './importarProdutosBody';
 export * from './itemAnalisado';
+export * from './itemEfetivado';
 export * from './itemNota';
 export * from './layoutArquivo';
 export * from './leituraRfid';
@@ -92,6 +96,8 @@ export * from './loteNota';
 export * from './mapeamentoColuna';
 export * from './metodoSimilaridade';
 export * from './movimentacaoDetalhe';
+export * from './notaFiscalEfetivada';
+export * from './novoProdutoNota';
 export * from './obterExtratoParams';
 export * from './obterMinhaCotaIaParams';
 export * from './obterSaldoNaDataParams';
