@@ -1,0 +1,90 @@
+import type { AnaliseNotaFiscal } from '@/api/gerado/modelos'
+
+/**
+ * Análise da NF-e de exemplo da API (api/tests/.../NotasFiscais/Exemplos/nfe-autorizada.xml), para os testes e o modo
+ * demonstração. Item 1: casou pelo GTIN da caixa de 12 (10 CX = 120 UN, lote L2610A). Item 2: "SEM GTIN", só
+ * candidatos pela descrição (5 PCT = 500 UN).
+ */
+export const ANALISE_EXEMPLO: AnaliseNotaFiscal = {
+  chaveAcesso: '35261011222333000181550010000012341123456787',
+  numero: 1234,
+  serie: 1,
+  dataEmissao: '2026-10-20T13:30:00Z',
+  autorizada: true,
+  fornecedor: {
+    fornecedorId: null,
+    cnpj: '11222333000181',
+    cpf: null,
+    razaoSocial: 'Distribuidora Exemplo Ltda',
+    nomeFantasia: 'Exemplo',
+  },
+  itens: [
+    {
+      item: {
+        numeroItem: 1,
+        codigoFornecedor: 'REF-001',
+        gtin: '17891000315504',
+        descricao: 'REFRIGERANTE COLA 2L CX 12',
+        ncm: '22021000',
+        cest: null,
+        cfop: '5102',
+        unidadeComercial: 'CX',
+        quantidadeComercial: 10,
+        valorUnitarioComercial: 95.4,
+        gtinTributavel: '7891000315507',
+        unidadeTributavel: 'UN',
+        quantidadeTributavel: 120,
+        lotes: [{ numero: 'L2610A', quantidade: 10, fabricacao: '2026-10-01', validade: '2027-04-30' }],
+      },
+      origem: 'Gtin',
+      casamento: {
+        produtoId: 'prod-0009',
+        sku: 'REF-COL-2L',
+        descricao: 'Refrigerante cola 2L',
+        unidadeBase: 'UN',
+        controlaLote: false,
+        controlaValidade: false,
+        embalagemId: 'emb-0082',
+        tipoEmbalagem: 'Caixa',
+        fatorConversao: 12,
+        produtoFornecedorId: null,
+        porGtinTributavel: false,
+      },
+      metodoSugestoes: null,
+      sugestoes: [],
+      requerConfirmacao: true,
+      conversao: { fator: 12, origem: 'Nota', quantidadeBase: 120 },
+      lotes: [{ numero: 'L2610A', quantidadeNota: 10, quantidadeBase: 120, fabricacao: '2026-10-01', validade: '2027-04-30' }],
+      alertas: [],
+    },
+    {
+      item: {
+        numeroItem: 2,
+        codigoFornecedor: 'REF-077',
+        gtin: null,
+        descricao: 'COPO DESC 200ML PCT 100',
+        ncm: '39241000',
+        cest: null,
+        cfop: '5102',
+        unidadeComercial: 'PCT',
+        quantidadeComercial: 5,
+        valorUnitarioComercial: 12.9,
+        gtinTributavel: null,
+        unidadeTributavel: 'UN',
+        quantidadeTributavel: 500,
+        lotes: [],
+      },
+      origem: 'Similaridade',
+      casamento: null,
+      metodoSugestoes: 'Trigramas',
+      sugestoes: [
+        { id: 'prod-0016', sku: 'COP-VID-6', descricao: 'Copo de vidro (caixa com 6)', unidadeBase: 'CX', pontuacao: 0.41 },
+        { id: 'prod-0014', sku: 'DET-NEU-500', descricao: 'Detergente neutro 500ml', unidadeBase: 'UN', pontuacao: 0.18 },
+      ],
+      requerConfirmacao: true,
+      conversao: { fator: 100, origem: 'Nota', quantidadeBase: 500 },
+      lotes: [],
+      alertas: [],
+    },
+  ],
+}
