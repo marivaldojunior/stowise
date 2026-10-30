@@ -16,12 +16,12 @@ O Stowise testa recursos de IA sobre um caso real: um sistema de inventário e a
 | Painel de gestão | [`web/`](web) | React 19 + TypeScript (Vite), TanStack Query, shadcn/ui, cliente gerado do OpenAPI (orval) |
 | App de campo | [`mobile/`](mobile) | Flutter 3.44, Riverpod, go_router, ML Kit, cliente gerado do OpenAPI (dart-dio) |
 
-## O que já funciona (Marco 1)
+## O que já funciona
 
 | Frente | Recursos |
 | --- | --- |
-| API | Catálogo com embalagens, armazéns, zonas e endereços (geração em lote), estoque como livro-razão (entrada, saída, transferência, ajuste e reserva, com idempotência), autenticação com JWT e refresh rotativo, importação de produtos por CSV, TXT ou Excel em background, com **mapeamento de colunas sugerido pela IA** e prévia antes de gravar |
-| Painel web | Catálogo, endereços com mapa de ocupação, saldos e extrato, usuários e perfis, importação com revisão da sugestão da IA e progresso em tempo real |
+| API | **Marco 1:** catálogo com embalagens, armazéns, zonas e endereços (geração em lote), estoque como livro-razão (entrada, saída, transferência, ajuste e reserva, com idempotência), autenticação com JWT e refresh rotativo, importação de produtos por CSV, TXT ou Excel em background, com **mapeamento de colunas sugerido pela IA** e prévia antes de gravar.<br>**Marco 2 (em andamento):** fornecedores e de-para de produtos, leitura da NF-e 4.00 validada pelos XSD oficiais, casamento de itens (de-para, GTIN e similaridade por embeddings) com fator de conversão e lotes inferidos, efetivação da nota em recebimento, conferência do recebimento, **motor de armazenagem explicável** (sem LLM) com tarefas e divergências, curva ABC recalculada por job e etiquetas RFID em SGTIN-96 |
+| Painel web | **Marco 1:** catálogo, endereços com mapa de ocupação, saldos e extrato, usuários e perfis, importação com revisão da sugestão da IA e progresso em tempo real.<br>**Marco 2 (em andamento):** fila de cadastros incompletos, envio de NF-e e revisão dos itens com as sugestões, também no modo demonstração |
 | App | Login, leitura de código de barras no aparelho (ML Kit ou leitor do coletor), entrada, saída e transferência, e consulta de saldo por produto ou endereço |
 
 <p align="center">
@@ -30,7 +30,7 @@ O Stowise testa recursos de IA sobre um caso real: um sistema de inventário e a
   <img src="docs/media/app.gif" alt="App de campo: login, início, entrada de uma caixa lida pelo código de barras e consulta de saldo" width="230">
 </p>
 
-Planejado nos próximos marcos ([plano completo](docs/SPEC.md)): NF-e com casamento de itens por IA e sugestão de endereço explicável, inventário offline no app, busca semântica com pgvector, consulta em linguagem natural e perguntas sobre documentos (RAG).
+Planejado nos próximos marcos ([plano completo](docs/SPEC.md)): telas de recebimentos, tarefas e divergências de armazenagem e dos pesos das regras no painel, conferência e armazenagem no app, inventário offline, busca semântica no catálogo, consulta em linguagem natural e perguntas sobre documentos (RAG).
 
 Regras que valem para todos os recursos de IA:
 
@@ -52,8 +52,9 @@ flowchart LR
     subgraph API[".NET 10 (camadas: Domain ← Application ← Infrastructure / Api)"]
         HTTP["Endpoints REST<br/>/api/v1 + OpenAPI"]
         HUB["SignalR<br/>/hubs/importacoes"]
-        JOBS["Jobs Hangfire<br/>staging, IA, efetivação"]
+        JOBS["Jobs Hangfire<br/>staging, IA, embeddings, curva ABC"]
         IA["GatewayIa<br/>timeout, retry, fallback, cota"]
+        ARM["Motor de armazenagem<br/>regras e pontuação, sem LLM"]
     end
 
     DB[("PostgreSQL + pgvector<br/>livro-razão, staging, hangfire")]
@@ -63,6 +64,7 @@ flowchart LR
     WEB -. progresso .-> HUB
     APP -- "JWT + refresh no Keystore" --> HTTP
     HTTP --> DB
+    HTTP --> ARM
     JOBS --> DB
     JOBS --> IA
     JOBS -. eventos .-> HUB
